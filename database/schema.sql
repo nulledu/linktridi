@@ -22,6 +22,10 @@ create table if not exists public.profiles (
   posts_count      integer not null default 0 check (posts_count >= 0),
   instagram_url    text,
   tiktok_url       text,
+  section_title    text,
+  section_title_size text default 'md',
+  show_social      boolean not null default true,
+  card_bg          text default '#18181b',
   updated_at       timestamptz not null default now()
 );
 
@@ -44,7 +48,8 @@ create table if not exists public.posts (
   price_prefix     text,
   price            numeric(10,2),
   price_suffix     text,
-  cta_label        text
+  cta_label        text,
+  title_size       text default 'md'
 );
 
 create index if not exists posts_profile_published_order

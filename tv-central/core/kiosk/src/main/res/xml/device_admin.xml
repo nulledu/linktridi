@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Políticas que o app pede como Device Owner. Deliberadamente curto: só o que o
+  quiosque precisa. Nada de apagar dados, nada de câmera, nada de senha.
+-->
+<device-admin xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-policies>
+        <disable-keyguard-features />
+        <force-lock />
+    </uses-policies>
+</device-admin>

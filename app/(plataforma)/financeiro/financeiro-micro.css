@@ -1,0 +1,49 @@
+/* ── Financeiro · micro-interações do módulo ──────────────────────────────────
+   Área discreta: movimento curto, sem enfeite. Tempo e curva só da escala do
+   `:root` (--duration-*, --ease-*). Nada termina em translate/scale identidade
+   — sempre `transform: none` — e nada disto mora num ancestral de popover.
+   A pílula que desliza é IRMÃ dos botões, não invólucro deles. */
+
+/* ── Pílula que viaja entre as abas (Kinetics 005 · Tab Pill Glide) ─────────
+   Posição e largura medidas do botão ativo por `offsetLeft/offsetWidth` (o
+   rect viria com transform e, na faixa que rola, na coordenada da TELA). Só
+   anima depois da primeira medição (`data-pronta`), senão nasce em x=0 e
+   desliza sozinha ao abrir a tela. */
+.fin-abas { position: relative; }
+.fin-abas-pilula {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: var(--r-pill);
+  background: color-mix(in srgb, var(--primary) 12%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--primary) 40%, var(--border));
+}
+.fin-abas-pilula[data-pronta] {
+  transition:
+    transform var(--duration-fast) var(--ease-smooth-out),
+    width var(--duration-fast) var(--ease-smooth-out);
+}
+.fin-abas > button { position: relative; z-index: 1; }
+
+/* Alternador cartões/tabela: o mesmo trajeto, no miolo de 38×34. */
+.fin-visao { position: relative; }
+.fin-visao-pilula {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: calc(var(--r-sm) - 3px);
+  background: var(--primary);
+}
+.fin-visao-pilula[data-pronta] {
+  transition: transform var(--duration-fast) var(--ease-smooth-out);
+}
+.fin-visao > button { position: relative; z-index: 1; }
+.fin-visao-ico { transition: color var(--duration-fast) var(--ease-in-out); }
+
+@media (prefers-reduced-motion: reduce) {
+  .fin-abas-pilula[data-pronta], .fin-visao-pilula[data-pronta], .fin-visao-ico { transition: none !important; }
+}

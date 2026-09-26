@@ -1,0 +1,223 @@
+/* ══════════════════════════════════════════════════════════════════════════════
+   MARKETING · GERAL e BIBLIOTECA DE CRIATIVOS  (prefixo .mk-)
+
+   Cor só de token do tema (claro e escuro saem daqui sem bloco próprio). Tempo
+   e curva só da escala do globals.css. As regras que este arquivo respeita:
+   • nenhuma animação termina em translateY(0)/scale(1) — sempre `none`;
+   • vidro (.glass) não recebe transform — o cartão que sobe é superfície sólida;
+   • a célula é quem entra na `Fila` (a entrada termina em `transform: none`
+     preso por `forwards`); o cartão dentro dela fica livre pra subir;
+   • nenhuma entrada lateral; nada depende de :hover.
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Grade de criativos · Kinetics 054 (entrada escalonada) + 127 (lift) ──── */
+.mk-grade { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); }
+.mk-cel { display: flex; min-width: 0; }
+.mk-card {
+  position: relative; display: flex; flex-direction: column; gap: 8px; width: 100%; min-width: 0;
+  padding: 10px; border-radius: 18px; background: var(--surface); border: 1px solid var(--border);
+  transition:
+    transform var(--duration-fast) var(--ease-smooth-out),
+    box-shadow var(--duration-fast) var(--ease-smooth-out),
+    border-color var(--duration-quick) var(--ease-out);
+}
+/* Ponteiro fino: o cartão sobe com sombra longa e macia. A volta usa a mesma
+   curva sem repique — overshoot só na entrada. */
+@media (hover: hover) and (pointer: fine) {
+  .mk-card:hover {
+    transform: translateY(calc(var(--distance-micro) * -1));
+    border-color: color-mix(in srgb, var(--primary) 28%, var(--border));
+    box-shadow: 0 2px 6px rgb(0 0 0 / 0.08), 0 22px 44px -26px rgb(0 0 0 / 0.55);
+  }
+}
+.mk-card:focus-within { border-color: color-mix(in srgb, var(--primary) 40%, var(--border)); }
+
+.mk-capa {
+  position: relative; display: block; aspect-ratio: 4 / 5; border-radius: 12px; overflow: hidden;
+  background: var(--surface-2, var(--border)); -webkit-tap-highlight-color: transparent;
+  transition: transform var(--duration-quick) var(--ease-smooth-out);
+}
+/* Toque: o retorno do pointer-down é o da fundação (sombra interna, sem
+   transform — `pressao-sem-transform.test.ts`); a capa só escurece um fio. */
+.mk-capa::after {
+  content: ""; position: absolute; inset: 0; z-index: 4; pointer-events: none;
+  background: rgb(0 0 0 / 0); transition: background var(--duration-quick) var(--ease-out);
+}
+.mk-capa:active::after { background: rgb(0 0 0 / 0.12); }
+.mk-capa:focus-visible { outline: var(--foco-largura) solid var(--foco-cor); outline-offset: var(--foco-offset); }
+.mk-capa > video, .mk-capa .mk-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+@media (hover: hover) and (pointer: fine) {
+  .mk-capa .mk-img img { transition: transform var(--duration-slow) var(--ease-smooth-out); }
+  .mk-card:hover .mk-capa .mk-img img { transform: scale(1.03); }
+}
+.mk-capa-sem {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  font-size: 26px; letter-spacing: -0.02em; color: var(--text-dim); opacity: 0.55;
+}
+.mk-capa-play {
+  position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none;
+  background: linear-gradient(transparent 45%, rgb(0 0 0 / 0.35));
+}
+.mk-card-esq { display: block; aspect-ratio: 4 / 6; border-radius: 18px; }
+
+.mk-card-pe { display: flex; align-items: center; gap: 6px; padding: 0 4px; }
+.mk-card-datas { flex: 1; min-width: 0; font-size: 12px; line-height: 1.35; color: var(--text-dim); }
+
+/* ── Imagem: esqueleto → conteúdo · Kinetics 074 (receita t-skel) ─────────── */
+.mk-img { position: absolute; inset: 0; display: block; overflow: hidden; }
+.mk-img .t-skel-skeleton, .mk-img .t-skel-content { display: block; }
+.mk-img-esq { display: block; width: 100%; height: 100%; border-radius: 0; }
+/* Revelada, a espera para de brilhar — shimmer por baixo de uma foto é CPU à toa. */
+.mk-img.is-revealed .mk-img-esq { animation: none; }
+.mk-img img { display: block; width: 100%; height: 100%; object-fit: cover; }
+
+/* ── Chips de filtro · Kinetics 018 (pop ao ligar) ────────────────────────── */
+.mk-chip {
+  flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: var(--tap); padding: 0 14px;
+  border-radius: 999px; border: 1px solid var(--border); background: transparent; color: var(--text-dim);
+  font: inherit; font-size: 13px; font-weight: 700; white-space: nowrap; cursor: pointer;
+  transition: background var(--duration-quick) var(--ease-out), color var(--duration-quick) var(--ease-out),
+              border-color var(--duration-quick) var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .mk-chip:hover { color: var(--text); border-color: color-mix(in srgb, var(--text) 25%, var(--border)); }
+}
+.mk-chip:focus-visible { outline: var(--foco-largura) solid var(--foco-cor); outline-offset: var(--foco-offset); }
+.mk-chip[aria-pressed="true"] {
+  color: var(--on-primary, #fff); background: var(--primary-acao, var(--primary)); border-color: transparent;
+  animation: mkChipPop var(--duration-fast) var(--ease-bounce) backwards;
+}
+@keyframes mkChipPop { from { transform: scale(1.1); } to { transform: none; } }
+.mk-divisor { width: 1px; height: 20px; background: var(--border); flex: none; }
+.mk-sr {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+/* A troca de vista é uma aba deslizante (Kinetics 005, `Abas`): só o ícone,
+   quadrado de 44px. */
+.mk-vistas .ui-abas-item { min-width: var(--tap); min-height: var(--tap); justify-content: center; padding-inline: 10px; }
+
+/* ── Copiar · Kinetics 016 ────────────────────────────────────────────────── */
+.mk-copiar {
+  flex: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  min-width: var(--tap); min-height: var(--tap); padding: 0 12px; border-radius: 999px;
+  border: 1px solid var(--border); background: transparent; color: var(--text-dim);
+  font: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; white-space: nowrap;
+  transition: color var(--duration-quick) var(--ease-out), border-color var(--duration-quick) var(--ease-out),
+              background var(--duration-quick) var(--ease-out);
+}
+.mk-copiar[data-compacto="1"] { padding: 0; }
+@media (hover: hover) and (pointer: fine) {
+  .mk-copiar:hover { color: var(--text); border-color: color-mix(in srgb, var(--text) 25%, var(--border)); }
+}
+.mk-copiar:focus-visible { outline: var(--foco-largura) solid var(--foco-cor); outline-offset: var(--foco-offset); }
+.mk-copiar[data-ok="1"] {
+  color: var(--ok); border-color: color-mix(in srgb, var(--ok) 45%, var(--border));
+  background: color-mix(in srgb, var(--ok) 9%, transparent);
+}
+.mk-copiar-txt { display: inline-block; min-width: 0; }
+
+/* ── Área de soltar (Biblioteca) ──────────────────────────────────────────── */
+.mk-drop {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  min-height: 104px; padding: 16px 12px; border-radius: 14px; text-align: center; cursor: pointer;
+  border: 1.5px dashed var(--border); background: var(--surface-2, transparent); color: var(--text);
+  transition:
+    border-color var(--duration-fast) var(--ease-smooth-out),
+    background var(--duration-fast) var(--ease-smooth-out),
+    transform var(--duration-fast) var(--ease-smooth-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .mk-drop:hover { border-color: color-mix(in srgb, var(--primary) 45%, var(--border)); }
+}
+.mk-drop:focus-within { outline: var(--foco-largura) solid var(--foco-cor); outline-offset: var(--foco-offset); }
+.mk-drop-ico {
+  width: 42px; height: 42px; border-radius: 13px; display: grid; place-items: center; margin-bottom: 2px;
+  color: var(--primary-texto); background: color-mix(in srgb, var(--primary) 12%, transparent);
+  transition: transform var(--duration-fast) var(--ease-bounce);
+}
+.mk-drop strong { font-size: 14px; font-weight: 700; }
+.mk-drop-dica { font-size: 12px; line-height: 1.4; color: var(--text-dim); }
+.mk-drop-lim { font-size: 11px; color: var(--text-dim); }
+/* Arquivo por cima: a borda ganha a cor, a área cresce um fio e o ícone sobe. */
+.mk-drop[data-sobre="1"] {
+  border-color: var(--primary); background: color-mix(in srgb, var(--primary) 9%, var(--surface-2, transparent));
+  transform: scale(1.01);
+}
+.mk-drop[data-sobre="1"] .mk-drop-ico { transform: translateY(calc(var(--distance-micro) * -1)); }
+
+/* ── Fila de envio · Kinetics 057 (barra) + 065 (visto) ───────────────────── */
+.mk-envios { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.mk-envio {
+  display: grid; grid-template-columns: 18px minmax(0, 1fr) auto; align-items: center; gap: 4px 10px;
+  padding: 8px 10px; border-radius: 12px; font-size: 13px; background: var(--surface-2, transparent);
+  animation: mkSurge var(--duration-fast) var(--ease-smooth-out) backwards;
+}
+.mk-envio > svg { color: var(--text-dim); }
+.mk-envio-nome { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mk-envio-pct { font-variant-numeric: tabular-nums; font-size: 12px; font-weight: 700; color: var(--text-dim); }
+.mk-envio .mk-prog { grid-column: 2 / -1; }
+.mk-envio[data-ok="1"] { color: var(--text); background: color-mix(in srgb, var(--ok) 9%, var(--surface-2, transparent)); }
+.mk-envio[data-ok="1"] > svg, .mk-envio[data-ok="1"] .mk-envio-pct { color: var(--ok); }
+.mk-envio[data-saindo="1"] {
+  opacity: 0; transition: opacity var(--duration-quick) var(--ease-out);
+}
+
+.mk-prog {
+  display: block; height: 5px; border-radius: 999px; overflow: hidden;
+  background: color-mix(in srgb, var(--text) 10%, transparent);
+}
+.mk-prog > span {
+  display: block; height: 100%; border-radius: inherit; background: var(--primary);
+  transform-origin: left center; transform: scaleX(var(--p, 0));
+  transition: transform var(--duration-slow) var(--ease-bounce);
+}
+
+.mk-check-anel, .mk-check-visto { stroke-dasharray: 1; stroke-dashoffset: 0; }
+.mk-check-anel { animation: mkTraco var(--duration-very-slow) var(--ease-smooth-out) backwards; }
+.mk-check-visto { animation: mkTraco var(--duration-fast) var(--ease-out) var(--duration-slow) backwards; }
+@keyframes mkTraco { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+
+/* ── Peças da biblioteca ──────────────────────────────────────────────────── */
+.mk-peca {
+  border: 1px solid var(--border); border-radius: 14px; overflow: hidden; background: var(--surface);
+  display: flex; flex-direction: column; min-width: 0;
+}
+.mk-peca-midia { position: relative; aspect-ratio: 1 / 1; background: var(--surface-2, var(--border)); }
+.mk-peca-midia > video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.mk-peca-capa {
+  position: absolute; top: 6px; left: 6px; z-index: 3; display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 8px; border-radius: 999px; font-size: 11px; font-weight: 700;
+  background: var(--primary-acao, var(--primary)); color: var(--on-primary, #fff);
+  animation: mkSelo var(--duration-fast) var(--ease-bounce) backwards;
+}
+@keyframes mkSelo { from { opacity: 0; transform: scale(0.6); } to { opacity: 1; transform: none; } }
+.mk-peca-dur {
+  position: absolute; bottom: 6px; right: 6px; z-index: 3; padding: 2px 6px; border-radius: 6px;
+  font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums; background: rgb(0 0 0 / 0.7); color: #fff;
+}
+.mk-peca-esq { display: block; aspect-ratio: 1 / 1.34; border-radius: 14px; }
+.mk-acao {
+  flex: 1; min-height: var(--tap); display: inline-flex; align-items: center; justify-content: center;
+  background: none; border: 0; border-right: 1px solid var(--border); cursor: pointer; color: var(--text-dim);
+  text-decoration: none; transition: background var(--duration-quick) var(--ease-out), color var(--duration-quick) var(--ease-out);
+}
+.mk-acao:last-child { border-right: 0; }
+@media (hover: hover) and (pointer: fine) {
+  .mk-acao:hover { color: var(--text); background: color-mix(in srgb, var(--text) 5%, transparent); }
+  .mk-acao[data-perigo="1"]:hover { color: var(--perigo); background: color-mix(in srgb, var(--perigo) 8%, transparent); }
+}
+.mk-acao:active { background: color-mix(in srgb, var(--text) 9%, transparent); }
+.mk-acao:focus-visible { outline: var(--foco-largura) solid var(--foco-cor); outline-offset: var(--foco-offset-dentro); }
+
+@keyframes mkSurge { from { opacity: 0; transform: translateY(var(--distance-micro)); } to { opacity: 1; transform: none; } }
+
+/* ── Menos movimento ──────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .mk-card, .mk-capa, .mk-capa .mk-img img, .mk-chip, .mk-copiar, .mk-drop, .mk-drop-ico,
+  .mk-envio, .mk-prog > span, .mk-check-anel, .mk-check-visto, .mk-peca-capa, .mk-acao {
+    animation: none !important; transition: none !important;
+  }
+  .mk-card:hover, .mk-capa:active, .mk-card:hover .mk-capa .mk-img img,
+  .mk-drop[data-sobre="1"], .mk-drop[data-sobre="1"] .mk-drop-ico { transform: none !important; }
+}

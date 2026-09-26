@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Tema base sem ActionBar — a UI é 100% Compose, tela cheia, modo claro (marca Tridi). -->
+    <style name="Theme.Ponto" parent="android:Theme.Material.Light.NoActionBar.Fullscreen">
+        <item name="android:windowBackground">#F4F1FB</item>
+        <item name="android:statusBarColor">#F4F1FB</item>
+        <item name="android:navigationBarColor">#F4F1FB</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+    </style>
+</resources>

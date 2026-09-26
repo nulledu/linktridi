@@ -1,0 +1,121 @@
+/*
+  Tokens da PAREDE DE TV (/painel) — casca, espaço, raio, sombra, tipo e movimento.
+
+  Importado pelo PainelRoot; vale para todo painel (vendas, produção,
+  logística, máquinas). Os valores de cor repetem os --p-* do widgets.css
+  (pele clara: lavanda + cartão branco + UM roxo) para que a casca e as telas
+  de setor falem a mesma língua dos blocos sem depender de estarem dentro de
+  um `.pw-grade`. Quem adotar: troque número solto por estes tokens.
+
+  Tudo em px do PALCO (1280×720 ou 720×1280): o KioskShell escala o palco
+  inteiro por transform, então 1px aqui é 1,5px numa TV 1080p e 3px numa 4K.
+
+  Movimento: abrir 250ms, fechar 150ms e sem atraso (regra do CLAUDE.md);
+  só transform/opacity; nenhum keyframe termina em scale(1)/translateY(0) —
+  sempre `transform: none`.
+*/
+:root {
+  /* Espaço (escala de 4) */
+  --tv-esp-1: 4px;
+  --tv-esp-2: 8px;
+  --tv-esp-3: 12px;
+  --tv-esp-4: 16px;
+  --tv-esp-5: 24px;
+  --tv-esp-6: 32px;
+  --tv-esp-7: 48px;
+  /* Margem do palco (o que a casca já usava). */
+  --tv-margem-x: 64px;
+  --tv-margem-y: 48px;
+
+  /* Raio */
+  --tv-raio-s: 10px;
+  --tv-raio-m: 16px;
+  --tv-raio-l: 22px;
+  --tv-raio-pill: 999px;
+
+  /* Sombra (duas camadas, igual ao --p-sombra) */
+  --tv-sombra: 0 1px 2px rgba(20, 20, 46, 0.04), 0 14px 32px -14px rgba(20, 20, 46, 0.14);
+  --tv-sombra-alta: 0 2px 4px rgba(20, 20, 46, 0.05), 0 24px 48px -18px rgba(20, 20, 46, 0.2);
+
+  /* Tipo — lido a 3 m: nada de informação abaixo de 14px de palco. */
+  --tv-tipo-rodape: 13px;   /* tarja, selo (só quem chega perto) */
+  --tv-tipo-rotulo: 15px;
+  --tv-tipo-corpo: 18px;
+  --tv-tipo-titulo: 28px;
+  --tv-tipo-destaque: 44px;
+  --tv-tipo-heroi: 72px;
+  --tv-peso-rotulo: 600;
+  --tv-peso-titulo: 800;
+  --tv-tracking-titulo: -0.02em;
+
+  /* Cor (espelho dos --p-* da pele clara) */
+  --tv-fundo: #f5f4fa;
+  --tv-cartao: #ffffff;
+  --tv-texto: #14142e;
+  --tv-fraco: #9394b1;
+  --tv-primaria: #6c4cf0;
+  --tv-selo: #ece7fe;
+  --tv-trilho: #eae8f4;
+
+  /* Movimento */
+  --tv-entra: 250ms;
+  --tv-sai: 150ms;
+  --tv-curva-entra: cubic-bezier(0.22, 1, 0.36, 1);
+  --tv-curva-sai: cubic-bezier(0.4, 0, 1, 1);
+  --tv-escala-entra: 0.985;
+}
+
+/* Entrada da tela: opacidade + escala mínima. Termina em `none`. */
+@keyframes tvTelaEntra {
+  from { opacity: 0; transform: scale(var(--tv-escala-entra)); }
+  to { opacity: 1; transform: none; }
+}
+.tv-tela-entra {
+  animation: tvTelaEntra var(--tv-entra) var(--tv-curva-entra) both;
+}
+
+/* Menu da tarja: sobe do canto que o abriu, sem passar do ponto. */
+@keyframes tvMenuEntra {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: none; }
+}
+.tv-menu-entra {
+  transform-origin: bottom right;
+  animation: tvMenuEntra var(--tv-entra) var(--tv-curva-entra) both;
+}
+
+/*
+  Indicador de rotação: fio de 4px no pé do palco. O preenchimento é UM
+  scaleX de 0→1 durando o slide inteiro — compositor puro, zero trabalho de
+  layout por quadro. Reiniciado trocando a `key` do elemento.
+*/
+.tv-rota {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 4px;
+  background: var(--tv-trilho);
+  overflow: hidden;
+  z-index: 5;
+  pointer-events: none;
+}
+.tv-rota-fio {
+  height: 100%;
+  background: var(--tv-primaria);
+  transform-origin: left center;
+  animation: tvRotaEnche var(--tv-rota-ms, 15000ms) linear both;
+}
+@keyframes tvRotaEnche {
+  from { transform: scaleX(0); }
+  to { transform: none; }
+}
+.tv-rota-rotulo {
+  position: absolute; left: 22px; bottom: 14px; z-index: 6;
+  display: inline-flex; align-items: center; gap: var(--tv-esp-2);
+  font-size: var(--tv-tipo-rotulo); font-weight: 700;
+  color: var(--tv-texto);
+  pointer-events: none;
+}
+.tv-rota-rotulo .tv-rota-prox { color: var(--tv-fraco); font-weight: 600; }
+
+@media (prefers-reduced-motion: reduce) {
+  .tv-tela-entra, .tv-menu-entra { animation-duration: 1ms; }
+  .tv-rota-fio { animation: none; transform: none; opacity: 0.35; }
+}

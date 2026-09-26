@@ -1,0 +1,297 @@
+/* ── Painel de Máquinas · parede de monitoramento ────────────────────────────
+   Pele clara da parede (widgets.css): fundo lavanda, cartão branco, UM roxo
+   (identidade: título, porte, ícones de KPI). ESTADO é semântico e mora só
+   nos tokens --mq-st-*: verde produz, âmbar pede atenção, ardósia espera,
+   vermelho parou, azul está em manutenção. Nunca o roxo num estado.
+
+   Os --p-* vêm do `.pele-clara` do KioskShell; os valores depois da vírgula
+   são os mesmos, pra prova (/dev-painel-maquinas) e qualquer palco sem a pele.
+
+   Movimento: só opacidade e cor, com os tokens da escala. Nada termina em
+   translateY(0)/scale(1) — a entrada é `mqEntra`, que acaba em `none`. */
+
+.mq {
+  --mq-fundo: var(--p-fundo, #f5f4fa);
+  --mq-cartao: var(--p-cartao, #ffffff);
+  --mq-texto: var(--p-texto, #14142e);
+  /* --p-fraco (#9394b1) some em texto pequeno a três metros: o rótulo da
+     parede é a tinta a 62% sobre o branco. */
+  --mq-dim: color-mix(in srgb, var(--mq-texto) 62%, var(--mq-cartao));
+  --mq-trilho: var(--p-trilho, #eae8f4);
+  --mq-roxo: var(--p-primaria, #6c4cf0);
+  --mq-selo: var(--p-selo, #ece7fe);
+  --mq-aro: var(--p-aro, rgba(20, 20, 46, 0.055));
+  --mq-sombra: var(--p-sombra, 0 1px 2px rgba(20, 20, 46, 0.04), 0 14px 32px -14px rgba(20, 20, 46, 0.14));
+
+  --mq-st-producao: var(--p-ok, #17a34a);
+  --mq-st-atencao: var(--p-atencao, #c2830b);
+  --mq-st-parada: var(--p-perigo, var(--perigo));
+  --mq-st-aguardando: #5b6478;
+  --mq-st-manutencao: var(--azul);
+
+  /* corDoOEE() devolve var(--ok/--atencao/--perigo): aqui eles apontam pros
+     tons calibrados pro branco, não os de iOS escuro. */
+  --ok: var(--mq-st-producao);
+  --atencao: var(--mq-st-atencao);
+  --perigo: var(--mq-st-parada);
+
+  width: 100%; height: 100%;
+  display: flex; flex-direction: column; gap: 10px;
+  color: var(--mq-texto);
+}
+
+.mq-tela { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 14px; }
+.mq-entra { animation: mqEntra var(--duration-slow, 400ms) var(--ease-smooth-out, ease-out) both; }
+@keyframes mqEntra { from { opacity: 0; } to { opacity: 1; } }
+
+.mq-pontos { flex: none; display: flex; justify-content: center; gap: 6px; }
+.mq-pontos span {
+  width: 7px; height: 7px; border-radius: 999px; background: var(--mq-trilho);
+  transition: width var(--duration-fast, 200ms) var(--ease-smooth-out, ease-out), background-color var(--duration-fast, 200ms) var(--ease-smooth-out, ease-out);
+}
+.mq-pontos span[data-on] { width: 22px; background: var(--mq-roxo); }
+
+.mq-bolinha { width: 9px; height: 9px; border-radius: 999px; flex: none; display: inline-block; }
+
+/* ── Topo do monitor: título · faixa de estados · números do dia ─────────── */
+.mq-topo {
+  flex: none; display: flex; align-items: stretch; gap: 14px; min-width: 0;
+}
+.mq-titulo { display: flex; align-items: center; gap: 12px; min-width: 0; flex: none; }
+.mq-titulo-placa {
+  width: 46px; height: 46px; border-radius: 14px; flex: none;
+  display: grid; place-items: center; background: var(--mq-selo);
+}
+.mq-titulo h1, .mq-h1 { font-size: 30px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.05; white-space: nowrap; }
+.mq-titulo-sub { display: flex; align-items: center; gap: 7px; font-size: 13.5px; font-weight: 600; color: var(--mq-dim); white-space: nowrap; }
+
+.mq-faixa { flex: 1; min-width: 0; container-type: inline-size; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+.mq-faixa-item {
+  display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto;
+  column-gap: clamp(6px, 1.2cqi, 10px); align-items: center; min-width: 0;
+  padding: 9px clamp(8px, 1.6cqi, 14px); border-radius: 18px;
+  background: var(--mq-cartao); box-shadow: var(--mq-sombra);
+  /* A régua de cor em cima: o estado aparece antes do número. */
+  border-top: 4px solid var(--mq-est);
+  transition: opacity var(--duration-slow, 400ms) var(--ease-smooth-out, ease-out);
+}
+.mq-faixa-item[data-zero] { opacity: 0.55; border-top-color: var(--mq-trilho); }
+.mq-faixa-placa {
+  grid-row: 1 / 3; width: clamp(30px, 4.4cqi, 42px); height: clamp(30px, 4.4cqi, 42px); border-radius: 13px;
+  display: grid; place-items: center;
+  background: color-mix(in srgb, var(--mq-est) 13%, var(--mq-cartao));
+}
+.mq-faixa-item b { font-size: 34px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+.mq-faixa-rot { font-size: clamp(11px, 1.55cqi, 14px); font-weight: 700; color: var(--mq-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.mq-topo-num { flex: none; display: flex; gap: 10px; }
+.mq-topo-num > div {
+  display: flex; flex-direction: column; justify-content: center; gap: 2px;
+  padding: 9px 16px; border-radius: 18px; background: var(--mq-cartao); box-shadow: var(--mq-sombra);
+}
+.mq-topo-num span { font-size: 12.5px; font-weight: 700; color: var(--mq-dim); white-space: nowrap; }
+.mq-topo-num b { font-size: 28px; font-weight: 800; line-height: 1.05; font-variant-numeric: tabular-nums; }
+
+/* ── Grade: todas as máquinas, cabendo sem rolar ──────────────────────────── */
+.mq-grade {
+  flex: 1; min-height: 0;
+  display: grid; gap: 12px;
+  grid-template-columns: repeat(var(--mq-cols, 4), minmax(0, 1fr));
+  grid-template-rows: repeat(var(--mq-rows, 2), minmax(0, 1fr));
+}
+
+/* ── Cartão do monitor ───────────────────────────────────────────────────────
+   O cartão é um CONTÊINER de tamanho: tudo dentro mede em cqh/cqi, então o
+   mesmo desenho serve a 1920×1080 e a 1280×720 sem media query. */
+.mq-cm {
+  container-type: size; min-width: 0; min-height: 0;
+  border-radius: 20px; background: var(--mq-cartao);
+  box-shadow: var(--mq-sombra);
+  /* Tarja de estado à esquerda + aro na cor do estado quando pede gente. */
+  border: 2px solid transparent;
+  border-left: 7px solid var(--mq-est);
+  overflow: hidden;
+  transition: border-color var(--duration-slow, 400ms) var(--ease-smooth-out, ease-out);
+}
+.mq-cm[data-estado="parada"],
+.mq-cm[data-estado="manutencao"],
+.mq-cm[data-estado="atencao"] { border-color: color-mix(in srgb, var(--mq-est) 55%, var(--mq-cartao)); border-left-color: var(--mq-est); }
+
+.mq-cm-in {
+  height: 100%; display: flex; flex-direction: column;
+  gap: clamp(4px, 2.6cqh, 14px);
+  padding: clamp(8px, 4.2cqh, 22px) clamp(10px, 5cqi, 24px);
+}
+.mq-cm-in > * { flex: none; min-width: 0; }
+
+.mq-cm-topo { display: flex; align-items: center; gap: 8px; }
+.mq-cm-nome {
+  font-size: clamp(15px, min(8.5cqh, 9cqi), 40px); font-weight: 800; letter-spacing: -0.015em;
+  line-height: 1.05; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
+}
+.mq-cm-porte {
+  flex: none; padding: 2px 8px; border-radius: 8px;
+  font-size: clamp(11px, 4.4cqh, 20px); font-weight: 800;
+  background: var(--mq-selo); color: var(--mq-roxo);
+}
+.mq-cm-oee {
+  margin-left: auto; flex: none; font-size: clamp(11px, 4.6cqh, 21px); font-weight: 800;
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+
+/* A faixa de estado: a coisa que se lê de longe. */
+.mq-cm-estado {
+  display: flex; align-items: center; gap: clamp(6px, 2.4cqi, 12px);
+  padding: clamp(4px, 2.4cqh, 12px) clamp(8px, 3.4cqi, 16px);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--mq-est) 13%, var(--mq-cartao));
+  color: var(--mq-est);
+  transition: background-color var(--duration-slow, 400ms) var(--ease-smooth-out, ease-out), color var(--duration-slow, 400ms) var(--ease-smooth-out, ease-out);
+}
+.mq-cm-est-ic { flex: none; display: grid; place-items: center; }
+.mq-cm-est-ic svg { width: clamp(16px, 7cqh, 32px); height: clamp(16px, 7cqh, 32px); }
+.mq-cm[data-estado="producao"] .mq-cm-est-ic { animation: mqPulso 2.6s ease-in-out infinite alternate; }
+@keyframes mqPulso { from { opacity: 1; } to { opacity: 0.45; } }
+.mq-cm-est-rot {
+  font-size: clamp(13px, 6.2cqh, 28px); font-weight: 800; text-transform: uppercase; letter-spacing: 0.02em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
+}
+.mq-cm-est-tempo {
+  margin-left: auto; flex: none; font-size: clamp(11px, 4.6cqh, 21px); font-weight: 700;
+  color: var(--mq-texto); font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+
+.mq-cm-in > .mq-cm-job { flex: 1 1 auto; min-height: 0; overflow: hidden; display: flex; flex-direction: column; justify-content: center; }
+.mq-cm-ref {
+  font-size: clamp(13px, 6.4cqh, 29px); font-weight: 800; line-height: 1.15;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.mq-cm-mat {
+  font-size: clamp(11px, 4.4cqh, 20px); color: var(--mq-dim); font-weight: 600;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.mq-cm-trilho { height: clamp(6px, 2.8cqh, 14px); border-radius: 999px; overflow: hidden; background: var(--mq-trilho); }
+.mq-cm-barra {
+  height: 100%; border-radius: 999px; background: var(--mq-est);
+  transition: width var(--duration-very-slow, 600ms) var(--ease-smooth-out, ease-out), background-color var(--duration-slow, 400ms) var(--ease-smooth-out, ease-out);
+}
+.mq-cm-prog-lin { display: flex; align-items: baseline; gap: 8px; margin-top: clamp(2px, 1.2cqh, 6px); min-width: 0; }
+.mq-cm-prog-lin b { font-size: clamp(13px, 6cqh, 27px); font-weight: 800; color: var(--mq-est); font-variant-numeric: tabular-nums; flex: none; }
+.mq-cm-prog-lin span {
+  margin-left: auto; font-size: clamp(11px, 4.2cqh, 19px); font-weight: 600; color: var(--mq-dim);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; font-variant-numeric: tabular-nums;
+}
+
+.mq-cm-metricas {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(4px, 2cqi, 10px);
+}
+.mq-cm-metricas > div {
+  min-width: 0; display: flex; flex-direction: column;
+  padding: clamp(4px, 2cqh, 10px) clamp(6px, 2.6cqi, 12px); border-radius: 12px;
+  background: var(--mq-fundo);
+}
+.mq-cm-metricas span { font-size: clamp(10px, 3.8cqh, 17px); font-weight: 700; color: var(--mq-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mq-cm-metricas b { font-size: clamp(14px, 7cqh, 32px); font-weight: 800; line-height: 1.1; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.mq-cm-metricas i { font-style: normal; font-size: clamp(9px, 3.4cqh, 15px); color: var(--mq-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.mq-cm-prob {
+  display: flex; align-items: center; gap: 7px; min-width: 0;
+  font-size: clamp(11px, 4.4cqh, 20px); font-weight: 700;
+  color: var(--mq-st-parada);
+}
+.mq-cm[data-estado="atencao"] .mq-cm-prob,
+.mq-cm[data-estado="aguardando"] .mq-cm-prob { color: var(--mq-st-atencao); }
+.mq-cm[data-estado="manutencao"] .mq-cm-prob { color: var(--mq-st-manutencao); }
+.mq-cm-prob[data-ok] { color: var(--mq-dim); font-weight: 600; }
+.mq-cm-prob svg { flex: none; width: clamp(13px, 4.8cqh, 22px); height: clamp(13px, 4.8cqh, 22px); }
+.mq-cm-prob span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.mq-cm-prob b { flex: none; margin-left: auto; padding: 1px 7px; border-radius: 999px; background: color-mix(in srgb, currentColor 13%, var(--mq-cartao)); }
+
+/* Cartão baixo demais (muitas máquinas numa TV pequena): some o que é
+   detalhe, fica estado + trabalho + barra. */
+@container (max-height: 230px) {
+  .mq-cm-metricas i { display: none; }
+}
+@container (max-height: 180px) {
+  .mq-cm-metricas, .mq-cm-mat { display: none; }
+}
+
+/* ── Tela do setor ───────────────────────────────────────────────────────── */
+.mq-setor { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 22px; justify-content: center; }
+.mq-selo {
+  margin-left: auto; display: inline-flex; align-items: center; gap: 8px; padding: 7px 14px; border-radius: 999px;
+  background: color-mix(in srgb, var(--mq-est) 13%, var(--mq-cartao)); color: var(--mq-est);
+  font-size: 14px; font-weight: 700;
+}
+.mq-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.mq-kpi {
+  display: flex; align-items: center; gap: 12px; min-width: 0;
+  padding: 12px 16px; border-radius: 20px; background: var(--mq-cartao); box-shadow: var(--mq-sombra);
+}
+.mq-kpi-placa { width: 58px; height: 58px; border-radius: 17px; flex: none; display: grid; place-items: center; background: var(--mq-selo); }
+.mq-kpi-rot { font-size: 15px; color: var(--mq-dim); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mq-kpi-num { font-size: 46px; font-weight: 800; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.mq-kpi-nota { font-size: 12px; color: var(--mq-dim); }
+
+.mq-materiais { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); gap: 10px; }
+.mq-material {
+  display: flex; align-items: center; gap: 10px; min-width: 0;
+  padding: 11px 14px; border-radius: 18px; background: var(--mq-cartao); box-shadow: var(--mq-sombra);
+}
+.mq-material-placa { width: 44px; height: 44px; border-radius: 13px; flex: none; display: grid; place-items: center; }
+.mq-material-rot { font-size: 13px; color: var(--mq-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mq-material-num { font-size: 28px; font-weight: 800; line-height: 1.15; }
+.mq-material-num span { font-size: 12.5px; font-weight: 600; color: var(--mq-dim); }
+
+.mq-oee {
+  display: grid; grid-template-columns: minmax(min(100%, 210px), 260px) 1fr; gap: 18px;
+  align-items: center; padding: 16px 20px; border-radius: 22px;
+  background: var(--mq-cartao); box-shadow: var(--mq-sombra);
+}
+.mq-oee-num { display: flex; align-items: baseline; gap: 8px; line-height: 1; }
+.mq-oee-num b { font-size: 58px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+.mq-oee-num span { font-size: 22px; font-weight: 800; }
+.mq-oee-rot { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 800; color: var(--mq-dim); }
+.mq-oee-faixa { font-size: 13px; font-weight: 800; margin-top: 4px; }
+.mq-oee-conta { font-size: 12px; color: var(--mq-dim); margin-top: 2px; font-variant-numeric: tabular-nums; }
+.mq-pilares { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); gap: 14px; }
+.mq-pilar-rot { display: flex; align-items: baseline; gap: 8px; font-size: 13px; color: var(--mq-dim); font-weight: 600; }
+.mq-pilar-rot b { margin-left: auto; font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.mq-pilar-trilho { height: 9px; border-radius: 999px; margin-top: 6px; overflow: hidden; background: var(--mq-trilho); }
+.mq-pilar-barra { height: 100%; border-radius: 999px; transition: width var(--duration-slow, 400ms) var(--ease-smooth-out, ease-out); }
+.mq-pilar-meta { font-size: 11.5px; color: var(--mq-dim); margin-top: 4px; font-variant-numeric: tabular-nums; }
+
+/* ── Tela das filas ──────────────────────────────────────────────────────── */
+.mq-fila {
+  min-width: 0; min-height: 0; overflow: hidden;
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 12px 14px; border-radius: 20px;
+  background: var(--mq-cartao); box-shadow: var(--mq-sombra);
+  border-left: 7px solid var(--mq-est);
+}
+.mq-fila header { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.mq-fila .mq-cm-nome { font-size: 22px; }
+.mq-fila-est {
+  margin-left: auto; flex: none; display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 9px; border-radius: 999px; font-size: 12.5px; font-weight: 800; text-transform: uppercase;
+  color: var(--mq-est); background: color-mix(in srgb, var(--mq-est) 13%, var(--mq-cartao));
+}
+.mq-prox {
+  display: flex; align-items: center; gap: 9px; min-width: 0;
+  padding: 7px 9px; border-radius: 12px; background: var(--mq-fundo);
+}
+.mq-prox-num {
+  width: 26px; height: 24px; flex: none; display: grid; place-items: center;
+  border-radius: 8px; font-size: 12px; font-weight: 800;
+  background: var(--mq-selo); color: var(--mq-roxo); font-variant-numeric: tabular-nums;
+}
+.mq-prox-ref { font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mq-prox-mat { font-size: 12.5px; color: var(--mq-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mq-prox-dur { flex: none; font-size: 13px; font-weight: 700; color: var(--mq-dim); font-variant-numeric: tabular-nums; }
+.mq-vazio { font-size: 13px; color: var(--mq-dim); padding: 4px 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .mq-entra, .mq-cm[data-estado="producao"] .mq-cm-est-ic { animation: none; }
+  .mq-cm, .mq-cm-estado, .mq-cm-barra, .mq-pilar-barra, .mq-faixa-item, .mq-pontos span { transition: none; }
+}

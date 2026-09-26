@@ -1,0 +1,773 @@
+/* ── Formulário público de candidatura (RH → Currículos) ──────────────────────
+   Copiado do desenho do quiz de candidatura do TridiFlow: fundo lavanda, um
+   cartão branco por etapa, título com o miolo em roxo, ilustração com frase
+   manuscrita ao pé e a fileira Voltar/Continuar presa embaixo.
+   Só `dvh`, nunca `vh`. Prefixo `cd-`. Tema único (claro) de propósito: é a
+   página do candidato, não do sistema. */
+
+/* A página do candidato é CLARA, sempre — mas mora no mesmo `<html>` do ERP,
+   que nasce em tema escuro (color-scheme: dark, fundo escuro, e `input {
+   background: var(--surface-2); color: var(--text); padding: 11px 14px }`
+   do globals.css). Sem este bloco o texto do campo sai BRANCO em cima do
+   cartão branco, a área de rolagem além do cartão fica preta, o campo ganha
+   44px de altura por dentro do invólucro e o anel de foco interno do sistema
+   aparece dentro do campo. `:has` no root porque o layout raiz não sabe que
+   esta página existe. */
+:root:has(.cd-scope) { color-scheme: light; background: #f4f1fb; }
+:root:has(.cd-scope) body { background: #f4f1fb; }
+
+/* Os campos do formulário, limpos da folha global. `!important` de propósito
+   e só aqui: as regras do globals.css que precisam ser vencidas têm
+   especificidade (0,4,1) (`input:not(…):not(…):not(…):not(…)`) e um
+   `!important` próprio no font-size do celular. */
+.cd-scope input:not([type="file"]),
+.cd-scope textarea {
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0;
+  min-height: 0 !important;
+  width: 100%;
+  min-width: 0;
+  font: inherit;
+  font-size: 16px !important;   /* iOS dá zoom com menos de 16px */
+  line-height: 1.4;
+  color: var(--cd-texto) !important;
+  caret-color: var(--cd-roxo);
+  transition: none;
+}
+.cd-scope input:not([type="file"]):focus, .cd-scope textarea:focus { outline: none; box-shadow: none !important; border: 0 !important; }
+.cd-scope input::placeholder, .cd-scope textarea::placeholder { color: #a39dbb; opacity: 1; }
+/* O preenchimento automático do Chrome pinta o campo de azul/amarelo e o
+   texto de preto. Deixa o cartão branco e o texto na tinta da página. */
+.cd-scope input:-webkit-autofill,
+.cd-scope input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px #fff inset !important;
+  -webkit-text-fill-color: var(--cd-texto);
+  caret-color: var(--cd-roxo);
+}
+/* `label` global tem margem embaixo e cor esmaecida: aqui o rótulo é parte
+   do desenho do campo, e o `.cd-longo`/`.cd-drop` são labels que ENVOLVEM. */
+.cd-scope label { margin: 0; display: block; font-size: inherit; color: inherit; font-weight: inherit; }
+/* …mas o `display` acima venceria o `grid` da zona de upload (0,1,1 > 0,1,0). */
+.cd-scope label.cd-drop { display: grid; }
+/* Título e parágrafo: o `p { max-width: 68ch }` e o `.page-head h1` do
+   sistema não valem aqui — a coluna já tem 460px. */
+.cd-scope p { max-width: none; }
+
+.cd-scope {
+  --cd-roxo: #6D1192;
+  --cd-roxo-2: #8b3ac6;
+  --cd-roxo-claro: #efe6f7;
+  --cd-roxo-tinta: #2a1a4a;
+  --cd-lavanda: #f4f1fb;
+  --cd-texto: #241a3a;
+  --cd-dim: #6b6580;
+  --cd-borda: #e4dcf2;
+  --cd-branco: #fff;
+  --cd-tap: 44px;
+  --cd-safe-b: env(safe-area-inset-bottom, 0px);
+  color: var(--cd-texto);
+  background: var(--cd-lavanda);
+  min-height: 100dvh;
+  display: flex;
+  justify-content: center;
+  font-family: var(--font-manrope), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.cd-tela {
+  width: 100%;
+  max-width: 460px;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  padding: max(14px, env(safe-area-inset-top, 0px)) 16px calc(12px + var(--cd-safe-b));
+  background: var(--cd-lavanda);
+}
+
+/* Wordmark "Tridi" */
+.cd-marca {
+  font-weight: 800;
+  font-size: 30px;
+  letter-spacing: -.04em;
+  color: var(--cd-roxo);
+  line-height: 1;
+  padding: 6px 2px 14px;
+}
+.cd-marca span { color: var(--cd-roxo-2); }
+
+/* O cartão da etapa */
+.cd-cartao {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--cd-branco);
+  border-radius: 22px;
+  padding: 16px 16px 0;
+  box-shadow: 0 10px 30px rgba(66, 22, 110, .07);
+  min-width: 0;
+  animation: cdEntra var(--duration-medium, 350ms) var(--ease-out, ease-out) both;
+}
+@keyframes cdEntra {
+  from { opacity: 0; transform: translateY(var(--distance-sm, 8px)); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) { .cd-cartao { animation: none; } }
+
+.cd-topo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--cd-dim);
+  font-size: 14px;
+  font-weight: 600;
+}
+.cd-topo strong { color: var(--cd-dim); font-weight: 600; flex: 1; min-width: 0; }
+.cd-topo em { font-style: normal; font-variant-numeric: tabular-nums; }
+
+/* Barra segmentada: um trilho por etapa contada */
+.cd-barra {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 4px;
+  height: 8px;
+  margin: 12px 0 18px;
+}
+.cd-barra i {
+  display: block;
+  border-radius: 99px;
+  background: var(--cd-roxo-claro);
+  transition: background var(--duration-quick, 150ms) ease-out;
+}
+.cd-barra i[data-on="1"] { background: var(--cd-roxo); }
+
+.cd-titulo {
+  font-size: clamp(24px, 7.2vw, 30px);
+  font-weight: 800;
+  letter-spacing: -.035em;
+  line-height: 1.12;
+  color: var(--cd-roxo-tinta);
+  margin: 0 0 10px;
+}
+.cd-titulo b { color: var(--cd-roxo-2); font-weight: 800; }
+.cd-sub { font-size: 14.5px; line-height: 1.45; color: var(--cd-dim); margin: 0 0 16px; }
+
+/* Duas pastilhas da abertura */
+.cd-duo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  background: var(--cd-lavanda);
+  border-radius: 14px;
+  padding: 8px;
+  margin-bottom: 12px;
+}
+.cd-duo > div { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.cd-duo strong { display: block; font-size: 14px; }
+.cd-duo small { display: block; font-size: 11.5px; color: var(--cd-dim); }
+
+.cd-ico {
+  width: 40px; height: 40px; flex: none; border-radius: 12px;
+  display: grid; place-items: center;
+  background: var(--cd-roxo-claro); color: var(--cd-roxo);
+}
+
+/* Lista de promessas (abertura) e de opções (escolha) */
+.cd-lista { display: grid; gap: 8px; margin: 0 0 12px; padding: 0; list-style: none; }
+.cd-lista li {
+  display: flex; align-items: center; gap: 12px;
+  border: 1px solid var(--cd-borda); border-radius: 14px;
+  padding: 10px 12px; min-height: var(--cd-tap);
+}
+.cd-lista li strong { display: block; font-size: 14px; }
+.cd-lista li small { display: block; font-size: 12.5px; color: var(--cd-dim); }
+
+.cd-opcao {
+  display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
+  border: 1px solid var(--cd-borda); border-radius: 14px; background: var(--cd-branco);
+  padding: 8px 12px; min-height: var(--cd-tap); font: inherit; font-size: 15px; color: var(--cd-texto);
+  cursor: pointer;
+  transition: background var(--duration-quick, 150ms) ease-out, border-color var(--duration-quick, 150ms) ease-out, transform var(--duration-quick, 150ms) ease-out;
+}
+.cd-opcao:active { transform: scale(.985); }
+.cd-opcao .cd-ico { width: 34px; height: 34px; border-radius: 10px; }
+.cd-opcao[aria-checked="true"] {
+  background: var(--cd-roxo-claro); border-color: var(--cd-roxo-2); color: var(--cd-roxo-tinta); font-weight: 700;
+}
+.cd-opcao[aria-checked="true"] .cd-ico { background: var(--cd-roxo); color: #fff; }
+
+/* Campos */
+.cd-campo {
+  display: flex; align-items: center; gap: 10px;
+  border: 1px solid var(--cd-borda); border-radius: 14px; background: var(--cd-branco);
+  padding: 8px 14px; min-height: 56px;
+}
+.cd-campo:focus-within { border-color: var(--cd-roxo-2); box-shadow: 0 0 0 3px rgba(139, 58, 198, .14); }
+.cd-campo > div { flex: 1; min-width: 0; display: grid; }
+.cd-campo label { font-size: 12.5px; color: var(--cd-dim); font-weight: 600; }
+.cd-campo > div > input { height: 24px; }
+.cd-longo { display: block; border: 1px solid var(--cd-borda); border-radius: 14px; padding: 12px 14px; position: relative; }
+.cd-longo:focus-within { border-color: var(--cd-roxo-2); box-shadow: 0 0 0 3px rgba(139, 58, 198, .14); }
+.cd-longo textarea {
+  min-height: 150px !important; resize: none; display: block; line-height: 1.5;
+  /* Cresce com o texto até um teto, em vez de rolar dentro de 150px — rolar
+     dentro do campo no celular disputa com a rolagem da página. */
+  field-sizing: content; max-height: 40dvh;
+}
+.cd-longo small { display: block; text-align: right; font-size: 12px; color: var(--cd-dim); font-variant-numeric: tabular-nums; }
+.cd-campos { display: grid; gap: 10px; }
+
+/* Cursor que desliza (InputSuave.tsx). O nativo some; a barrinha anda com
+   transição de transform — 160ms com leve passada do ponto, que é o que faz
+   parecer que o cursor "corre" atrás da letra em vez de teleportar. */
+.cd-suave { position: relative; display: grid; min-width: 0; }
+/* Especificidade acima de `.cd-scope input:not([type="file"])`, que repinta o
+   cursor nativo de roxo — sem isso apareciam DOIS traços. */
+.cd-scope .cd-suave > input:not([type="file"]) { caret-color: transparent; grid-area: 1 / 1; }
+.cd-suave-medida { position: absolute; top: 0; left: 0; visibility: hidden; white-space: pre; pointer-events: none; }
+.cd-suave-cursor {
+  grid-area: 1 / 1; align-self: center; justify-self: start; pointer-events: none;
+  width: 2px; height: 1.15em; border-radius: 1px; background: var(--cd-roxo);
+  opacity: 0; will-change: transform;
+  transition: transform 160ms cubic-bezier(.22, 1, .36, 1), opacity var(--duration-quick, 150ms) ease-out;
+}
+.cd-suave-cursor[data-pisca="1"] { animation: cdPisca 1.06s steps(2, start) infinite; }
+@keyframes cdPisca { to { visibility: hidden; } }
+@media (prefers-reduced-motion: reduce) {
+  .cd-suave-cursor { transition: none; animation: none !important; }
+}
+
+/* Chips "como conheceu" */
+.cd-rotulo { font-size: 14.5px; font-weight: 700; margin: 14px 0 8px; color: var(--cd-roxo-tinta); }
+.cd-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.cd-chip {
+  display: inline-flex; align-items: center; gap: 8px; min-height: var(--cd-tap);
+  padding: 0 14px; border-radius: 99px; border: 1px solid var(--cd-borda); background: var(--cd-branco);
+  font: inherit; font-size: 14px; color: var(--cd-texto); cursor: pointer;
+}
+.cd-chip svg { color: var(--cd-roxo); }
+.cd-chip[aria-pressed="true"] { background: var(--cd-roxo-claro); border-color: var(--cd-roxo-2); font-weight: 700; }
+
+/* Sim/não */
+.cd-simnao { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+/* Currículo */
+.cd-drop {
+  display: grid; justify-items: center; gap: 8px; text-align: center; cursor: pointer;
+  border: 2px dashed #cdbfe6; border-radius: 18px; padding: 24px 16px; background: var(--cd-branco);
+  min-height: 160px; align-content: center;
+}
+.cd-drop:focus-within, .cd-drop[data-sobre="1"] { border-color: var(--cd-roxo-2); background: var(--cd-lavanda); }
+.cd-drop .cd-ico { width: 64px; height: 64px; border-radius: 50%; }
+.cd-drop strong { color: var(--cd-roxo); font-size: 16px; }
+.cd-drop small { color: var(--cd-dim); font-size: 13.5px; }
+.cd-drop input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.cd-arquivo {
+  display: flex; align-items: center; gap: 12px; border: 1px solid var(--cd-borda); border-radius: 14px; padding: 10px 12px;
+}
+.cd-arquivo strong { display: block; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cd-arquivo small { color: var(--cd-dim); font-size: 12.5px; }
+.cd-arquivo button { margin-left: auto; }
+
+/* A ilustração: personagem 3D + frase manuscrita + traços em SVG
+   (Personagem.tsx). Só aparece na primeira tela das etapas escolhidas. */
+.cd-ilustra {
+  /* Presa no pé do cartão, colada no rodapé; a imagem é mais alta que a
+     caixa e a base CORTA o moletom — igual às referências. */
+  position: relative; margin: auto -16px 0; height: var(--cd-alt, 210px); flex: none;
+  display: flex; align-items: flex-start; justify-content: center; overflow: hidden; pointer-events: none;
+  padding: 0 12px;
+}
+.cd-ilustra[data-pos="esq"] { justify-content: flex-start; }
+.cd-ilustra[data-pos="dir"] { justify-content: flex-end; }
+.cd-figura { position: relative; display: block; line-height: 0; }
+.cd-figura img { width: auto; max-width: min(66vw, 300px); display: block; object-fit: contain; object-position: top; }
+.cd-tracos { position: absolute; top: 4%; left: -24px; color: var(--cd-roxo-2); }
+.cd-ilustra[data-pos="esq"] .cd-tracos { left: auto; right: -18px; }
+.cd-figura[data-animado="1"] { animation: cdBalanca 1.6s var(--ease-in-out, ease-in-out) infinite; }
+@keyframes cdBalanca { 0%, 100% { transform: none; } 50% { transform: translateY(-6px); } }
+.cd-nota {
+  position: absolute; top: 18px; font-family: var(--font-nota), "Segoe Script", "Bradley Hand", cursive;
+  font-size: 21px; line-height: 1.05; color: var(--cd-roxo); transform: rotate(-8deg); max-width: 38%; z-index: 1;
+  display: grid; justify-items: center; gap: 4px; text-align: center;
+}
+.cd-nota[data-lado="dir"] { right: 14px; }
+.cd-nota[data-lado="esq"] { left: 14px; }
+.cd-nota-traco { color: var(--cd-roxo-2); }
+.cd-ilustra[data-sem-imagem="1"] { height: 70px; }
+/* Sem personagem, a tela ainda empurra o rodapé pra baixo. */
+.cd-respiro { margin-top: auto; min-height: 16px; }
+@media (prefers-reduced-motion: reduce) { .cd-figura[data-animado="1"] { animation: none; } }
+
+/* Grade compacta de opções (várias perguntas na mesma tela) */
+.cd-grade { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 138px), 1fr)); }
+.cd-grade .cd-opcao { font-size: 14px; padding: 8px 10px; gap: 10px; }
+.cd-grade .cd-opcao .cd-ico { width: 30px; height: 30px; }
+.cd-bloco { display: grid; min-width: 0; }
+.cd-bloco > .cd-rotulo:first-child { margin-top: 4px; }
+.cd-campos > .cd-bloco + .cd-bloco { margin-top: 4px; }
+.cd-opcional { font-style: normal; font-weight: 500; font-size: 12px; color: var(--cd-dim); margin-left: 8px; }
+.cd-vaga {
+  display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; margin: 0 0 12px;
+  background: var(--cd-roxo-claro); color: var(--cd-roxo-tinta); border-radius: 99px; padding: 6px 12px; font-size: 13px;
+}
+.cd-vaga b { color: var(--cd-roxo); }
+.cd-marca img { height: 30px; width: auto; display: block; }
+.cd-topo em b { color: var(--cd-roxo); font-weight: 800; }
+
+/* Data: o seletor nativo, na tinta do formulário */
+.cd-scope input[type="date"] { height: 24px; color-scheme: light; }
+
+/* Enviando: o personagem balançando por cima, sem sair da tela */
+.cd-enviando {
+  position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 16px;
+  background: rgba(244, 241, 251, .82); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+  animation: cdSurge var(--duration-quick, 150ms) var(--ease-out, ease-out) both;
+}
+.cd-enviando-caixa {
+  display: grid; justify-items: center; gap: 4px; text-align: center; background: #fff; border-radius: 22px;
+  padding: 18px 28px 22px; box-shadow: 0 18px 50px rgba(66, 22, 110, .16); color: var(--cd-roxo-tinta);
+}
+.cd-enviando-caixa .cd-ilustra { margin: 0 0 6px; padding: 0; }
+.cd-enviando-caixa .cd-tracos { display: none; }
+.cd-enviando-caixa strong { font-size: 17px; }
+.cd-enviando-caixa small { color: var(--cd-dim); font-size: 13.5px; }
+@keyframes cdSurge { from { opacity: 0; } to { opacity: 1; } }
+
+/* Final: confete em SVG, check que pula, lista que entra em fila */
+.cd-fim-topo { position: relative; display: grid; justify-items: center; }
+.cd-confete { position: absolute; top: 4px; max-width: 100%; }
+.cd-check-pula { animation: cdPula 520ms var(--ease-spring, cubic-bezier(.34, 1.56, .64, 1)) both; }
+@keyframes cdPula { from { opacity: 0; transform: scale(.6); } to { opacity: 1; transform: none; } }
+.cd-conferido li { animation: cdEntra var(--duration-medium, 350ms) var(--ease-out, ease-out) both; }
+@media (prefers-reduced-motion: reduce) {
+  .cd-check-pula, .cd-conferido li, .cd-enviando { animation: none; }
+}
+
+/* Rodapé fixo: Voltar / Continuar */
+.cd-rodape {
+  position: sticky; bottom: calc(-1 * var(--cd-safe-b)); display: grid; gap: 10px; grid-template-columns: auto 1fr;
+  padding: 12px 0 0; background: linear-gradient(to bottom, rgba(244, 241, 251, 0), var(--cd-lavanda) 40%);
+}
+.cd-rodape[data-so-um="1"] { grid-template-columns: 1fr; }
+.cd-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; white-space: nowrap;
+  min-height: 56px; padding: 0 16px; border-radius: 16px; border: 0; font: inherit; font-size: 16px; font-weight: 700;
+  cursor: pointer; transition: transform var(--duration-quick, 150ms) ease-out, opacity var(--duration-quick, 150ms) ease-out;
+}
+.cd-btn:active { transform: scale(.97); }
+.cd-btn[disabled] { opacity: .55; cursor: not-allowed; transform: none; }
+.cd-btn-primario { background: var(--cd-roxo); color: #fff; text-decoration: none; }
+a.cd-btn { color: #fff; }
+.cd-btn-voltar { background: var(--cd-roxo-claro); color: var(--cd-roxo-tinta); }
+.cd-btn svg { flex: none; }
+/* Em 320px "Enviar candidatura" + "Voltar" não cabem numa linha: vira "Enviar". */
+@media (max-width: 359px) { .cd-so-largo { display: none; } }
+
+.cd-erro { margin: 10px 0 0; font-size: 13px; color: #b3261e; font-weight: 600; display: flex; gap: 6px; align-items: flex-start; }
+.cd-erro svg { flex: none; margin-top: 1px; }
+.cd-fechado { text-align: center; padding: 40px 12px; color: var(--cd-dim); }
+
+/* Final: check grande e lista de conferência */
+.cd-check {
+  width: 92px; height: 92px; border-radius: 50%; margin: 10px auto 14px; display: grid; place-items: center;
+  background: var(--cd-roxo-claro); color: var(--cd-roxo);
+}
+.cd-fim-titulo { text-align: center; }
+.cd-fim-sub { text-align: center; }
+.cd-proximo {
+  display: flex; gap: 12px; align-items: flex-start; border: 1px solid var(--cd-borda); border-radius: 14px; padding: 12px;
+  background: var(--cd-lavanda); margin-bottom: 12px;
+}
+.cd-proximo strong { display: block; font-size: 15px; }
+.cd-proximo small { font-size: 13.5px; color: var(--cd-dim); line-height: 1.4; }
+.cd-previa {
+  align-self: flex-start; margin: -6px 0 10px;
+  background: var(--cd-roxo-tinta); color: #fff; font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 99px;
+}
+
+/* Abertura compacta: nas referências tudo cabe na primeira dobra, com a
+   menina espiando atrás do "Começar". */
+.cd-abertura .cd-titulo { margin-bottom: 6px; }
+.cd-abertura .cd-sub { margin-bottom: 10px; font-size: 14px; }
+.cd-abertura .cd-duo { margin-bottom: 8px; padding: 6px; }
+.cd-abertura .cd-duo .cd-ico { width: 34px; height: 34px; }
+.cd-abertura .cd-lista { gap: 6px; margin-bottom: 0; }
+.cd-abertura .cd-lista li { padding: 6px 10px; min-height: 0; }
+.cd-abertura .cd-lista li .cd-ico { width: 34px; height: 34px; border-radius: 10px; }
+.cd-abertura .cd-lista li small { font-size: 12px; }
+
+/* Lista longa (6–8 opções), como "Seu momento" e "Interesses": opções mais
+   baixas pra caber com o personagem na mesma dobra. Alvo segue em 44px. */
+.cd-cartao[data-muitas="1"] .cd-lista { gap: 5px; }
+.cd-cartao[data-muitas="1"] .cd-opcao { padding: 4px 12px; font-size: 14.5px; }
+.cd-cartao[data-muitas="1"] .cd-opcao .cd-ico { width: 30px; height: 30px; }
+.cd-cartao[data-muitas="1"] .cd-titulo { font-size: clamp(22px, 6.6vw, 28px); }
+
+
+/* ═══ Quadro de altura fixa — NUNCA rola a página (pedido do dono, 18/09) ═══
+   A tela é exatamente a altura do aparelho (100dvh). Dentro do cartão:
+     cabeçalho + barra ... fixos
+     .cd-miolo ........... a pergunta; encolhe, e só como ÚLTIMO recurso
+                           (celular muito baixo, teclado aberto) rola por dentro
+     .cd-ilustra ......... o personagem ocupa o que SOBRA, até 260px, e some
+                           sozinho abaixo de 84px (container query)
+     .cd-rodape .......... fixo, colado no personagem
+   Tipografia e respiros escalam pela ALTURA (dvh), não só pela largura. */
+:root:has(.cd-scope), :root:has(.cd-scope) body { overflow: hidden; height: 100dvh; overscroll-behavior: none; }
+.cd-scope { height: 100dvh; min-height: 0; overflow: hidden; }
+.cd-tela {
+  height: 100dvh; min-height: 0; overflow: hidden;
+  padding: max(10px, env(safe-area-inset-top, 0px)) 14px calc(10px + var(--cd-safe-b));
+}
+.cd-marca { font-size: clamp(22px, 3.6dvh, 30px); padding: 2px 2px clamp(6px, 1.4dvh, 14px); flex: none; }
+.cd-marca img { height: clamp(22px, 3.6dvh, 30px); }
+.cd-previa { flex: none; margin: -4px 0 8px; }
+.cd-cartao { flex: 1 1 auto; min-height: 0; overflow: hidden; padding: clamp(12px, 2dvh, 16px) 16px 0; }
+.cd-topo, .cd-barra { flex: none; }
+.cd-barra { margin: clamp(8px, 1.4dvh, 12px) 0 clamp(10px, 2dvh, 18px); }
+.cd-miolo {
+  flex: 0 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
+  scrollbar-width: none; display: flex; flex-direction: column;
+}
+.cd-miolo::-webkit-scrollbar { display: none; }
+.cd-titulo { font-size: clamp(19px, min(7.2vw, 3.5dvh), 30px); margin-bottom: clamp(6px, 1dvh, 10px); }
+.cd-sub { font-size: clamp(13px, 1.9dvh, 14.5px); margin-bottom: clamp(8px, 1.8dvh, 16px); }
+.cd-lista { gap: clamp(5px, .9dvh, 8px); }
+.cd-opcao { padding-block: clamp(4px, .8dvh, 8px); }
+.cd-longo textarea { min-height: clamp(84px, 17dvh, 150px) !important; max-height: 28dvh; }
+
+.cd-ilustra, .cd-ilustra:not([data-fixa]) {
+  /* Espaço reservado: o personagem é parte da tela, como nas referências —
+     o conteúdo é que se compacta pra caber, não ele que some. */
+  flex: 1 1 0; min-height: clamp(104px, 17dvh, 150px); height: auto; max-height: 280px; margin: auto -16px 0;
+  container-type: size;
+}
+.cd-ilustra[data-fixa="1"] { flex: none; height: var(--cd-alt); container-type: normal; }
+.cd-figura { height: 100%; }
+.cd-figura img { height: calc(100% / var(--cd-corte, .8)); max-height: none; max-width: none; }
+.cd-nota { top: 12%; font-size: clamp(16px, 2.6dvh, 21px); }
+@container (max-height: 60px) { .cd-figura, .cd-nota { display: none; } }
+.cd-respiro { flex: 1 1 0; min-height: 0; }
+
+.cd-rodape {
+  position: static; flex: none; background: none;
+  padding: clamp(8px, 1.4dvh, 12px) 0 clamp(10px, 1.6dvh, 16px);
+}
+.cd-btn { min-height: clamp(48px, 6.6dvh, 56px); }
+
+/* Final: sem a lista de conferência — é a tela da referência. */
+.cd-check { width: clamp(64px, 10dvh, 92px); height: clamp(64px, 10dvh, 92px); margin: 4px auto clamp(8px, 1.4dvh, 14px); }
+.cd-proximo { margin-bottom: 0; }
+
+/* Telas baixas (até ~760px de altura): compacta o CONTEÚDO, nunca a tela. */
+@media (max-height: 760px) {
+  /* 6–8 opções em duas colunas: metade da altura, alvo de 44px mantido. */
+  .cd-cartao[data-muitas="1"] .cd-lista { grid-template-columns: 1fr 1fr; gap: 6px; }
+  .cd-cartao[data-muitas="1"] .cd-opcao { font-size: 13px; gap: 8px; padding: 4px 8px; line-height: 1.2; }
+  .cd-cartao[data-muitas="1"] .cd-opcao .cd-ico { width: 26px; height: 26px; border-radius: 8px; }
+  .cd-opcao { font-size: 14px; line-height: 1.25; }
+  .cd-opcao .cd-ico { width: 30px; height: 30px; }
+  .cd-abertura .cd-lista li small { display: none; }
+  .cd-abertura .cd-sub { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .cd-campo { min-height: 50px; padding-block: 5px; }
+  .cd-grade { grid-template-columns: repeat(auto-fill, minmax(min(100%, 100px), 1fr)); gap: 6px; }
+  .cd-grade .cd-opcao { padding: 4px 8px; gap: 6px; font-size: 13px; }
+  .cd-grade .cd-opcao .cd-ico { width: 24px; height: 24px; border-radius: 7px; }
+  .cd-campos { gap: 8px; }
+  .cd-rotulo { margin: 8px 0 6px; }
+  .cd-drop { min-height: 120px; padding: 14px; }
+}
+@media (max-height: 620px) {
+  .cd-sub { display: none; }
+  .cd-abertura .cd-duo { display: none; }
+}
+
+/* O selo da prévia não ocupa altura: fica ao lado da marca. */
+.cd-tela { position: relative; }
+.cd-tela > .cd-previa { position: absolute; top: max(12px, env(safe-area-inset-top, 0px)); right: 14px; margin: 0; font-size: 11px; padding: 5px 10px; }
+
+/* Aparelho muito baixo (iPhone SE 1ª geração, 568px): o último degrau. */
+@media (max-height: 620px) {
+  .cd-marca { font-size: 20px; padding-bottom: 4px; }
+  .cd-topo { font-size: 12.5px; }
+  .cd-barra { height: 6px; margin: 6px 0 8px; }
+  .cd-titulo { font-size: 18px; line-height: 1.12; }
+  .cd-cartao { padding-top: 10px; }
+  .cd-lista { gap: 4px; }
+  .cd-opcao { font-size: 12.5px; padding: 2px 10px; gap: 8px; }
+  .cd-opcao .cd-ico { width: 24px; height: 24px; border-radius: 7px; }
+  .cd-campo { min-height: 44px; padding: 2px 12px; }
+  .cd-campo label { font-size: 11px; }
+  .cd-ilustra, .cd-ilustra:not([data-fixa]) { min-height: 84px; }
+  .cd-btn { min-height: 46px; font-size: 15px; }
+  .cd-rodape { padding: 6px 0 8px; }
+  .cd-check { width: 56px; height: 56px; }
+  .cd-proximo small { font-size: 12.5px; }
+  .cd-rotulo { margin: 6px 0 4px; font-size: 13px; }
+}
+
+
+/* ═══ Pé do cartão v3 (18/09): figura e frase LADO A LADO, nunca por cima ═══
+   Antes a frase era `position: absolute` sobre a caixa e a figura era mais
+   alta que a caixa (recortada embaixo): em tela estreita a frase caía em
+   cima do personagem, e o recorte parecia imagem quebrada. Agora é uma
+   fileira: a figura INTEIRA (contain, presa embaixo) de um lado, a frase na
+   sobra do outro. */
+.cd-scope .cd-ilustra {
+  display: flex; flex-direction: row; align-items: stretch; justify-content: flex-start;
+  gap: 6px; padding: 0 16px; overflow: visible;
+}
+.cd-scope .cd-ilustra[data-pos="dir"] { flex-direction: row-reverse; }
+.cd-scope .cd-ilustra[data-pos="centro"] { justify-content: center; }
+.cd-scope .cd-ilustra[data-pos="centro"][data-lado="esq"] { flex-direction: row-reverse; }
+.cd-scope .cd-figura {
+  position: relative; flex: 0 1 auto; min-width: 0; max-width: 64%; height: 100%;
+  display: flex; align-items: flex-end;
+}
+.cd-scope .cd-figura img {
+  display: block; height: 100%; width: auto; max-width: 100%; max-height: none;
+  object-fit: contain; object-position: bottom;
+}
+.cd-scope .cd-nota {
+  position: static; flex: 1 1 0; min-width: 0; max-width: none; align-self: center;
+  margin-bottom: 8%; transform: rotate(-6deg); text-align: center; justify-items: center;
+}
+.cd-scope .cd-ilustra[data-pos="centro"] .cd-nota { flex: 0 1 34%; }
+.cd-scope .cd-tracos { top: 2%; left: auto; right: auto; }
+.cd-scope .cd-ilustra[data-lado="dir"] .cd-tracos { right: -8px; }
+.cd-scope .cd-ilustra[data-lado="esq"] .cd-tracos { left: -8px; }
+@container (max-height: 60px) { .cd-scope .cd-figura, .cd-scope .cd-nota { display: none; } }
+
+/* Sem "slide" entre as telas: a troca é instantânea (pedido do dono). */
+.cd-scope .cd-cartao { animation: none; }
+
+
+/* ═══ Só o cartão (18/09): no celular a pessoa vê o cartão e mais nada ═══
+   A marca "Tridi" de fora e o selo da prévia saíram — eram a parte
+   "irrelevante" da tela. O cartão encosta nas bordas com um respiro mínimo. */
+.cd-scope .cd-tela > .cd-marca, .cd-scope .cd-tela > .cd-previa { display: none; }
+.cd-scope .cd-tela { padding: max(8px, env(safe-area-inset-top, 0px)) 8px calc(8px + var(--cd-safe-b)); }
+
+/* ═══ Computador: duas colunas ═══════════════════════════════════════════════
+   O mesmo cartão vira uma peça larga: à esquerda um painel lavanda com o
+   personagem grande e a frase manuscrita; à direita cabeçalho, pergunta e
+   botões. Nada muda no HTML — o grid reposiciona os filhos do cartão. Ainda
+   sem rolagem: altura travada em min(740px, tela − 48px). */
+@media (min-width: 1100px) and (min-height: 560px) {
+  .cd-scope .cd-tela {
+    max-width: none; align-items: center; justify-content: center; padding: 24px;
+    background: radial-gradient(1200px 600px at 20% 10%, #ece5f9 0%, var(--cd-lavanda) 60%);
+  }
+  .cd-scope .cd-cartao {
+    flex: none; width: min(1080px, 100%); height: min(740px, calc(100dvh - 48px));
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+    grid-template-rows: auto auto minmax(0, 1fr) auto; column-gap: 48px;
+    padding: 0 48px 0 0; border-radius: 28px; box-shadow: 0 30px 80px rgba(66, 22, 110, .12);
+  }
+  .cd-scope .cd-cartao > .cd-topo { grid-column: 2; grid-row: 1; padding-top: 40px; font-size: 15px; }
+  .cd-scope .cd-cartao > .cd-barra { grid-column: 2; grid-row: 2; margin: 14px 0 28px; }
+  .cd-scope .cd-cartao > .cd-miolo { grid-column: 2; grid-row: 3; align-self: start; max-height: 100%; }
+  .cd-scope .cd-cartao > .cd-rodape { grid-column: 2; grid-row: 4; padding: 16px 0 40px; grid-template-columns: auto 1fr; }
+  .cd-scope .cd-cartao > .cd-rodape[data-so-um="1"] { grid-template-columns: 1fr; }
+
+  /* O painel do personagem ocupa a coluna inteira, de cima a baixo. */
+  .cd-scope .cd-cartao > .cd-ilustra,
+  .cd-scope .cd-cartao > .cd-respiro {
+    grid-column: 1; grid-row: 1 / -1; margin: 0; height: auto; min-height: 0; max-height: none;
+    border-radius: 28px 0 0 28px;
+    background: linear-gradient(180deg, #f6f2fd 0%, #ece3fa 100%);
+  }
+  .cd-scope .cd-cartao > .cd-ilustra,
+  .cd-scope .cd-cartao > .cd-ilustra[data-pos] {
+    flex-direction: column-reverse; align-items: center; justify-content: flex-start;
+    padding: 48px 28px 0; gap: 0;
+  }
+  .cd-scope .cd-cartao > .cd-ilustra .cd-figura { max-width: 100%; height: 76%; flex: none; }
+  .cd-scope .cd-cartao > .cd-ilustra .cd-nota {
+    flex: none; align-self: center; margin: 0 0 auto; font-size: 30px; max-width: 80%;
+  }
+  .cd-scope .cd-cartao > .cd-ilustra .cd-tracos { width: 48px; height: 48px; }
+
+  .cd-scope .cd-titulo { font-size: clamp(28px, 3.9dvh, 38px); }
+  .cd-scope .cd-sub { font-size: 16px; }
+  .cd-scope .cd-opcao { font-size: 15.5px; }
+  .cd-scope .cd-cartao[data-muitas="1"] .cd-lista { grid-template-columns: 1fr 1fr; }
+  .cd-scope .cd-btn { min-height: 56px; font-size: 17px; }
+  .cd-scope .cd-so-largo { display: inline; }
+  /* O "enviando" continua central por cima de tudo. */
+}
+
+
+/* A figura do tamanho EXATO do desenho (proporção --ar = altura/largura):
+   cabe na altura da caixa E em ~62% da largura, o que for menor. Assim a
+   caixa da imagem é o próprio desenho — os traços "/ /" ficam na cabeça do
+   personagem, e não flutuando no vazio acima dele. */
+.cd-scope .cd-figura { height: auto; max-width: none; align-self: flex-end; }
+.cd-scope .cd-figura img { height: min(100cqh, calc(62cqw * var(--ar, 1.2))); width: auto; max-width: none; object-fit: fill; }
+.cd-scope .cd-ilustra[data-fixa="1"] .cd-figura img { height: var(--cd-alt); }
+.cd-scope .cd-miolo { padding-bottom: 2px; }
+@media (min-width: 1100px) and (min-height: 560px) {
+  .cd-scope .cd-cartao > .cd-ilustra .cd-figura { height: auto; }
+  .cd-scope .cd-cartao > .cd-ilustra .cd-figura img { height: min(74cqh, calc(88cqw * var(--ar, 1.2))); }
+}
+
+
+/* ═══ Computador v2 (19/09): escala de tela grande ═══════════════════════════
+   A v1 herdava a escala do celular (títulos 30px, lista de 12–14px, frase
+   manuscrita pequena e longe do personagem) e sobrava um vão entre a pergunta
+   e os botões. Aqui tudo cresce pra distância de leitura de um monitor, e o
+   painel do personagem ganha a marca e um halo atrás da figura. */
+@media (min-width: 1100px) and (min-height: 560px) {
+  .cd-scope .cd-cartao {
+    width: min(1180px, 100%); height: min(800px, calc(100dvh - 48px));
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); column-gap: 64px; padding-right: 64px;
+  }
+
+  /* ── Painel do personagem ── */
+  .cd-scope .cd-cartao > .cd-ilustra { position: relative; padding: 40px 32px 0; isolation: isolate; }
+  .cd-scope .cd-cartao > .cd-ilustra::before {
+    content: "Tridi"; position: absolute; top: 34px; left: 40px; z-index: 1;
+    font-weight: 800; font-size: 34px; letter-spacing: -.04em; color: var(--cd-roxo);
+  }
+  .cd-scope .cd-cartao > .cd-ilustra::after {
+    content: ""; position: absolute; z-index: -1; left: 50%; bottom: 6%; width: 78%; aspect-ratio: 1;
+    transform: translateX(-50%); border-radius: 50%;
+    background: radial-gradient(circle, rgba(139, 58, 198, .20) 0%, rgba(139, 58, 198, .08) 45%, transparent 70%);
+  }
+  .cd-scope .cd-cartao > .cd-ilustra .cd-figura img { height: min(68cqh, calc(90cqw * var(--ar, 1.2))); }
+  .cd-scope .cd-cartao > .cd-ilustra .cd-nota {
+    font-size: clamp(34px, 4.6dvh, 46px); line-height: 1.02; max-width: 88%;
+    margin: auto 0 18px; transform: rotate(-5deg); gap: 8px;
+  }
+  .cd-scope .cd-cartao > .cd-ilustra .cd-nota-traco { width: 120px; height: 20px; }
+  .cd-scope .cd-cartao > .cd-ilustra .cd-tracos { width: 56px; height: 56px; }
+
+  /* ── Coluna da pergunta: o bloco fica no meio, não colado no topo ── */
+  .cd-scope .cd-cartao > .cd-topo { padding-top: 48px; font-size: 16px; }
+  .cd-scope .cd-cartao > .cd-topo svg { width: 20px; height: 20px; }
+  .cd-scope .cd-cartao > .cd-barra { height: 10px; gap: 6px; margin: 16px 0 0; }
+  .cd-scope .cd-cartao > .cd-miolo { align-self: center; padding: 24px 0 8px; }
+  .cd-scope .cd-cartao > .cd-rodape { padding: 12px 0 48px; }
+
+  .cd-scope .cd-titulo { font-size: clamp(34px, 5dvh, 46px); line-height: 1.08; margin-bottom: 14px; }
+  .cd-scope .cd-sub { font-size: 18px; line-height: 1.5; margin-bottom: 24px; display: block; }
+
+  .cd-scope .cd-lista { gap: 10px; }
+  .cd-scope .cd-opcao { font-size: 17px; padding: 12px 16px; gap: 14px; min-height: 58px; border-radius: 16px; }
+  .cd-scope .cd-opcao .cd-ico { width: 40px; height: 40px; border-radius: 12px; }
+  .cd-scope .cd-opcao .cd-ico svg { width: 20px; height: 20px; }
+  .cd-scope .cd-cartao[data-muitas="1"] .cd-opcao { font-size: 16px; padding: 10px 14px; min-height: 54px; }
+  .cd-scope .cd-grade { grid-template-columns: repeat(auto-fill, minmax(min(100%, 150px), 1fr)); gap: 10px; }
+  .cd-scope .cd-grade .cd-opcao { font-size: 16px; padding: 10px 14px; }
+  .cd-scope .cd-campo { min-height: 68px; padding: 10px 18px; border-radius: 16px; }
+  .cd-scope .cd-campo label { font-size: 14px; }
+  .cd-scope .cd-campo input:not([type="file"]) { font-size: 18px !important; }
+  .cd-scope .cd-campos { gap: 14px; }
+  .cd-scope .cd-rotulo { font-size: 17px; margin: 18px 0 10px; }
+  .cd-scope .cd-longo textarea { min-height: 200px !important; max-height: 34dvh; font-size: 17px !important; }
+  .cd-scope .cd-drop { min-height: 220px; }
+  .cd-scope .cd-btn { min-height: 60px; font-size: 18px; border-radius: 18px; }
+
+  /* Abertura: sai a versão compacta do celular. */
+  .cd-scope .cd-abertura .cd-sub { -webkit-line-clamp: unset; display: block; margin-bottom: 24px; }
+  .cd-scope .cd-abertura .cd-duo { display: grid; padding: 12px; gap: 12px; margin-bottom: 14px; border-radius: 18px; }
+  .cd-scope .cd-abertura .cd-duo .cd-ico { width: 44px; height: 44px; }
+  .cd-scope .cd-abertura .cd-duo strong { font-size: 17px; }
+  .cd-scope .cd-abertura .cd-duo small { font-size: 14px; }
+  .cd-scope .cd-abertura .cd-lista { gap: 10px; }
+  .cd-scope .cd-abertura .cd-lista li { padding: 14px 16px; gap: 16px; border-radius: 16px; }
+  .cd-scope .cd-abertura .cd-lista li .cd-ico { width: 44px; height: 44px; border-radius: 12px; }
+  .cd-scope .cd-abertura .cd-lista li strong { font-size: 17px; }
+  .cd-scope .cd-abertura .cd-lista li small { display: block; font-size: 15px; }
+
+  /* Final: centralizado na coluna, com mais presença. */
+  .cd-scope .cd-check { width: 104px; height: 104px; }
+  .cd-scope .cd-proximo { padding: 18px; gap: 16px; }
+  .cd-scope .cd-proximo strong { font-size: 18px; }
+  .cd-scope .cd-proximo small { font-size: 16px; }
+}
+
+/* Computador de tela BAIXA (notebook 1366×768, 1280×720): mesma escala de
+   leitura, menos respiro — nada rola. */
+@media (min-width: 1100px) and (min-height: 560px) and (max-height: 820px) {
+  .cd-scope .cd-cartao > .cd-topo { padding-top: 32px; }
+  .cd-scope .cd-cartao > .cd-miolo { padding: 14px 0 4px; }
+  .cd-scope .cd-cartao > .cd-rodape { padding: 10px 0 32px; }
+  .cd-scope .cd-titulo { font-size: clamp(28px, 4.6dvh, 38px); margin-bottom: 10px; }
+  .cd-scope .cd-sub { font-size: 16px; margin-bottom: 16px; }
+  .cd-scope .cd-lista { gap: 8px; }
+  .cd-scope .cd-opcao { min-height: 48px; padding: 8px 14px; font-size: 16px; }
+  .cd-scope .cd-opcao .cd-ico { width: 34px; height: 34px; }
+  .cd-scope .cd-abertura .cd-lista li { padding: 10px 14px; }
+  .cd-scope .cd-abertura .cd-lista li small { font-size: 14px; }
+  .cd-scope .cd-abertura .cd-duo { padding: 8px; margin-bottom: 10px; }
+  .cd-scope .cd-longo textarea { min-height: 140px !important; }
+  .cd-scope .cd-btn { min-height: 54px; }
+}
+
+/* ═══ Travas de interface (19/09) ════════════════════════════════════════════
+   Arrastar o mouse não pinta a tela de azul: nada é selecionável, a não ser o
+   que a pessoa digita. Imagem não se arrasta, toque não pisca o destaque do
+   navegador e toque duplo não dá zoom (os campos já têm 16px, o iOS não
+   aproxima ao focar). */
+.cd-scope { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+.cd-scope input, .cd-scope textarea { -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; }
+.cd-scope img, .cd-scope svg { -webkit-user-drag: none; user-drag: none; }
+.cd-scope button, .cd-scope a, .cd-scope label, .cd-scope .cd-opcao { touch-action: manipulation; }
+.cd-scope .cd-opcao:focus-visible, .cd-scope .cd-btn:focus-visible {
+  outline: 3px solid rgba(139, 58, 198, .45); outline-offset: 2px;
+}
+
+
+/* ═══ Zero barra de rolagem (19/09) ══════════════════════════════════════════
+   1. O texto longo OCUPA o espaço livre da tela (flex), em vez de ter altura
+      fixa que transbordava com a resposta comprida. O miolo vira coluna
+      flexível e a caixa estica até o personagem.
+   2. Nenhuma barra aparece em lugar nenhum do formulário: se um texto de mil
+      caracteres passar da caixa, ela rola pelo toque/roda, sem trilho visível.
+   3. As duas colunas do computador só a partir de 1100px (acima). Entre 900 e
+      1100px vale o cartão único, que cabe até no celular de 568px. */
+.cd-scope .cd-miolo:has(.cd-longo) { flex: 1 1 auto; }
+.cd-scope .cd-miolo:has(.cd-longo) > .cd-bloco:has(.cd-longo) { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+.cd-scope .cd-bloco > .cd-longo { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+.cd-scope .cd-longo textarea {
+  flex: 1 1 auto; min-height: 72px !important; max-height: none; height: auto; field-sizing: fixed;
+}
+/* No celular o personagem divide a sobra com a caixa de texto. */
+.cd-scope .cd-miolo:has(.cd-longo) ~ .cd-ilustra { flex: 0 1 38%; }
+.cd-scope, .cd-scope * { scrollbar-width: none; }
+.cd-scope *::-webkit-scrollbar { display: none; width: 0; height: 0; }
+
+@media (min-width: 1100px) and (min-height: 560px) {
+  .cd-scope .cd-cartao > .cd-miolo:has(.cd-longo) { align-self: stretch; }
+  .cd-scope .cd-longo textarea { min-height: 120px !important; }
+  .cd-scope .cd-miolo:has(.cd-longo) ~ .cd-ilustra { flex: none; }
+}
+
+/* Computador MUITO baixo (≤ 680px de altura útil). */
+@media (min-width: 1100px) and (min-height: 560px) and (max-height: 680px) {
+  .cd-scope .cd-cartao > .cd-topo { padding-top: 24px; }
+  .cd-scope .cd-cartao > .cd-barra { margin-top: 10px; }
+  .cd-scope .cd-cartao > .cd-miolo { padding: 10px 0 2px; }
+  .cd-scope .cd-cartao > .cd-rodape { padding: 8px 0 24px; }
+  .cd-scope .cd-titulo { font-size: clamp(24px, 4.4dvh, 32px); }
+  .cd-scope .cd-sub { font-size: 15px; margin-bottom: 12px; }
+  .cd-scope .cd-lista { gap: 6px; }
+  .cd-scope .cd-opcao { min-height: 44px; padding: 6px 12px; font-size: 15px; }
+  .cd-scope .cd-abertura .cd-lista li small { display: none; }
+  .cd-scope .cd-btn { min-height: 50px; }
+}
+
+/* Pergunta longa (mais de ~80 letras, como "Quando você entra em um lugar ou
+   grupo novo…"): o título desce um degrau pra caber junto com as opções. */
+.cd-scope .cd-cartao[data-titulo-longo="1"] .cd-titulo { font-size: clamp(19px, min(6.4vw, 3.2dvh), 26px); }
+@media (min-width: 1100px) and (min-height: 560px) {
+  .cd-scope .cd-cartao[data-titulo-longo="1"] .cd-titulo { font-size: clamp(24px, 3.4dvh, 34px); }
+}

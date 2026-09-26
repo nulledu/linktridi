@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    O serviço que confirma a instalação quando a TV não pode ser device owner.
+
+    `packageNames` é o que mais importa aqui: o serviço só recebe eventos do
+    INSTALADOR do sistema. Sem esta linha ele veria tudo o que passa na tela da
+    TV, e não há motivo nenhum para isso — ele tem um trabalho só.
+
+    Sem `canRetrieveWindowContent` o serviço não consegue achar o botão; sem
+    `flagDefault` ele não recebe os eventos de janela que precisa. Nada além
+    disso é pedido: sem toques na tela, sem teclas, sem gestos.
+-->
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:accessibilityEventTypes="typeWindowStateChanged|typeWindowContentChanged"
+    android:accessibilityFeedbackType="feedbackGeneric"
+    android:accessibilityFlags="flagDefault"
+    android:canRetrieveWindowContent="true"
+    android:notificationTimeout="200"
+    android:packageNames="com.android.packageinstaller,com.google.android.packageinstaller"
+    android:description="@string/dedo_descricao" />

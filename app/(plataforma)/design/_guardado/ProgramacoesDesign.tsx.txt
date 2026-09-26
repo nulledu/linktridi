@@ -1,0 +1,215 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import Link from "next/link";
+import { Icon } from "../../Icon";
+import { Abas } from "../../ui/Abas";
+import { KpiIcone, Selo } from "../../ui/primitives";
+import { CartaoPainel, VazioPainel } from "../../ui/CartaoPainel";
+import { AnelProgresso } from "../../ui/micro";
+import { MonoRoundedBarChart } from "../../ui/monocharts/MonoRoundedBarChart";
+import { useLeitura } from "../../ui/useLeitura";
+import { EVENTO, STATUS_DESIGN } from "@/lib/design-fluxo";
+import { turnoDe } from "@/lib/producao-hub";
+import type { DesignSnapshot } from "@/lib/design";
+import type { ProjetoLinha, TarefaDesign } from "@/lib/design-projetos";
+import { useResumoDesign, type RespostaResumo } from "../dados";
+import { DetalheProjeto, SeloPrioridade, naEtapa, refCurta } from "../parts";
+import { hora } from "../VisaoDesign";
+
+type Escala = "dia" | "semana" | "mes";
+const TZ = "America/Sao_Paulo";
+const diaSP = (d: Date) => new Date(d.getTime() - 3 * 3_600_000).toISOString().slice(0, 10);
+const DIAS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+const rotDia = (iso: string) => `${DIAS[new Date(`${iso}T12:00:00-03:00`).getDay()]} ${iso.slice(8, 10)}/${iso.slice(5, 7)}`;
+const comoSnap = (d: Record<string, unknown>) => d as unknown as DesignSnapshot;
+
+/**
+ * Programações do Design. O ERP não guarda horário marcado nem prazo de arte;
+ * o que ele guarda é QUANDO cada passo aconteceu. Então:
+ *  · Dia = a linha do tempo real de hoje (demanda chegou, criação começou,
+ *    arte foi pro cliente, voltou com ajuste, aprovou) + a fila do que vem,
+ *    na ordem de prioridade + as tarefas com prazo lançadas em Atividades.
+ *  · Semana/Mês = artes feitas × aprovadas × reprovadas por dia (o mesmo
+ *    snapshot do Desempenho da equipe) + as tarefas com prazo no período.
+ * Planejar com data e pessoa é por Atividades (setor Design) — é lá que
+ * existe prazo; aqui é onde ele aparece.
+ */
+export function ProgramacoesDesign() {
+  const [escala, setEscala] = useState<Escala>("dia");
+  const [aberto, setAberto] = useState<ProjetoLinha | null>(null);
+  const lr = useResumoDesign();
+  const r = lr.estado === "ok" ? lr.dado : null;
+
+  return (
+    <div className="pv-pilha">
+      <div className="dv-barra">
+        <Abas valor={escala} onMuda={setEscala} ariaLabel="Escala" itens={[{ valor: "dia", rotulo: "Dia" }, { valor: "semana", rotulo: "Semana" }, { valor: "mes", rotulo: "Mês" }]} />
+        <Link href="/atividades" className="dv-link"><Icon name="list-check" size={15} /> Programar tarefa em Atividades</Link>
+      </div>
+      {lr.estado === "carregando" && <VazioPainel texto="Carregando…" />}
+      {(lr.estado === "erro" || lr.estado === "indisponivel") && <VazioPainel texto="Não deu pra ler o ERP agora." />}
+      {r && escala === "dia" && <Dia r={r} abrir={setAberto} />}
+      {r && escala !== "dia" && <Periodo escala={escala} tarefas={r.tarefas} />}
+      {aberto && <DetalheProjeto p={aberto} onFechar={() => setAberto(null)} />}
+    </div>
+  );
+}
+
+function Dia({ r, abrir }: { r: RespostaResumo; abrir: (p: ProjetoLinha) => void }) {
+  const hoje = diaSP(new Date());
+  const eventos = r.eventos.filter((e) => diaSP(new Date(e.quando)) === hoje).sort((a, b) => a.quando.localeCompare(b.quando));
+  const tarefasHoje = r.tarefas.filter((t) => t.prazo === hoje || (t.prazo && t.prazo < hoje && t.status !== "concluida"));
+  const fila = useMemo(() => {
+    const vistos = new Set<number>();
+    return [...r.atencao, ...r.emCriacao].filter((p) => !vistos.has(p.id) && vistos.add(p.id)).slice(0, 10);
+  }, [r]);
+  const h = r.resumo.hoje;
+  const feito = h.enviadas + h.aprovadas;
+  const meta = Math.max(1, feito + r.resumo.porStatus.criacao + r.resumo.porStatus.ajustes);
+  let turno = "";
+
+  return (
+    <div className="og-grade">
+      <div className="og-principal">
+        <CartaoPainel icone="clock" titulo="Linha do tempo de hoje" sub="Cada passo dos projetos, na hora em que aconteceu">
+          {eventos.length === 0 ? <VazioPainel texto="Nada aconteceu ainda hoje." /> : (
+            <ol className="pv-tempo">
+              {eventos.map((e, i) => {
+                const t = turnoDe(new Date(e.quando));
+                const cab = t !== turno ? (turno = t) : null;
+                const ev = EVENTO[e.tipo];
+                return (
+                  <li key={`${e.projetoId}${e.tipo}${i}`} className="pv-tempo-item" data-estado={e.tipo === "aprovado" ? "andamento" : e.tipo === "revisao" ? "pausado" : undefined}>
+                    {cab && <span className="pv-turno">{cab}</span>}
+                    <span className="pv-tempo-hora mt-num">{hora(e.quando)}</span>
+                    <span className="pv-tempo-ponto" aria-hidden />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div className="og-linha-tit">{refCurta(e.ref)}</div>
+                      <div className="og-linha-sub">{ev.rotulo}{e.quem ? ` · ${e.quem}` : ""}</div>
+                    </div>
+                    <Selo tom={ev.tom}>{ev.rotulo.split(" ")[0] === "Arte" ? ev.rotulo.replace("Arte ", "") : ev.rotulo}</Selo>
+                  </li>
+                );
+              })}
+            </ol>
+          )}
+        </CartaoPainel>
+
+        <CartaoPainel icone="list-details" titulo="Fila do dia" sub="O que vem agora, do mais urgente" href="/design/controle">
+          {fila.length === 0 ? <VazioPainel texto="Fila limpa." /> : (
+            <ul className="og-lista">
+              {fila.map((p, i) => (
+                <li key={p.id}>
+                  <button type="button" className="og-proxima pv-linha-btn" onClick={() => abrir(p)}>
+                    <span className="og-prazo">{i + 1}º</span>
+                    <span style={{ flex: 1, minWidth: 0 }}>
+                      <span className="og-linha-tit">{refCurta(p.ref)}</span>
+                      <span className="og-linha-sub">{STATUS_DESIGN.find((s) => s.chave === p.status)!.nome} · {p.responsavel ?? "Sem responsável"} · {naEtapa(p)}</span>
+                    </span>
+                    <SeloPrioridade p={p.prioridade} />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </CartaoPainel>
+      </div>
+
+      <aside className="og-lado">
+        <CartaoPainel icone="chart-line" titulo="Resumo do dia">
+          <div className="pv-resumo-anel">
+            <AnelProgresso valor={feito} max={meta} rotulo="Andamento do dia" tamanho={120} espessura={10}>
+              <span style={{ display: "grid", justifyItems: "center" }}>
+                <b className="mt-num" style={{ fontSize: 22 }}>{feito}</b>
+                <span className="og-linha-sub" style={{ marginTop: 0 }}>entregas</span>
+              </span>
+            </AnelProgresso>
+          </div>
+          <div className="og-celulas">
+            <KpiIcone size="sm" label="Demandas novas" value={h.novas} icon="inbox" />
+            <KpiIcone size="sm" label="Artes enviadas" value={h.enviadas} icon="send" />
+            <KpiIcone size="sm" label="Aprovadas" value={h.aprovadas} icon="circle-check" cor="var(--ok)" />
+            <KpiIcone size="sm" label="Voltaram p/ ajuste" value={h.ajustes} icon="adjustments" cor="var(--perigo)" />
+          </div>
+        </CartaoPainel>
+
+        <CartaoPainel icone="calendar" titulo="Prazos de hoje" sub="Tarefas do setor em Atividades" href="/atividades">
+          <ListaTarefas tarefas={tarefasHoje} hoje={hoje} vazio="Nenhuma tarefa com prazo hoje." />
+        </CartaoPainel>
+      </aside>
+    </div>
+  );
+}
+
+function Periodo({ escala, tarefas }: { escala: "semana" | "mes"; tarefas: TarefaDesign[] }) {
+  const l = useLeitura(`/api/design?period=${escala === "semana" ? "7d" : "mes"}`, comoSnap);
+  const s = l.estado === "ok" ? l.dado : null;
+  const hoje = diaSP(new Date());
+  const fim = diaSP(new Date(Date.now() + (escala === "semana" ? 7 : 31) * 86_400_000));
+  const doPeriodo = tarefas.filter((t) => t.prazo && t.prazo <= fim && (t.prazo >= hoje || t.status !== "concluida"));
+
+  if (!s) return <VazioPainel texto={l.estado === "carregando" ? "Carregando o período…" : "Não deu pra ler o período."} />;
+  const aprov = new Map(s.aprovacao.series.map((p) => [p.day, p.value]));
+  const rep = new Map(s.naoAprovadas.series.map((p) => [p.day, p.value]));
+  const dias = s.vetor.series;
+  const totalArtes = dias.reduce((a, p) => a + p.value, 0);
+
+  return (
+    <>
+      <div className="og-kpis kpi-row">
+        <KpiIcone label="Artes feitas" value={totalArtes} icon="vector-bezier" />
+        <KpiIcone label="Aprovadas" value={s.aprovacao.aprovados} icon="circle-check" cor="var(--ok)" />
+        <KpiIcone label="Reprovadas" value={s.aprovacao.reprovados} icon="adjustments" cor="var(--perigo)" invert />
+        <KpiIcone label="Taxa de aprovação" value={`${s.aprovacao.taxaAprov}%`} icon="chart-line" />
+      </div>
+      <div className="og-duo og-duo-largo">
+        <CartaoPainel icone="chart-bar" titulo="Feito × aprovado" sub={escala === "semana" ? "Últimos 7 dias" : "Este mês"} href="/design/equipe">
+          <MonoRoundedBarChart semCartao eixoY altura={230} nomePrimario="Artes feitas" nomeSecundario="Aprovadas"
+            pontos={dias.map((p) => ({ label: escala === "semana" ? DIAS[new Date(`${p.day}T12:00:00-03:00`).getDay()] : p.day.slice(8, 10), primary: p.value, secondary: aprov.get(p.day) ?? 0 }))} />
+        </CartaoPainel>
+        <CartaoPainel icone="calendar" titulo={escala === "semana" ? "Prazos da semana" : "Prazos do mês"} sub="Tarefas do setor em Atividades" href="/atividades">
+          <ListaTarefas tarefas={doPeriodo} hoje={hoje} vazio="Nenhuma tarefa com prazo no período. Programe em Atividades, setor Design." />
+        </CartaoPainel>
+      </div>
+      <CartaoPainel icone="list-details" titulo="Dia a dia">
+        <ul className="og-lista">
+          {[...dias].reverse().filter((p) => p.day <= hoje).map((p) => (
+            <li key={p.day} className="og-proxima">
+              <span className="og-prazo dv-prazo">{rotDia(p.day)}</span>
+              <span className="og-linha-sub" style={{ flex: 1, marginTop: 0 }}>{p.value} artes · {aprov.get(p.day) ?? 0} aprovadas · {rep.get(p.day) ?? 0} reprovadas</span>
+              {(aprov.get(p.day) ?? 0) + (rep.get(p.day) ?? 0) > 0 && (
+                <Selo tom="neutro">{Math.round(((aprov.get(p.day) ?? 0) / ((aprov.get(p.day) ?? 0) + (rep.get(p.day) ?? 0))) * 100)}% aprov.</Selo>
+              )}
+            </li>
+          ))}
+        </ul>
+      </CartaoPainel>
+    </>
+  );
+}
+
+function ListaTarefas({ tarefas, hoje, vazio }: { tarefas: TarefaDesign[]; hoje: string; vazio: string }) {
+  if (tarefas.length === 0) return <VazioPainel texto={vazio} />;
+  return (
+    <ul className="og-lista">
+      {tarefas.slice(0, 12).map((t) => {
+        const atrasada = !!t.prazo && t.prazo < hoje && t.status !== "concluida";
+        return (
+          <li key={t.id} className="og-proxima">
+            <span className="og-prazo dv-prazo" data-atrasada={atrasada ? "1" : undefined}>
+              {t.prazo ? (t.prazo === hoje ? "Hoje" : new Date(`${t.prazo}T12:00:00-03:00`).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", timeZone: TZ })) : "—"}
+            </span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div className="og-linha-tit">{t.tarefa}</div>
+              <div className="og-linha-sub">{t.para}</div>
+            </div>
+            <Selo tom={t.status === "concluida" ? "ok" : atrasada ? "perigo" : t.status === "em_andamento" ? "destaque" : t.urgente ? "atencao" : "neutro"}>
+              {t.status === "concluida" ? "Feita" : atrasada ? "Atrasada" : t.status === "em_andamento" ? "Em andamento" : "A fazer"}
+            </Selo>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}

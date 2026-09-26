@@ -1,0 +1,13 @@
+node_modules
+.next
+.git
+.env*
+android
+tv-app
+ponto-app
+docs
+supabase
+*.apk
+*.log
+.DS_Store
+tsconfig.tsbuildinfo

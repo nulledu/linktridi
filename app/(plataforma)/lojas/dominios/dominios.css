@@ -1,0 +1,128 @@
+/* ── Domínios ─────────────────────────────────────────────────────────────────
+ * Um cartão por endereço, com o que falta ABERTO. A escala é a de `../ui.css`;
+ * aqui só o que é desta tela. */
+
+.dm-add { display: flex; gap: 8px; flex-wrap: wrap; }
+.dm-add input { flex: 1 1 220px; min-width: 0; }
+
+.dm-aviso {
+  display: flex; align-items: flex-start; gap: 8px;
+  margin: 10px 0 0;
+  font-size: 12px; line-height: 1.55; color: var(--atencao);
+}
+.dm-aviso code { background: var(--surface-2); padding: 1px 5px; border-radius: 5px; }
+
+.dm-abas { background: var(--surface-2); }
+.dm-conta {
+  margin-left: 5px; padding: 0 5px; border-radius: 999px;
+  background: color-mix(in srgb, currentColor 14%, transparent);
+  font-size: 10.5px; font-weight: 750; font-variant-numeric: tabular-nums;
+}
+
+/* ── O cartão ─────────────────────────────────────────────────────────────── */
+.dm-card {
+  display: flex; flex-direction: column; gap: 14px;
+  padding: 18px;
+  border: 1px solid var(--border); border-radius: 16px;
+  background: var(--surface);
+  min-width: 0;
+}
+/* Conectado ganha a borda verde: numa lista de seis endereços, o que já
+   funciona precisa ser reconhecido sem ler. */
+.dm-card[data-pronto] { border-color: color-mix(in srgb, var(--ok) 45%, var(--border)); }
+
+.dm-cab {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 10px; flex-wrap: wrap;
+}
+.dm-cab-txt { min-width: 0; }
+.dm-cab-txt h2 {
+  margin: 0;
+  font-size: 17px; font-weight: 700; letter-spacing: -0.01em;
+  /* Endereço longo quebra em vez de esticar a página. */
+  overflow-wrap: anywhere;
+}
+.dm-cab-txt p { margin: 4px 0 0; font-size: 12.5px; line-height: 1.5; color: var(--text-dim); }
+.dm-cab-txt a { color: inherit; }
+
+.dm-selo {
+  display: inline-flex; align-items: center; gap: 5px; flex: none;
+  padding: 4px 10px; border-radius: 999px;
+  font-size: 10.5px; font-weight: 800; white-space: nowrap;
+}
+
+/* ── Qual loja o endereço abre ────────────────────────────────────────────── */
+.dm-loja { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.dm-loja label { font-size: 12px; font-weight: 650; color: var(--text-dim); flex: none; }
+.dm-loja select { flex: 1 1 180px; min-width: 0; }
+
+/* ── O que falta ──────────────────────────────────────────────────────────── */
+.dm-passos {
+  list-style: none; counter-reset: passo;
+  margin: 0; padding: 0;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.dm-passo {
+  counter-increment: passo;
+  display: flex; flex-direction: column; gap: 10px;
+  padding: 13px 14px 13px 44px;
+  border-radius: 12px; background: var(--surface-2);
+  position: relative;
+}
+.dm-passo::before {
+  content: counter(passo);
+  position: absolute; left: 13px; top: 13px;
+  width: 21px; height: 21px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--primary-acao, var(--primary)); color: var(--on-primary, #fff);
+  font-size: 11px; font-weight: 800;
+}
+.dm-passo-txt { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.dm-passo-txt strong { font-size: 13px; font-weight: 700; }
+.dm-passo-txt span { font-size: 12px; line-height: 1.55; color: var(--text-dim); }
+.dm-passo > .ui-btn { align-self: flex-start; }
+
+/* ── O registro de DNS pra copiar ─────────────────────────────────────────── */
+.dm-dns { border: 1px solid var(--border); border-radius: 11px; overflow: hidden; background: var(--surface); }
+.dm-dns-linha {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 6px 9px 12px;
+  border-top: 1px solid var(--border);
+}
+.dm-dns-linha:first-child { border-top: 0; }
+/* Base que PODE encolher: 132px fixo não sobra numa tela de 320. */
+.dm-dns-rot { flex: 0 1 130px; min-width: 0; }
+.dm-dns-rot strong { display: block; font-size: 11.5px; font-weight: 700; }
+.dm-dns-rot small { font-size: 10px; color: var(--text-dim); line-height: 1.35; }
+.dm-dns-linha code {
+  flex: 1; min-width: 0;
+  font-size: 12.5px; overflow-wrap: anywhere;
+  font-variant-ligatures: none;
+}
+.dm-copiar {
+  flex: none; width: var(--tap); height: var(--tap);
+  display: grid; place-items: center;
+  border: 0; border-radius: var(--r-sm); background: none; cursor: pointer;
+}
+.dm-copiar:hover { background: var(--surface-2); }
+
+.dm-detalhe {
+  display: flex; align-items: flex-start; gap: 8px;
+  margin: 0; font-size: 12px; line-height: 1.55; color: var(--text-dim);
+}
+
+.dm-acoes { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.dm-acoes > a.ui-btn { display: inline-flex; align-items: center; gap: 6px; text-decoration: none; }
+
+.dm-rodape { margin: 0; font-size: 12px; line-height: 1.6; color: var(--text-dim); }
+
+@media (max-width: 520px) {
+  .dm-card { padding: 14px; }
+  .dm-cab-txt h2 { font-size: 15.5px; }
+  .dm-passo { padding: 12px 12px 12px 40px; }
+  /* A linha de DNS vira duas: rótulo em cima, valor e cópia embaixo — em 320px
+     o rótulo espremia o valor até sobrar três caracteres visíveis. */
+  .dm-dns-linha { flex-wrap: wrap; }
+  .dm-dns-rot { flex: 1 1 100%; }
+  .dm-dns-linha code { flex: 1 1 auto; }
+}

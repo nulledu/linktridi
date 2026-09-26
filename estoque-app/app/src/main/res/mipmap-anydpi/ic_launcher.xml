@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ícone para Android 7 (API 24/25), que não conhece <adaptive-icon>. O
+     tablet do galpão é 8.1 e usa a versão adaptativa em mipmap-anydpi-v26 —
+     esta existe pra que `@mipmap/ic_launcher` NUNCA fique sem resolver: uma
+     referência de ícone que não resolve derruba a instalação, e o minSdk do
+     app é 24. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@drawable/ic_launcher_fundo" />
+    <item android:drawable="@drawable/ic_marca_estoque" />
+</layer-list>

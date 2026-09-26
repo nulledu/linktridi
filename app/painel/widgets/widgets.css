@@ -1,0 +1,2399 @@
+/*
+  Estilo dos widgets do painel.
+
+  Tudo aqui escala pela PRÓPRIA CAIXA, não pela tela: cada slot é um
+  `container-type: size` e as medidas usam `cqh`/`cqmin`. É o que faz o mesmo
+  layout servir para a TV de 55" e para a pré-visualização de 380px no admin —
+  sem media query, sem segunda folha de estilo e sem número estourando a caixa
+  quando alguém arrasta o widget para metade do tamanho.
+*/
+
+.pw-grade {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+  gap: 0.9%;
+  width: 100%;
+  height: 100%;
+  color: var(--p-texto, #f5f5f7);
+}
+
+/*
+  ── A escala por POLEGADAS ─────────────────────────────────────────────────
+  `--esc` chega do perfil (1.0 = a TV de 50" de referência) e multiplica TODO
+  tamanho de texto. Não é resolução: 55" e 24" podem ter os mesmos 1920×1080 e
+  pedem tamanhos diferentes, porque o que muda é a distância de leitura.
+
+  Por que cada regra precisa da multiplicação, em vez de uma linha só: as fontes
+  são medidas em unidades de container (`cqh`/`cqi`), que ignoram o `font-size`
+  herdado. Qualquer escala aplicada ao bloco inteiro (zoom, transform) cresceria
+  o texto E a caixa na mesma proporção — e se cancelaria, que é justamente o
+  contrário do que se quer aqui: texto maior DENTRO da mesma caixa.
+
+  A multiplicação envolve o `clamp` INTEIRO (mínimo, preferido e teto crescem
+  juntos). Escalar só o valor preferido faria a TV grande parar de crescer
+  exatamente quando o número fica grande — no teto, que é onde ela mais precisa.
+
+  Propriedade personalizada herda, então basta declarar no `.pw-grade`.
+*/
+.pw-grade { --esc: 1; }
+
+/*
+  ── A PELE da parede ───────────────────────────────────────────────────────
+  Um lugar só decide a cor de TODO bloco. Antes cada regra escrevia o próprio
+  fallback (`var(--p-fraco, #b9b9c2)`) e a parede era escura por acidente: o
+  token nunca era declarado, então o painel inteiro vivia do valor de reserva
+  espalhado por cem lugares. Trocar de pele exigia caçar hexadecimal por
+  hexadecimal — e foi por isso que ninguém trocou.
+
+  Agora os tokens EXISTEM aqui em cima. Os fallbacks continuam escritos nas
+  regras (nenhuma delas depende deste bloco para funcionar), mas quem manda é
+  esta lista. Pele nova = editar estas dez linhas.
+
+  A pele clara não é "tema claro" no sentido do ERP: é o desenho da parede —
+  cartão branco sobre fundo lavanda, tinta quase preta, e UMA cor de destaque
+  que atravessa número, barra, anel e degrau do pódio. A três metros, dois
+  matizes disputando já são um a mais.
+*/
+.pw-grade,
+.pele-clara {
+  --p-fundo: #f5f4fa;
+  --p-cartao: #ffffff;
+  --p-texto: #14142e;
+  --p-fraco: #9394b1;
+  --p-apagado: #a9aac2;
+  --p-primaria: #6c4cf0;
+  /* A ponta clara do degradê (barra da meta, degrau do campeão). */
+  --p-primaria-clara: #a78bfa;
+  /* O quadradinho do ícone: o roxo a 12% de tinta, chapado — `color-mix` com
+     transparente sobre cartão branco daria o mesmo tom, mas o bloco também
+     mora sobre o fundo lavanda (o selo do "lidera") e ali translúcido muda de
+     cor. Ver a nota sobre translúcido empilhado no CLAUDE.md. */
+  --p-selo: #ece7fe;
+  --p-trilho: #eae8f4;
+  --p-aro: rgba(20, 20, 46, 0.055);
+  /*
+    Sombra em DUAS camadas: um contato curto que cola o cartão no fundo e um
+    halo largo e quase transparente que dá a profundidade. Uma sombra só, no
+    claro, ou some (fraca demais) ou vira uma mancha cinza embaixo da caixa.
+  */
+  --p-sombra:
+    0 1px 2px rgba(20, 20, 46, 0.04),
+    0 14px 32px -14px rgba(20, 20, 46, 0.14);
+  /* Estado continua sendo estado: verde/amarelo/vermelho calibrados para
+     fundo claro — os hexadecimais de iOS escuro (#30d158) somem no branco. */
+  --p-secundaria: #17a34a;
+  --p-ok: #17a34a;
+  --p-atencao: #c2830b;
+  --p-perigo: #dc2626;
+}
+
+/*
+  ── A ARTE MONO-ROUNDED, na régua da PAREDE ────────────────────────────────
+  Os gráficos daqui usam as classes `.mono-*` do globals.css (`.mono-serie`,
+  `--mono-tinta`), mas os valores padrão não servem numa TV, por dois motivos:
+
+  1. `--mono-tinta` nasce de `var(--text)`, que é o texto do ERP. Na TV o
+     `KioskShell` reescreve `--text` conforme a luminância do fundo do painel,
+     mas na PRÉVIA do editor (`/painel-tv`) quem manda é o tema do navegador de
+     quem edita: com o ERP no claro, a tinta ficava preta dentro de uma TV de
+     fundo escuro e a linha do gráfico simplesmente sumia da prévia. A tinta da
+     parede sai do mesmo `--p-texto` que já pinta todo número daqui.
+  2. Traço de 3px é o certo a 60cm de um monitor e some a três metros. A parede
+     escreve tudo mais grosso — era a espessura que os widgets já usavam antes
+     de trocarem o desenho pelo mono.
+*/
+.pw-grade {
+  --mono-tinta: var(--p-texto, #f5f5f7);
+  --mono-apoio: var(--p-fraco, #b9b9c2);
+  --mono-grade: color-mix(in srgb, var(--p-texto, #f5f5f7) 14%, transparent);
+  --mono-eixo: var(--p-fraco, #b9b9c2);
+  --mono-traco: 6px;
+  --mono-traco-2: 4px;
+}
+
+/* A seta de variação (Tabler, no lugar dos caracteres ▲/▼): do tamanho da
+   LETRA ao lado, não de um ícone fixo — a parede escala tudo por container e um
+   `size` em pixels nasceria minúsculo numa TV de 65". */
+.pw-seta { width: 1em; height: auto; flex: none; align-self: center; }
+.pw-exp-sobe,
+.pw-exp-desce { display: inline-flex; align-items: center; gap: 0.25em; }
+
+.pw-slot {
+  container-type: size;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Cada bloco preenche o slot; o alinhamento interno é do bloco. */
+.pw-slot > * {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+}
+
+.pw-rotulo {
+  /*
+   * O rótulo respeita as DUAS dimensões, como o número — mas com PISO.
+   *
+   * Só com `cqh`, num bloco estreito e alto (a célula de uma TV em pé) o
+   * rótulo batia no teto de 26px enquanto o número, limitado pela largura,
+   * saía com os mesmos 25px: empate não é hierarquia, e de longe se lia
+   * "ENTRADA DA LOGÍSTICA" antes de ler 12.
+   *
+   * A primeira tentativa usou `5cqi` e trocou um defeito por outro pior: num
+   * bloco de 2 colunas (156px) o rótulo caía para 9,2px — ilegível, contra os
+   * 13px que a tela clássica escrevia ali. O `7cqi` com piso de 13px mantém a
+   * hierarquia em tela estreita SEM apagar a letra; para rótulo comprido, a
+   * saída certa é escrever mais curto (a opção `rotulo` do bloco), não
+   * encolher a fonte até sumir.
+   */
+  font-size: calc(var(--esc, 1) * clamp(13px, min(13cqh, 7cqi), 57px));
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--p-fraco, #b9b9c2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/*
+  A fonte respeita as DUAS dimensões da caixa.
+  Só com `cqh`, um bloco largo e baixo dava um número enorme que atravessava o
+  widget vizinho ("R$ 2.180.00(" por cima do gasto de tráfego). O `cqi` limita
+  pela largura; vence o menor dos dois.
+*/
+.pw-numero {
+  /*
+   * O tamanho respeita as duas dimensões — e o COMPRIMENTO do texto.
+   *
+   * Com um coeficiente fixo de largura, "353" ficava do mesmo tamanho de
+   * "R$ 1.607.000": o limite era calculado para a pior string, então todo
+   * número curto desperdiçava a caixa e o cartão nascia com metade vazia. Era
+   * o "não aproveita o widget" que se vê num painel de cards.
+   *
+   * `--fator` vem do componente, que é quem sabe quantos caracteres vai
+   * escrever (ver `fatorDoNumero`): número curto ganha mais largura por
+   * caractere e cresce até a ALTURA barrar; número longo continua contido.
+   */
+  font-size: calc(var(--esc, 1) * clamp(16px, min(42cqh, var(--fator, 13) * 1cqi), 264px));
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  /* Dígito de largura fixa. O número CONTA até o valor novo (ver
+     `useNumeroFluido`), e com largura variável o "1" estreito fazia o bloco
+     inteiro tremer a cada quadro da contagem. */
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+/* ── semáforo ────────────────────────────────────────────────────────────────
+   Cor + ícone, sempre os dois. Ver o comentário do componente `Sinal`.        */
+.faixa-ok { color: var(--p-secundaria, #30d158); }
+.faixa-atencao { color: #ffd60a; }
+.faixa-critico { color: #ff453a; }
+.faixa-neutro { color: inherit; }
+/* Sem alvo definido, o anel e a barra da meta são da MARCA, não da tinta do
+   texto: um anel quase preto sobre cartão branco lê como moldura, não como
+   progresso. */
+.pw-anel-arco.faixa-neutro { color: var(--p-primaria, #6c4cf0); }
+
+.faixa-fundo-ok { background: var(--p-secundaria, #30d158) !important; }
+.faixa-fundo-atencao { background: linear-gradient(90deg, #ffb020, #ffd60a) !important; }
+.faixa-fundo-critico { background: linear-gradient(90deg, #ff453a, #ff7a70) !important; }
+
+.pw-kpi-linha { display: flex; align-items: center; gap: 0.35em; min-width: 0; }
+.pw-sinal { flex: none; width: calc(var(--esc, 1) * clamp(12px, 16cqh, 75px)); height: auto; }
+
+/* A marca do ritmo: onde o número DEVERIA estar hoje. */
+.pw-marca-ritmo {
+  position: absolute;
+  top: -25%;
+  bottom: -25%;
+  width: 2px;
+  background: var(--p-texto, #14142e);
+  border-radius: 2px;
+  transform: translateX(-1px);
+  /* Acima do preenchimento: a marca fica quase sempre DENTRO da parte
+     preenchida, e atrás dela era o mesmo que não existir. */
+  z-index: 2;
+  /* Sem aro escuro: no claro a marca já é a coisa mais escura da barra. O aro
+     de antes existia para separá-la do preenchimento colorido no fundo preto. */
+  box-shadow: none;
+  opacity: 0.75;
+}
+.pw-barra { position: relative; overflow: visible; }
+.pw-barra > .pw-barra-fill { position: relative; z-index: 1; }
+
+.pw-vazio {
+  font-size: calc(var(--esc, 1) * clamp(9px, 12cqh, 44px));
+  color: var(--p-apagado, #77778a);
+}
+
+.pw-dir { text-align: right; }
+.pw-destaque { color: var(--p-primaria, #0a84ff); }
+.pw-trunc { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ── KPI ─────────────────────────────────────────────────────────────────── */
+.pw-kpi { gap: 0.4em; }
+
+/* A variação contra o período anterior. Fica ABAIXO do número e menor: é
+   contexto, não manchete — invertendo a hierarquia, a tela passa a gritar a
+   comparação e sussurrar o valor. */
+.pw-delta {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4em;
+  font-size: calc(var(--esc, 1) * clamp(8px, min(11cqh, 3.4cqi), 48px));
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pw-delta i { font-style: normal; font-weight: 600; color: var(--p-apagado, #77778a); }
+/* Cor pela DIREÇÃO DO ALVO, não pelo sinal: em CPA e gasto, subir é ruim. */
+.pw-delta-bom { color: var(--p-secundaria, #30d158); }
+.pw-delta-ruim { color: #ff453a; }
+
+/* Mini-gráfico: a forma dos últimos dias, sem eixo, sem número, sem legenda.
+   Um número diz onde se está; a linha diz se está subindo — e ela cabe no
+   espaço que sobra do card. */
+.pw-faisca {
+  width: 100%;
+  height: clamp(10px, 22cqh, 101px);
+  flex: none;
+  opacity: 0.55;
+  overflow: visible;
+}
+/* Bloco baixo: a faísca é a primeira coisa a sair. O número tem prioridade. */
+@container (max-height: 90px) {
+  .pw-faisca { display: none; }
+}
+
+/* ── Meta ────────────────────────────────────────────────────────────────── */
+.pw-meta { gap: 4cqh; justify-content: center; }
+.pw-meta-topo,
+.pw-meta-baixo {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.pw-meta-num { font-size: calc(var(--esc, 1) * clamp(9px, 14cqh, 57px)); color: var(--p-fraco, #b9b9c2); white-space: nowrap; }
+.pw-meta-num i { font-style: normal; opacity: 0.65; }
+/*
+  SEM cor fixa aqui: quem manda é a classe `faixa-*` do semáforo. Com
+  `color: var(--p-secundaria)` neste seletor (mais específico), a porcentagem
+  ficava VERDE enquanto a barra ao lado estava vermelha — a tela contradizendo
+  a si mesma, que é pior do que não ter cor nenhuma.
+*/
+.pw-meta-baixo strong { font-size: calc(var(--esc, 1) * clamp(12px, 26cqh, 119px)); font-weight: 900; }
+.pw-meta-baixo span { font-size: calc(var(--esc, 1) * clamp(9px, 13cqh, 53px)); color: var(--p-fraco, #b9b9c2); }
+
+/*
+  Bloco baixo: some com o que é acessório e mantém o que é o dado.
+  Um widget de meta com uma célula de altura numa TV pequena não tem espaço para
+  três linhas — melhor mostrar a barra e a porcentagem do que espremer as três e
+  cortar todas pela metade.
+*/
+@container (max-height: 70px) {
+  .pw-meta-topo { display: none; }
+  .pw-meta-baixo span { display: none; }
+}
+
+.pw-barra {
+  /* `display: block` porque nem toda barra é filha de flex/grid: onde ela é um
+     <span> solto (faixa da equipe, falta produzir), o elemento nascia inline e
+     ignorava largura e altura — a barra aparecia como um trilho vazio. */
+  display: block;
+  width: 100%;
+  height: clamp(6px, 12cqh, 48px);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+  flex: none;
+}
+.pw-barra-fina { height: clamp(4px, 8cqh, 26px); }
+.pw-barra-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  /* Tinta cheia, não o degradê azul→roxo de antes: a barra sem semáforo (top de
+     produtos, faixa da equipe) não está dizendo nada com aquela cor, e duas
+     cores numa barra de 8px de altura viram uma terceira a três metros. Onde a
+     cor SIGNIFICA — ritmo da meta, item zerado — quem pinta é `.faixa-fundo-*`,
+     logo acima, e continua vencendo por `!important`. */
+  background: var(--mono-tinta, #f5f5f7);
+  transition: width 0.6s ease;
+}
+
+/* ── Pódio ───────────────────────────────────────────────────────────────── */
+.pw-podio {
+  flex-direction: row !important;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 2.5cqw;
+}
+/*
+  Cada degrau é o próprio container. Nome e valor escalam por `cqi` (LARGURA da
+  coluna) e não por `cqh`: num pódio de três colunas o que falta é largura, e
+  medir pela altura gerava fonte gigante que virava "R$ 3…" reticências.
+*/
+.pw-degrau {
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  gap: 1cqh;
+}
+.pw-avatar {
+  position: relative;
+  width: clamp(24px, 46cqi, 242px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  overflow: visible;
+  display: grid;
+  place-items: center;
+  background: var(--p-selo, #ece7fe);
+  color: var(--p-primaria, #6c4cf0);
+  border: 2px solid var(--p-trilho, #eae8f4);
+  font-weight: 700;
+  font-size: calc(var(--esc, 1) * clamp(9px, 9cqh, 66px));
+  flex: none;
+}
+.pw-avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+.pw-avatar b {
+  position: absolute;
+  right: -4%;
+  bottom: -4%;
+  width: 38%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: calc(var(--esc, 1) * clamp(7px, 7cqh, 40px));
+  color: #1a1300;
+}
+/* O 1º lugar tem a foto MAIOR, como no painel clássico (104px contra 82px):
+   com os três do mesmo tamanho, de longe o pódio vira três colunas iguais. */
+.pw-avatar.pw-pos1 { width: clamp(24px, 56cqi, 286px); }
+/* Teto pela ALTURA da célula (o `cqh` sobe até o slot, que é container de
+   tamanho): num pódio largo e baixo a foto medida pela largura da coluna
+   comia o nome e o valor. */
+.pw-avatar { max-width: 26cqh; }
+.pw-avatar.pw-pos1 { max-width: 30cqh; }
+/* Com a linha "N vendas" o degrau ganha conteúdo, e quem cede é o PEDESTAL,
+   não a foto: `flex: 0 1 auto` deixa a base encolher, e o piso por colocação
+   garante que o 1º continua mais alto que o 2º mesmo depois de encolher. Num
+   pódio que cabe (o clássico de 6 colunas) nada encolhe e nada muda. */
+.pw-podio:has(.pw-podio-vendas) .pw-base { flex: 0 1 auto; }
+.pw-podio:has(.pw-podio-vendas) .pw-base.pw-pos1 { min-height: 24cqh; }
+.pw-podio:has(.pw-podio-vendas) .pw-base.pw-pos2 { min-height: 18cqh; }
+.pw-podio:has(.pw-podio-vendas) .pw-base.pw-pos3 { min-height: 13cqh; }
+.pw-avatar.pw-pos1 { border-color: #ffd60a; }
+.pw-avatar.pw-pos2 { border-color: #c7c7cc; }
+.pw-avatar.pw-pos3 { border-color: #cd7f4f; }
+.pw-avatar.pw-pos1 b { background: #ffd60a; }
+.pw-avatar.pw-pos2 b { background: #c7c7cc; }
+.pw-avatar.pw-pos3 b { background: #cd7f4f; }
+
+.pw-nome {
+  font-size: calc(var(--esc, 1) * clamp(8px, 13cqi, 48px));
+  font-weight: 700;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pw-valor {
+  font-size: calc(var(--esc, 1) * clamp(10px, 17cqi, 75px));
+  font-weight: 900;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: none;
+}
+.pw-valor.pw-pos1 { color: #ffd60a; }
+.pw-valor.pw-pos2 { color: #c7c7cc; }
+.pw-valor.pw-pos3 { color: #cd7f4f; }
+/*
+  O degrau encolhe antes de empurrar o texto para fora.
+  `flex: 0 1 auto` + `min-height: 0`: a altura vinda do style é a INTENÇÃO
+  (1º mais alto que o 2º), não uma exigência — quando o slot é baixo, quem cede
+  é a barra, não o nome do vendedor. Sem isso o pódio escrevia por cima de si
+  mesmo assim que alguém redimensionava o widget.
+*/
+.pw-base {
+  width: 100%;
+  border-radius: 10px 10px 0 0;
+  min-height: 0;
+  /* `flex: none` para a altura vinda do `style` (em `cqh`) VALER: com
+     `0 1 auto` a base encolhia até o espaço que sobrava na coluna, e o degrau
+     do campeão — que tem foto maior e troféu — ficava mais baixo que o do
+     vice. O teto de 44% impede que um bloco muito baixo vire só pedestal. */
+  flex: none;
+  max-height: 44%;
+}
+.pw-nome, .pw-avatar { flex: none; }
+.pw-base.pw-pos1 { background: linear-gradient(180deg, #ffd60a, #4a3f00); }
+.pw-base.pw-pos2 { background: linear-gradient(180deg, #c7c7cc, #3a3a3d); }
+.pw-base.pw-pos3 { background: linear-gradient(180deg, #cd7f4f, #3d2617); }
+
+/* ── Tabela / ranking ────────────────────────────────────────────────────── */
+/*
+  Grade de linhas iguais em vez de lista: as N linhas dividem a altura do slot,
+  então a última NÃO fica cortada pela metade quando alguém pede 8 linhas num
+  bloco baixo. A fonte segue a altura da própria linha (`1fr` → cqh do slot),
+  o que mantém tudo legível em qualquer tamanho.
+*/
+.pw-tabela {
+  display: grid !important;
+  grid-auto-rows: minmax(0, 1fr);
+  align-content: stretch;
+  gap: 0;
+}
+.pw-linha {
+  display: grid;
+  grid-template-columns: 1.8em minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.6em;
+  padding: 0 0.2em;
+  min-height: 0;
+  overflow: hidden;
+  font-size: calc(var(--esc, 1) * clamp(9px, 9cqh, 57px));
+  font-weight: 600;
+  border-bottom: 1px solid var(--p-trilho, #eae8f4);
+}
+/* A última linha não precisa de fio: ele fica pendurado na borda do cartão. */
+.pw-linha:last-child { border-bottom: none; }
+/* Nenhuma célula empurra a vizinha para fora: quem não cabe vira reticências.
+   Sem isto, o faturamento esticava e o nome do vendedor virava "An…". */
+.pw-linha > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Com a contagem de vendas — ou com a distância para o próximo — entra uma
+   quarta coluna à direita. A distância é mais larga: cabe "R$ 1.240". */
+.pw-linha.com-pedidos { grid-template-columns: 1.8em minmax(0, 1fr) auto minmax(2.6em, auto); }
+/* Quem lidera não tem "falta": tem vantagem. Verde para não ser lido como
+   dívida na mesma coluna onde os outros veem o quanto devem correr. */
+.pw-lider { color: var(--p-secundaria, #30d158); font-weight: 800; }
+
+.pw-linha.pw-cabecalho {
+  /*
+    O cabeçalho mede pelas DUAS dimensões, como todo o resto da parede.
+    Só com `cqh`, num bloco alto (a tabela ocupa 5 das 8 linhas) ele resolvia
+    34px e "FATURAMENTO" saía "FATURAM…" — o rótulo que existe para explicar a
+    coluna, cortado. Ele é legenda: pode ser pequeno, não pode ser incompleto.
+  */
+  font-size: calc(var(--esc, 1) * clamp(8px, min(9cqh, 2.6cqi), 40px));
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--p-fraco, #b9b9c2);
+  border-bottom-color: var(--p-trilho, #eae8f4);
+}
+
+/* ── Batalha ─────────────────────────────────────────────────────────────── */
+.pw-batalha { gap: 3cqh; justify-content: center; }
+.pw-lados { display: flex; align-items: flex-end; justify-content: space-between; gap: 2%; }
+/*
+  Cada lado é metade da caixa E o próprio container: sem `flex: 1 1 0` os dois
+  valores cresciam livres e "R$ 742.000" passava por cima de "R$ 865.000";
+  sem `container-type` a fonte era medida pela largura do slide inteiro.
+*/
+.pw-lados > div {
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;
+  min-width: 0;
+}
+.pw-lados .pw-dir { align-items: flex-end; }
+.pw-pct { font-size: calc(var(--esc, 1) * clamp(9px, 13cqh, 62px)); font-weight: 900; }
+.pw-cabo {
+  display: flex;
+  width: 100%;
+  height: clamp(8px, 16cqh, 88px);
+  border-radius: 999px;
+  overflow: hidden;
+  flex: none;
+}
+/*
+  Os dois lados na MESMA família de roxo — quem lidera em tinta cheia, quem
+  está atrás na lavanda. Antes eram laranja e azul, duas cores que não
+  significavam nada (marketing não é "o laranja") e que a três metros, coladas
+  na mesma pílula, viravam uma terceira cor na emenda.
+*/
+.pw-cabo-a { background: linear-gradient(90deg, var(--p-primaria-clara, #a78bfa), var(--p-primaria, #6c4cf0)); }
+.pw-cabo-b { background: var(--p-trilho, #eae8f4); }
+/* Perdendo, a tinta cheia vai para o lado que está na frente. */
+.pw-cabo[data-lider="b"] .pw-cabo-a { background: var(--p-trilho, #eae8f4); }
+.pw-cabo[data-lider="b"] .pw-cabo-b { background: linear-gradient(90deg, var(--p-primaria, #6c4cf0), var(--p-primaria-clara, #a78bfa)); }
+
+/* ── Produtos ────────────────────────────────────────────────────────────── */
+/*
+  SEM `justify-content: center` aqui.
+
+  Ele foi escrito quando o bloco era uma coluna FLEX, onde centrava as linhas na
+  vertical. O bloco virou `grid` (ver "Lista que SEMPRE cabe na caixa", no fim
+  do arquivo) e a mesma propriedade passou a significar outra coisa: centrar as
+  COLUNAS na horizontal. Com uma coluna só, ela deixa de esticar e encolhe até
+  o conteúdo — medido: linha de 783px numa faixa de 1280. A lista nascia
+  espremida no meio da tela com dois vãos vazios do lado, e ninguém liga uma
+  coisa na outra olhando.
+
+  Na grade, quem distribui a altura é o `grid-auto-rows: minmax(0, 1fr)`.
+*/
+.pw-produtos { gap: 1.5cqh; }
+/*
+  Posição · foto · (nome sobre a barra) · número.
+
+  A grade de três colunas de antes punha nome e barra lado a lado, cada um com
+  metade da largura: o nome do produto cabia em ~14 caracteres e a barra ficava
+  curta demais para comparar. Empilhados na mesma coluna, o nome usa a linha
+  inteira e a barra também — e é a barra que faz a lista ser lida como ranking
+  de longe.
+*/
+.pw-produto {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.9em;
+  /*
+    A altura de UMA linha, não a do bloco: `--linhas` chega do componente.
+    21 e não 26 porque a linha tem TRÊS alturas somadas (foto, nome sobre a
+    barra, número sobre a unidade) e o produto de baixo saía cortado pela borda
+    do cartão — medido no palco de 1280×720, onde a faixa tem 546px.
+  */
+  font-size: calc(var(--esc, 1) * clamp(9px, min(24cqh / var(--linhas, 6), 2.4cqi), 40px));
+  font-weight: 600;
+}
+.pw-produto-pos {
+  font-weight: 800;
+  color: var(--p-fraco, #9394b1);
+  font-variant-numeric: tabular-nums;
+  min-width: 1ch;
+  text-align: center;
+}
+.pw-produto-foto {
+  width: 2.4em;
+  aspect-ratio: 1;
+  border-radius: 24%;
+  overflow: hidden;
+  flex: none;
+  display: grid;
+  place-items: center;
+  background: var(--p-selo, #ece7fe);
+}
+.pw-produto-foto img { width: 100%; height: 100%; object-fit: cover; }
+.pw-produto-sem { color: var(--p-primaria, #6c4cf0); }
+.pw-produto-corpo { display: flex; flex-direction: column; gap: 0.3em; min-width: 0; }
+.pw-produto-nome { font-weight: 700; color: var(--p-texto, #14142e); }
+.pw-produto-num { display: flex; flex-direction: column; align-items: flex-end; min-width: 0; }
+.pw-produto-num strong {
+  white-space: nowrap;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--p-texto, #14142e);
+  font-size: 1.15em;
+}
+.pw-produto-num em {
+  font-style: normal;
+  font-weight: 700;
+  color: var(--p-fraco, #9394b1);
+  font-size: 0.62em;
+  white-space: nowrap;
+}
+
+/* ── Produção (chão de fábrica) ──────────────────────────────────────────── */
+.pw-prod { gap: 2cqh; min-width: 0; }
+.pw-prod-dia {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  align-self: flex-start;
+  font-size: calc(var(--esc, 1) * clamp(8px, min(9cqh, 2.4cqi), 40px));
+  font-weight: 700;
+  color: var(--p-fraco, #b9b9c2);
+}
+.pw-prod-cards { display: flex; gap: 1.5%; }
+.pw-prod-card {
+  container-type: inline-size;
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.2em;
+  padding: 0.5em 0.7em;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+/* Impedida é o único número que pede ação AGORA — some se ficar igual aos outros. */
+.pw-prod-alerta { background: rgba(255, 69, 58, 0.14); border-color: rgba(255, 69, 58, 0.4); }
+.pw-prod-alerta .pw-numero { color: #ff6961; }
+/* `cqi` é a largura DO CARD (container-type acima). Com 5–6 cards dividindo a
+   faixa, medir só pela altura estourava: "36min" saía como "36 …". */
+.pw-prod-card .pw-numero { font-size: calc(var(--esc, 1) * clamp(11px, min(26cqh, 17cqi), 97px)); white-space: nowrap; }
+.pw-prod-card .pw-rotulo { font-size: calc(var(--esc, 1) * clamp(7px, min(11cqh, 9cqi), 35px)); white-space: nowrap; }
+
+.pw-prod-time { display: flex; flex-direction: column; gap: 0.5cqh; min-height: 0; overflow: hidden; }
+.pw-prod-op {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto auto;
+  align-items: center;
+  gap: 0.8em;
+  font-size: calc(var(--esc, 1) * clamp(9px, min(11cqh, 2.6cqi), 57px));
+  font-weight: 700;
+}
+.pw-prod-foto { width: 1.9em; height: 1.9em; border-radius: 999px; object-fit: cover; }
+.pw-prod-sem { background: rgba(255, 255, 255, 0.12); display: block; }
+.pw-prod-nome { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pw-prod-pecas { font-weight: 900; }
+.pw-prod-pct, .pw-prod-tma { color: var(--p-fraco, #b9b9c2); font-variant-numeric: tabular-nums; }
+
+/* ── Expedição (a faixa da doca) ─────────────────────────────────────────── */
+.pw-exp { justify-content: center; gap: 1.6cqh; min-width: 0; }
+.pw-exp-barra {
+  display: flex;
+  height: 22cqh;
+  min-height: 10px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.08);
+}
+.pw-exp-barra > span { display: block; height: 100%; }
+.pw-exp-legenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5em 1.4em;
+  font-size: calc(var(--esc, 1) * clamp(9px, min(13cqh, 3.2cqi), 57px));
+  font-weight: 700;
+}
+.pw-exp-item { display: inline-flex; align-items: center; gap: 0.4em; min-width: 0; }
+.pw-exp-item i { width: 0.7em; height: 0.7em; border-radius: 999px; flex: none; }
+.pw-exp-item strong { font-weight: 900; font-variant-numeric: tabular-nums; }
+.pw-exp-item em { font-style: normal; font-size: 0.82em; font-weight: 800; }
+/* Fila que cresce é ruim e fila que diminui é boa — o oposto de venda. */
+.pw-exp-sobe { color: var(--p-perigo, #ff453a); }
+.pw-exp-desce { color: var(--p-ok, #30d158); }
+
+/* ── Pessoas (cartão do operador) ────────────────────────────────────────── */
+.pw-pessoas {
+  display: grid;
+  /* Uma coluna por cartão até caber duas: em bloco estreito (metade da tela,
+     como pede o desenho da produção) fica em coluna; em bloco largo, pareia. */
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 46%), 1fr));
+  gap: 1.6cqh;
+  align-content: start;
+  min-height: 0;
+  overflow: hidden;
+}
+.pw-pessoa {
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+  padding: 0.7em 0.9em;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  min-width: 0;
+}
+.pw-pessoa-topo { display: flex; align-items: center; gap: 0.7em; min-width: 0; }
+.pw-pessoa-foto { width: 2.6em; height: 2.6em; border-radius: 999px; object-fit: cover; flex: none; }
+.pw-pessoa-id { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.pw-pessoa-id strong {
+  font-size: calc(var(--esc, 1) * clamp(11px, min(13cqh, 6cqi), 66px));
+  font-weight: 900;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* O que a pessoa fez QUEBRA em duas linhas em vez de virar "107 pç · 3 fe…".
+   Nome pode ser cortado (a foto identifica); número cortado não informa nada. */
+.pw-pessoa-id span {
+  font-size: calc(var(--esc, 1) * clamp(8px, min(9cqh, 4cqi), 44px));
+  color: var(--p-fraco, #b9b9c2);
+  font-weight: 700;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.pw-pessoa-pct {
+  font-size: calc(var(--esc, 1) * clamp(12px, min(18cqh, 9cqi), 88px));
+  font-weight: 900;
+  flex: none;
+  font-variant-numeric: tabular-nums;
+}
+/* Abaixo de 70% a cor muda — mas só a cor, nunca o tamanho: o cartão não pode
+   dançar quando o número piora, senão a linha inteira se reorganiza. */
+.pw-pessoa-baixo { color: var(--p-atencao, #ffd60a); }
+.pw-pessoa-tempos {
+  display: flex;
+  gap: 0.9em;
+  flex-wrap: wrap;
+  font-size: calc(var(--esc, 1) * clamp(8px, min(9cqh, 3.6cqi), 40px));
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.pw-pessoa-tempos span { display: flex; flex-direction: column; min-width: 0; }
+.pw-pessoa-tempos em {
+  font-style: normal;
+  font-weight: 700;
+  color: var(--p-apagado, #77778a);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.85em;
+}
+
+/* ── Composição do faturamento ───────────────────────────────────────────── */
+/* Escala por `min(cqh, cqi)`: medir só pela altura foi o que fez número virar
+   "R$ …" em caixa larga e baixa. */
+.pw-comp { justify-content: center; gap: 2.5cqh; min-width: 0; }
+.pw-comp-barra {
+  display: flex;
+  height: 14cqh;
+  min-height: 8px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--p-trilho, #eae8f4);
+}
+.pw-comp-barra > span { display: block; height: 100%; }
+.pw-comp-linhas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6em 1.6em;
+  font-size: calc(var(--esc, 1) * clamp(9px, min(13cqh, 4cqi), 57px));
+}
+.pw-comp-item { display: flex; align-items: baseline; gap: 0.45em; min-width: 0; }
+.pw-comp-ponto {
+  width: 0.6em;
+  height: 0.6em;
+  border-radius: 999px;
+  align-self: center;
+  flex: none;
+}
+.pw-comp-item .pw-rotulo { font-size: 1em; }
+.pw-comp-item .pw-numero { font-size: 1.15em; white-space: nowrap; }
+.pw-comp-pct { color: var(--p-fraco, #b9b9c2); font-weight: 700; }
+/* Fatia que não entra na barra (Vega por dentro, marketplace por fora): linha
+   própria e visivelmente secundária, senão lê-se como mais uma parcela. */
+.pw-comp-notas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4em 1.6em;
+  font-size: calc(var(--esc, 1) * clamp(8px, min(10cqh, 3cqi), 44px));
+  color: var(--p-fraco, #b9b9c2);
+  font-weight: 700;
+}
+.pw-comp-notas i { font-style: normal; opacity: 0.7; }
+
+/* ── Cards (tráfego) ─────────────────────────────────────────────────────── */
+.pw-cards { flex-direction: row !important; gap: 1.5%; }
+.pw-card {
+  container-type: inline-size;   /* mede pela largura do card, não do slide */
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.3em;
+  padding: 0 0.8em;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+/* Quatro cards numa linha: quem manda é a largura de cada um. */
+.pw-card .pw-numero { font-size: calc(var(--esc, 1) * clamp(12px, min(30cqh, 17cqi), 132px)); }
+.pw-card .pw-rotulo { font-size: calc(var(--esc, 1) * clamp(8px, 8cqi, 48px)); }
+
+/* ── Relógio, logo, texto ────────────────────────────────────────────────── */
+.pw-relogio {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 0.5em;
+  /* `min(cqh, cqi)` e não só `cqh` — a MESMA armadilha que `.pw-logo-texto`
+     documenta logo abaixo, e que aqui tinha ficado de fora. Medindo só a
+     altura, num perfil 9:16 (a TV da doca, em pé) a faixa do topo é alta e
+     estreita: a fonte ia a 30% da altura, "25 de ago de 2026" quebrava em
+     TRÊS linhas e a hora vazava pra fora do cartão.
+     7cqi é o teto que faz a linha inteira caber: data (~18 caracteres) +
+     ícone + hora + os dois vãos dão ~13,5 vezes o tamanho da fonte. */
+  font-size: calc(var(--esc, 1) * clamp(9px, min(30cqh, 7cqi), 57px));
+  color: var(--p-fraco, #b9b9c2);
+  font-weight: 600;
+  /* Data e hora são uma linha só: quebrar "25 de ago" de "de 2026" não
+     ajuda ninguém a três metros. */
+  white-space: nowrap;
+  min-width: 0;
+  overflow: hidden;
+}
+.pw-relogio strong { color: var(--p-texto, #f5f5f7); }
+
+.pw-logo { align-items: flex-start; justify-content: center; }
+.pw-logo img { width: auto; height: 80%; max-width: 100%; object-fit: contain; object-position: left center; }
+/* `min(cqh, cqi)` e não só `cqh`: numa TV EM PÉ (perfil 9:16, a da doca) a
+   faixa do título é baixa e larguíssima em 16:9, mas alta e estreita em 9:16 —
+   medindo só a altura, a mesma palavra saía com o dobro do tamanho e vazava a
+   tela. Foi o que apareceu ao trocar o formato do perfil no editor. */
+.pw-logo-texto { font-size: calc(var(--esc, 1) * clamp(14px, min(48cqh, 14cqi), 97px)); font-weight: 900; }
+
+.pw-texto { justify-content: center; min-width: 0; }
+.pw-texto-titulo {
+  font-size: calc(var(--esc, 1) * clamp(14px, min(52cqh, 9cqi), 158px));
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--p-texto, #14142e);
+  /*
+    SEM `text-transform`. O caixa-alta era decidido aqui e valia para toda
+    tela: "Ranking dos vendedores" virava "RANKING DOS VENDEDORES" mesmo onde o
+    desenho pede a frase escrita como se fala. Agora quem decide é o texto
+    digitado no bloco — a tela de tráfego grita, a do ranking conversa.
+  */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* Subtítulo é a linha que EXPLICA o título — a metade do tamanho dele, não o
+   mesmo peso. Com `6cqi` numa faixa de tela cheia ele saía em 30px e disputava
+   a manchete que deveria apresentar. */
+.pw-texto-subtitulo { font-size: calc(var(--esc, 1) * clamp(11px, min(26cqh, 3.2cqi), 60px)); font-weight: 600; color: var(--p-fraco, #b9b9c2); }
+.pw-texto-corpo { font-size: calc(var(--esc, 1) * clamp(10px, min(26cqh, 4.5cqi), 62px)); color: var(--p-fraco, #b9b9c2); }
+
+/*
+  ── As telas CLÁSSICAS dentro da grade ─────────────────────────────────────
+  O painel de sempre (pódio com foto, batalha, financeiro em vidro) foi
+  desenhado em pixels fixos para uma TV 1080p. Aqui ele entra como bloco: o
+  palco é montado no tamanho de projeto e o conjunto inteiro é reduzido por
+  `transform: scale`, calculado no componente (`Classico`). Escalar o todo
+  preserva o desenho — reescrever cada medida em unidade de container seria
+  refazer a tela e perder exatamente aquilo que se quer preservar.
+*/
+.pw-classico {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  /* O texto do painel clássico não obedece a `--esc`: quem faz o papel dela
+     aqui é a escala do palco (ver `Classico`). Deixar a herança valer daria
+     escala duas vezes. */
+  --esc: 1;
+}
+
+/*
+  O slide clássico desenha um punhado de pixels ABAIXO do que o `offsetHeight`
+  dele informa (margem do último bloco, que colapsa para fora da caixa). No
+  painel de sempre isso cai no respiro do `KioskShell` e ninguém nota; dentro da
+  grade, o `.pw-slot` recorta, e o rodapé "Faturamento · Pedidos · % da meta"
+  era cortado ao meio. O slot que hospeda uma tela clássica não recorta — o
+  transbordo vai para o mesmo respiro de sempre.
+
+  `:has` não existe em navegador antigo, e ali a degradação é exatamente o
+  comportamento de antes (recorta na borda da célula), não uma tela quebrada.
+*/
+.pw-slot:has(> .pw-classico) { overflow: visible; }
+.pw-slot:has(> .pw-classico) > .pw-classico { overflow: visible; }
+
+.pw-classico-palco {
+  /* Tamanho vem do componente (1280×720 ÷ escala de polegadas), e o respiro é o
+     mesmo do `KioskShell` — é lá que essas telas foram desenhadas para viver.
+     O slide clássico transborda esse respiro de propósito (o pódio passa da
+     área útil); tudo continua dentro do palco, então nada é cortado. */
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 64px;
+  /* Canto, não centro: quem centra é o `translate` do componente, que sabe o
+     tamanho da célula. Ver o comentário em `Classico`. */
+  transform-origin: top left;
+}
+
+/*
+  ── O CARTÃO, uma receita só ───────────────────────────────────────────────
+
+  Todo bloco que é "uma coisa" mora num cartão branco. Não é enfeite: numa
+  parede clara, número solto sobre o fundo não tem onde começar nem onde
+  acabar, e a grade vira uma sopa de dígitos. O cartão é o que separa "isto é
+  o faturamento" de "isto é a meta" antes de qualquer leitura.
+
+  Uma variável (`--p-cartao`, `--p-aro`, `--p-sombra`) e uma lista de
+  seletores — não a mesma sombra copiada em dez regras, que foi como a versão
+  anterior acumulou três sombras diferentes para o mesmo desenho.
+
+  Sem `backdrop-filter`: o fundo da parede é chapado (não há o que borrar) e o
+  desfoque custa GPU num aparelho que fica ligado 24h.
+*/
+.pw-kpi,
+.pw-meta,
+.pw-prod-card,
+.pw-pessoa,
+.pw-produto,
+.pw-tabela,
+.pw-lidera,
+.pw-equipe,
+.pw-ritmo,
+.pw-batalha,
+.pw-curva,
+.pw-cartao {
+  background: var(--p-cartao, #fff);
+  border: 1px solid var(--p-aro, rgba(20, 20, 46, 0.055));
+  box-shadow: var(--p-sombra);
+}
+
+/* Raio proporcional à caixa: 12px fixo vira quina dura num bloco de tela cheia
+   e beirada redonda demais num bloco pequeno. */
+/* O número solto no fundo preto era o que mais destoava da tela clássica: lá
+   cada indicador mora num cartão de vidro (é o desenho dos 4 cards do tráfego).
+   Com o cartão, a grade 3×2 da doca passa a ter forma mesmo quando um dos
+   números está vazio. */
+.pw-kpi,
+.pw-meta {
+  padding: 0.7em 0.95em;
+  border-radius: clamp(14px, 3.2cqmin, 56px);
+}
+.pw-prod-card { border-radius: clamp(12px, 3cqmin, 52px); }
+.pw-pessoa    { border-radius: clamp(14px, 3.2cqmin, 56px); }
+.pw-produto   { border-radius: clamp(12px, 3cqmin, 48px); padding: 0.5em 0.9em; }
+.pw-tabela    { border-radius: clamp(14px, 3.2cqmin, 56px); padding: 0.7em 0.9em; }
+.pw-batalha   { border-radius: clamp(14px, 3.2cqmin, 56px); padding: 0.9em 1.1em; }
+
+/* O alerta continua sendo o único cartão com cor — mas agora com o mesmo
+   acabamento dos vizinhos, senão ele parece de outro sistema. */
+.pw-prod-alerta {
+  background: color-mix(in srgb, var(--p-perigo, #dc2626) 9%, var(--p-cartao, #fff));
+  border-color: color-mix(in srgb, var(--p-perigo, #dc2626) 22%, transparent);
+}
+
+/*
+  SEM brilho no número.
+
+  No fundo preto a sombra colorida separava o dígito do fundo sem aumentar a
+  fonte. Sobre cartão branco ela faz o contrário: um halo cinza-lilás em volta
+  de cada dígito, que a três metros lê como texto fora de foco. O que separa o
+  número aqui é o contraste da tinta quase preta contra o branco — que é maior
+  do que qualquer brilho dava no escuro.
+*/
+.pw-numero,
+.pw-meta-baixo strong,
+.pw-pessoa-pct {
+  font-weight: 800;
+  color: var(--p-texto, #14142e);
+  text-shadow: none;
+}
+.pw-valor { text-shadow: none; }
+
+/*
+  ── Pódio: UMA cor, três intensidades ──────────────────────────────────────
+
+  Ouro, prata e bronze saíram. Eram três matizes que não conversavam com nada
+  mais na tela, e num fundo claro o prata (#c7c7cc) simplesmente sumia — o 2º
+  colocado ficava com um degrau branco sobre cartão branco.
+
+  A colocação passa a ser dita pela INTENSIDADE do mesmo roxo: o campeão em
+  tinta cheia, 2º e 3º em lavanda. Continua legível a três metros (a diferença
+  é de valor, não de matiz) e o pódio para de brigar com o resto do painel.
+*/
+.pw-avatar { border-width: 3px; }
+.pw-avatar.pw-pos1 { border-color: var(--p-primaria, #6c4cf0); }
+.pw-avatar.pw-pos2,
+.pw-avatar.pw-pos3 { border-color: var(--p-trilho, #eae8f4); }
+.pw-avatar.pw-pos1 b { background: var(--p-primaria, #6c4cf0); color: #fff; }
+.pw-avatar.pw-pos2 b,
+.pw-avatar.pw-pos3 b { background: var(--p-selo, #ece7fe); color: var(--p-primaria, #6c4cf0); }
+.pw-valor.pw-pos1 { color: var(--p-primaria, #6c4cf0); }
+.pw-valor.pw-pos2,
+.pw-valor.pw-pos3 { color: var(--p-primaria, #6c4cf0); }
+/* O degrau: o campeão em roxo cheio, os outros dois na lavanda do trilho. */
+.pw-base.pw-pos1 {
+  background: linear-gradient(180deg, var(--p-primaria-clara, #a78bfa), var(--p-primaria, #6c4cf0));
+}
+.pw-base.pw-pos2,
+.pw-base.pw-pos3 {
+  /* Lavanda com contraste suficiente para EXISTIR sobre o fundo da parede
+     (#f5f4fa): a primeira tentativa (#eeebfb) ficava a três por cento do
+     fundo e o 2º e o 3º lugar simplesmente não tinham degrau. */
+  background: linear-gradient(180deg, #ddd6f8, #ece8fc);
+}
+.pw-base.pw-pos1,
+.pw-base.pw-pos2,
+.pw-base.pw-pos3 { box-shadow: none; }
+
+/* Barra: trilho lavanda chapado e preenchimento no degradê da marca. Nada de
+   sombra interna — no claro ela vira uma listra cinza dentro do trilho. */
+.pw-barra { box-shadow: none; background: var(--p-trilho, #eae8f4); }
+.pw-barra-fill {
+  box-shadow: none;
+  background: linear-gradient(90deg, var(--p-primaria-clara, #a78bfa), var(--p-primaria, #6c4cf0));
+}
+
+/* ── As peças soltas das telas clássicas ───────────────────────────────────
+   Mesmo vidro, mesma escala de texto: a peça tirada de dentro da tela pronta
+   não pode parecer de outro sistema quando o perfil a usa sozinha. */
+.pw-lidera {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 0.8em;
+  padding: 0.55em 0.9em;
+  border-radius: clamp(14px, 3.2cqmin, 56px);
+  min-width: 0;
+}
+.pw-lidera-selo {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: clamp(22px, 30cqh, 132px);
+  aspect-ratio: 1;
+  border-radius: 30%;
+  background: color-mix(in srgb, var(--p-primaria, #0a84ff) 18%, transparent);
+}
+.pw-lidera-selo svg { width: 60%; height: 60%; }
+.pw-lidera-corpo { display: flex; flex-direction: column; min-width: 0; flex: 1; gap: 0.1em; }
+/* O número e a legenda na MESMA linha, alinhados pela base: empilhados, o
+   bloco de duas linhas de altura ficava com o número espremido. */
+.pw-lidera-linha { display: flex; align-items: baseline; gap: 0.5em; min-width: 0; }
+.pw-lidera-linha .pw-numero { color: var(--p-primaria); }
+.pw-lidera-linha em {
+  font-style: normal;
+  font-weight: 700;
+  color: var(--p-fraco, #b9b9c2);
+  /* Numa faixa de UMA linha (73px) `11cqh` dava 8px — a frase que explica o
+     número saía menor que a legenda do painel clássico (14px) e ilegível a
+     três metros. O termo de largura resgata: numa faixa de 6 colunas são
+     ~571px, e o piso de 11px garante o resto. */
+  font-size: calc(var(--esc, 1) * clamp(11px, min(20cqh, 1.8cqi), 44px));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pw-equipe {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 1.4em;
+  padding: 0.5em 0.9em;
+  border-radius: clamp(14px, 3.2cqmin, 56px);
+  min-width: 0;
+}
+.pw-equipe-num { display: flex; flex-direction: column; flex: none; min-width: 0; }
+.pw-equipe-num .pw-numero { font-size: calc(var(--esc, 1) * clamp(12px, min(30cqh, 9cqi), 101px)); white-space: nowrap; }
+/* A barra fica com o espaço que sobrar — os dois números têm largura própria e
+   são o que se lê primeiro. */
+.pw-equipe-meta { display: flex; flex-direction: column; gap: 0.3em; flex: 1; min-width: 0; }
+.pw-equipe-topo { display: flex; align-items: baseline; gap: 0.45em; min-width: 0; }
+.pw-equipe-topo .pw-rotulo { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.pw-curva { gap: 0.4em; min-width: 0; }
+.pw-curva-topo { display: flex; align-items: baseline; justify-content: space-between; gap: 0.6em; min-width: 0; flex: none; }
+/* O rótulo do gráfico é LEGENDA, não manchete: sem este teto ele herda o
+   `13cqh` do rótulo padrão e, num bloco de meia tela de altura, virava um
+   título de 39px atravessado por cima da curva. */
+.pw-curva-topo .pw-rotulo { font-size: calc(var(--esc, 1) * clamp(8px, min(7cqh, 2.6cqi), 44px)); }
+.pw-curva-fim {
+  /*
+    O último ponto da série é REFERÊNCIA, não manchete.
+
+    Com o teto antigo ele saía maior que os cartões de cima e, ao lado do
+    título "Vendas atribuídas × investimento", virava um quinto número na tela
+    sem dizer de que dia era. Menor, continua legível e para de competir.
+  */
+  font-size: calc(var(--esc, 1) * clamp(10px, min(16cqh, 5cqi), 32px)); /* = Widgets.kt fonte(0.16, 0.05, max 32) */
+  font-weight: 900;
+  white-space: nowrap;
+  color: var(--p-primaria, #0a84ff);
+}
+/* `flex: 1` + `min-height: 0`: o desenho cede altura antes de empurrar o
+   rótulo e a faixa de datas para fora do bloco. */
+.pw-curva-svg { flex: 1; min-height: 0; width: 100%; display: block; }
+.pw-curva-eixo {
+  display: flex;
+  justify-content: space-between;
+  flex: none;
+  font-size: calc(var(--esc, 1) * clamp(7px, min(9cqh, 2.2cqi), 35px));
+  font-weight: 700;
+  color: var(--p-fraco, #b9b9c2);
+}
+
+/* ── Anel, ritmo, metas do time e recorde ─────────────────────────────────── */
+.pw-anel { position: relative; justify-content: center; align-items: center; }
+/* O SVG ocupa o QUADRADO que couber na caixa: num bloco retangular o anel
+   continua redondo e centrado, em vez de virar elipse. */
+.pw-anel-svg {
+  width: min(100%, calc(100cqh - 2px));
+  aspect-ratio: 1;
+  display: block;
+}
+.pw-anel-trilho {
+  fill: none;
+  stroke: var(--p-trilho, #eae8f4);
+  stroke-width: 9;
+}
+.pw-anel-arco {
+  fill: none;
+  stroke: currentColor;                 /* a cor vem da classe `faixa-*` */
+  stroke-width: 9;
+  stroke-linecap: round;
+  /* SEM `transition` aqui: quem move o arco é a mesma contagem que move o
+     número (`useNumeroFluido`), quadro a quadro. Com os dois, a transição
+     ficava perseguindo o valor da contagem e o arco chegava depois do texto —
+     duas animações para uma coisa só. */
+}
+/* O número mora NO MEIO do anel, não abaixo: é a leitura de uma coisa só. */
+.pw-anel-centro {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.1em;
+  pointer-events: none;
+}
+.pw-anel-centro strong {
+  font-size: calc(var(--esc, 1) * clamp(12px, min(26cqh, 26cqi), 132px));
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+.pw-anel-centro .pw-rotulo { font-size: calc(var(--esc, 1) * clamp(7px, min(9cqh, 9cqi), 35px)); }
+
+.pw-ritmo {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 1.2em;
+  padding: 0.5em 0.9em;
+  border-radius: clamp(14px, 3.2cqmin, 56px);
+  min-width: 0;
+}
+.pw-ritmo-col { display: flex; flex-direction: column; min-width: 0; flex: 1 1 0; }
+/* Três colunas de dinheiro dividindo a faixa: quem manda é a LARGURA. Com o
+   fator antigo (8cqi) o número não encolhia e saía "R$ 13…", que é o mesmo que
+   não mostrar. */
+.pw-ritmo-col .pw-numero { font-size: calc(var(--esc, 1) * clamp(10px, min(28cqh, 4.6cqi), 88px)); }
+.pw-ritmo-col .pw-numero em { font-style: normal; font-size: 0.5em; font-weight: 800; opacity: 0.75; }
+/* A média até agora é referência, não alvo: fica mais apagada para não
+   competir com o número que pede ação. */
+.pw-ritmo-fraco { opacity: 0.62; }
+/* Bloco estreito: a referência é a primeira a sair. */
+@container (max-width: 260px) {
+  .pw-ritmo-fraco { display: none; }
+}
+
+.pw-metas { gap: 0.6cqh; min-height: 0; overflow: hidden; }
+.pw-metas-linha {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) auto;
+  align-items: center;
+  gap: 0.7em;
+  font-size: calc(var(--esc, 1) * clamp(9px, min(12cqh, 2.6cqi), 57px));
+  font-weight: 700;
+}
+.pw-metas-nome { min-width: 0; }
+.pw-metas-pct { font-weight: 900; font-variant-numeric: tabular-nums; }
+
+.pw-recorde { justify-content: center; gap: 0.15em; min-width: 0; }
+.pw-recorde-pe {
+  font-size: calc(var(--esc, 1) * clamp(8px, min(11cqh, 3cqi), 44px));
+  font-weight: 700;
+  color: var(--p-fraco, #b9b9c2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pw-recorde-pe em { font-style: normal; opacity: 0.8; }
+
+/* ── Etapas, falta produzir e o destaque ──────────────────────────────────── */
+/* Mesma armadilha do `.pw-produtos`: em `grid`, `justify-content: center`
+   encolhe a coluna em vez de centrar as linhas. */
+.pw-etapas, .pw-falta { gap: 0.6cqh; min-height: 0; overflow: hidden; }
+
+.pw-etapas-linha {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 0.6em;
+  font-size: calc(var(--esc, 1) * clamp(9px, min(13cqh, 2.8cqi), 62px));
+  font-weight: 700;
+}
+.pw-etapas-cor { width: 0.62em; height: 0.62em; border-radius: 999px; flex: none; }
+.pw-etapas-valor { font-weight: 900; font-variant-numeric: tabular-nums; }
+/* A seta é do tamanho do texto ao lado, não do número: ela qualifica, não
+   compete. */
+.pw-etapas-linha .pw-exp-sobe,
+.pw-etapas-linha .pw-exp-desce { font-size: 0.78em; font-weight: 800; white-space: nowrap; }
+
+.pw-falta-linha {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 0.6em;
+  font-size: calc(var(--esc, 1) * clamp(9px, min(12cqh, 2.6cqi), 57px));
+  font-weight: 700;
+}
+.pw-falta-total { font-weight: 900; font-variant-numeric: tabular-nums; }
+.pw-falta-pedidos { color: var(--p-fraco, #b9b9c2); font-size: 0.82em; white-space: nowrap; }
+
+/* Estoque baixo: mesma anatomia da lista de "falta produzir" — nome, barra,
+   número e a régua embaixo dele. */
+/* `justify-content: center` aqui seria armadilha: como o container é GRID, ele
+   centraliza a COLUNA inteira em vez do texto — as linhas encolhiam para o
+   tamanho do conteúdo (287px de 559px) e a lista nascia espremida no meio do
+   bloco, com a barra virando um toco. O centro que interessa é o vertical, e
+   quem faz isso é o `align-content` da regra compartilhada abaixo. */
+.pw-estq { gap: 0.6cqh; min-height: 0; overflow: hidden; justify-content: stretch; }
+.pw-estq-linha {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 0.6em;
+  font-size: calc(var(--esc, 1) * clamp(9px, min(12cqh, 2.6cqi), 57px));
+  font-weight: 700;
+  min-height: 0;
+  overflow: hidden;
+}
+.pw-estq-saldo { font-weight: 900; font-variant-numeric: tabular-nums; }
+.pw-estq-min { color: var(--p-fraco, #b9b9c2); font-size: 0.82em; white-space: nowrap; }
+
+.pw-cartaz {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 0.25em;
+  min-width: 0;
+}
+/* A foto é o assunto: ocupa a largura da coluna até o teto da altura. */
+.pw-cartaz-foto {
+  position: relative;
+  width: min(78%, calc(42cqh));
+  aspect-ratio: 1;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.1);
+  border: 3px solid #ffd60a;
+  box-shadow: 0 0 2.4em -0.7em #ffd60a;
+  flex: none;
+  margin-bottom: 0.15em;
+}
+.pw-cartaz-foto img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+.pw-cartaz-foto b { font-size: calc(var(--esc, 1) * clamp(10px, 14cqh, 75px)); font-weight: 900; }
+.pw-cartaz-foto i {
+  position: absolute;
+  right: -4%;
+  bottom: -4%;
+  width: 34%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #ffd60a;
+  display: grid;
+  place-items: center;
+}
+.pw-cartaz-foto i svg { width: 60%; height: 60%; }
+.pw-cartaz-nome {
+  font-size: calc(var(--esc, 1) * clamp(10px, min(13cqh, 13cqi), 66px));
+  font-weight: 800;
+  max-width: 100%;
+}
+.pw-cartaz .pw-numero { font-size: calc(var(--esc, 1) * clamp(12px, min(18cqh, 18cqi), 97px)); color: #ffd60a; }
+.pw-cartaz-pe {
+  font-size: calc(var(--esc, 1) * clamp(8px, min(10cqh, 10cqi), 40px));
+  font-weight: 700;
+  color: var(--p-fraco, #b9b9c2);
+}
+
+/*
+  ── Movimento reduzido ─────────────────────────────────────────────────────
+  Numa TV ninguém liga a preferência, mas a mesma folha desenha a prévia do
+  editor, que roda no computador de quem monta. Movimento reduzido não é
+  "sem retorno": as barras e o anel continuam mudando de valor, só param de
+  deslizar até lá. Ver `prefers-reduced-motion` no guia da Apple.
+*/
+@media (prefers-reduced-motion: reduce) {
+  /* A barra deixa de deslizar; o anel e os números já respeitam a preferência
+     no próprio hook da contagem, que troca de valor sem percorrer o caminho. */
+  .pw-barra-fill { transition: none; }
+}
+
+/*
+  ── Lista que SEMPRE cabe na caixa ─────────────────────────────────────────
+  Todo bloco de lista (produtos, etapas, falta, metas, fila da produção,
+  cartões de pessoa) distribuía as linhas pelo tamanho natural delas e centrava
+  o conjunto. Ao encolher o bloco, o excedente saía pelo rodapé e o
+  `overflow: hidden` do slot cortava — de fora parecia que o widget tinha
+  "bugado" e comido metade do conteúdo.
+
+  Com linhas de `1fr` as N linhas dividem a altura disponível: encolher o bloco
+  aperta as linhas em vez de escondê-las. O que cada linha faz com o aperto é
+  problema dela — as fontes já são medidas em unidade de container.
+*/
+.pw-produtos,
+.pw-etapas,
+.pw-falta,
+.pw-estq,
+.pw-metas,
+.pw-prod-time {
+  display: grid;
+  grid-auto-rows: minmax(0, 1fr);
+  align-content: stretch;
+  min-height: 0;
+  overflow: hidden;
+}
+.pw-produto,
+.pw-etapas-linha,
+.pw-falta-linha,
+.pw-estq-linha,
+.pw-metas-linha,
+.pw-prod-op {
+  min-height: 0;
+  overflow: hidden;
+}
+/* Cartão de pessoa: mesma ideia, mas em grade de duas colunas. */
+.pw-pessoas { grid-auto-rows: minmax(0, 1fr); align-content: stretch; }
+.pw-pessoa { min-height: 0; overflow: hidden; }
+
+/* ── Dia a dia, atenção e imagem ──────────────────────────────────────────── */
+.pw-barras { gap: 0.5em; min-height: 0; }
+/* As colunas dividem a largura e a faixa divide a altura que sobra do rótulo:
+   encolher o bloco aperta as barras, não corta o último dia. */
+.pw-barras-campo {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  align-items: end;
+  gap: 0.5cqi;
+}
+.pw-barras-col {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  align-items: end;
+  justify-items: center;
+  height: 100%;
+  min-width: 0;
+  gap: 0.25em;
+}
+/* Barra em PÍLULA e tinta cheia — a assinatura do conjunto mono-rounded. O
+   999px arredonda até a metade da largura, então a coluna fecha em cima com
+   qualquer largura de bloco; embaixo o canto fica quase reto, porque a barra
+   nasce da linha de base e não pode parecer flutuando. */
+.pw-barras-barra {
+  width: 100%;
+  border-radius: 999px 999px 3px 3px;
+  background: var(--p-primaria, #6c4cf0);
+  align-self: end;
+}
+/* O melhor dia da janela: sem destaque, oito barras parecidas não dizem
+   qual foi a boa. Na tinta da casa, não em ouro — o ouro saiu do pódio
+   justamente por ser a única cor da parede que não conversa com nada. */
+.pw-barras-topo {
+  background: linear-gradient(180deg, var(--p-primaria-clara, #a78bfa), var(--p-primaria, #6c4cf0));
+  box-shadow: none;
+}
+.pw-barras-valor,
+.pw-barras-dia {
+  font-size: calc(var(--esc, 1) * clamp(8px, min(9cqh, 2.4cqi), 26px));
+  font-weight: 700;
+  white-space: nowrap;
+}
+/* O rótulo do melhor dia pode passar por cima das colunas vizinhas — a linha
+   dele é reservada e está vazia nelas, então não há o que atropelar. */
+.pw-barras-valor {
+  color: var(--p-texto);
+  font-weight: 800;
+  overflow: visible;
+  min-height: 1em;
+}
+.pw-barras-dia { color: var(--p-fraco, #b9b9c2); }
+/* Bloco baixo: o valor em cima da barra é a primeira coisa a sair. */
+@container (max-height: 130px) {
+  .pw-barras-valor { display: none; }
+}
+
+.pw-alertas { gap: 0.5em; min-height: 0; }
+.pw-alertas-lista { display: flex; flex-direction: column; gap: 0.45em; min-height: 0; overflow: hidden; }
+.pw-alertas-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  font-size: calc(var(--esc, 1) * clamp(11px, min(15cqh, 4cqi), 40px));
+  font-weight: 700;
+  color: #ffd60a;
+  min-width: 0;
+}
+.pw-alertas-grave { color: #ff453a; }
+.pw-alertas-item svg { flex: none; }
+/* Nada pendente é NOTÍCIA, não ausência de conteúdo. */
+.pw-alertas-paz {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  font-size: calc(var(--esc, 1) * clamp(11px, min(15cqh, 4.5cqi), 40px));
+  font-weight: 700;
+  color: var(--p-secundaria, #30d158);
+}
+
+.pw-imagem { padding: 0; }
+.pw-imagem img {
+  width: 100%;
+  height: 100%;
+  border-radius: clamp(8px, 2cqmin, 20px);
+  display: block;
+}
+
+/*
+  ══ Acabamento ═════════════════════════════════════════════════════════════
+  Os blocos estavam corretos e feios: o número ocupava pouco da caixa, o
+  rótulo crescia junto com ele (empatando a hierarquia), o respiro interno era
+  medido em `em` — ou seja, encolhia quando a fonte encolhia, e um cartão
+  grande ficava com a mesma margem de um pequeno.
+*/
+
+/* 1. O NÚMERO MANDA. 52% da altura contra 42%: num cartão de duas linhas ele
+      passa de ~74px para ~91px e o cartão deixa de parecer vazio. */
+.pw-numero {
+  font-size: calc(var(--esc, 1) * clamp(16px, min(52cqh, var(--fator, 13) * 1cqi), 264px));
+  letter-spacing: -0.025em;
+}
+/* Tracking é específico do tamanho (nunca um valor só): quanto maior o número,
+   mais apertado — grande com espaçamento de texto pequeno parece frouxo. */
+@container (min-height: 220px) {
+  .pw-numero { letter-spacing: -0.035em; }
+}
+
+/* 2. O RÓTULO É LEGENDA, e legenda tem teto. Ele subiu junto com todos os
+      outros tetos e chegava a 57px — do tamanho de um número em cartão médio.
+      Caixa alta grande também não quer o mesmo espacejamento da pequena. */
+.pw-rotulo { font-size: calc(var(--esc, 1) * clamp(13px, min(13cqh, 7cqi), 34px)); }
+@container (min-height: 220px) {
+  .pw-rotulo { letter-spacing: 0.02em; }
+}
+
+/* 3. O RESPIRO ACOMPANHA A CAIXA. Em `em` a margem interna encolhia junto com
+      a fonte; em `cqmin` ela é uma fração do cartão, como numa peça impressa. */
+.pw-kpi,
+.pw-meta,
+.pw-prod-card,
+.pw-pessoa,
+.pw-produto,
+.pw-tabela,
+.pw-lidera,
+.pw-equipe,
+.pw-ritmo,
+.pw-alertas,
+.pw-barras {
+  /* `cqmin` é o MENOR lado do slot, e num cartão deitado o menor lado é a
+     altura: 3,4% dela dava 6px e o piso do clamp assumia. Com 9% o cartão de
+     410×175 respira 16px, e o de tela cheia para nos 40px — passar disso é
+     margem de pôster, não de cartão. */
+  padding: clamp(12px, 9cqmin, 40px) clamp(14px, 10cqmin, 46px);
+  border-radius: clamp(14px, 6cqmin, 32px);
+}
+
+/* 4. LUZ NA BORDA DE CIMA. É o que faz o vidro parecer material e não caixa
+      cinza: a aresta superior recebe a luz, o resto some. Sem imagem, sem
+      blur — só um degradê de 1px, que a TV desenha de graça. */
+.pw-kpi,
+.pw-meta,
+.pw-prod-card,
+.pw-pessoa,
+.pw-produto,
+.pw-tabela,
+.pw-lidera,
+.pw-equipe,
+.pw-ritmo {
+  position: relative;
+  isolation: isolate;
+}
+/* O verniz branco que dava volume ao cartão ESCURO não tem função nenhuma
+   sobre um cartão branco — é branco sobre branco. A profundidade aqui vem da
+   sombra em duas camadas (`--p-sombra`), não de um degradê por cima. */
+
+/* 5. O SINAL É ADJETIVO. Um ícone de 75px ao lado do número competia com ele;
+      agora acompanha a altura da linha e para de crescer cedo. */
+.pw-sinal { width: calc(var(--esc, 1) * clamp(12px, 16cqh, 40px)); }
+
+/* 6. "SEM DADO" NÃO É MANCHETE. O teto subiu junto e um bloco vazio anunciava
+      a ausência em 44px. */
+.pw-vazio { font-size: calc(var(--esc, 1) * clamp(9px, min(12cqh, 4cqi), 24px)); }
+
+/* 7. A FAÍSCA É FUNDO, não gráfico: ela existe para dar forma ao número, e a
+      101px virava o assunto do cartão. */
+.pw-faisca { height: clamp(10px, 22cqh, 60px); }
+
+
+/*
+  ── O SELO: o quadradinho do ícone ─────────────────────────────────────────
+
+  Um ícone Tabler dentro de um quadrado de canto redondo, na lavanda da marca.
+  Não é enfeite: numa grade de quatro cartões brancos iguais, o selo é o que
+  dá a cada um uma silhueta própria antes de qualquer palavra ser lida — a
+  três metros, o carrinho diz "pedidos" mais rápido que a palavra PEDIDOS.
+
+  O tamanho sai da CAIXA (`cqmin`), como todo o resto da parede: o mesmo bloco
+  serve a TV de 55" e ao quadradinho da prévia do editor.
+*/
+.pw-selo {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: clamp(20px, 22cqmin, 132px);
+  aspect-ratio: 1;
+  border-radius: 28%;
+  background: var(--p-selo, #ece7fe);
+  color: var(--p-primaria, #6c4cf0);
+}
+.pw-selo svg { width: 58%; height: 58%; }
+
+/*
+  O KPI com selo vira uma LINHA (selo à esquerda, texto à direita) quando a
+  caixa é larga, e uma PILHA (selo em cima, texto centrado) quando é estreita —
+  que é exatamente a diferença entre o cartão do faturamento e o de pedidos no
+  desenho. Sem isso, o selo empurrava o número para uma linha de 40px de altura
+  num cartão de 3 colunas.
+*/
+.pw-kpi-selo { flex-direction: row !important; align-items: center; gap: 0.75em; }
+.pw-kpi-selo > .pw-kpi-corpo { display: flex; flex-direction: column; min-width: 0; flex: 1; gap: 0.15em; }
+/*
+  O ponto de virada é 240px, não 300: com 300 os cartões de 3 colunas da tela de
+  tráfego (288px no palco de 1280) caíam na pilha, e a fileira ficava com dois
+  cartões em linha e dois empilhados — quatro medidas iguais desenhadas de duas
+  maneiras. Abaixo de 240 a linha realmente não cabe.
+*/
+@container (max-width: 240px) {
+  .pw-kpi-selo { flex-direction: column !important; align-items: center; gap: 0.5em; }
+  .pw-kpi-selo > .pw-kpi-corpo { align-items: center; text-align: center; flex: none; }
+}
+
+/* Lugar guardado para a variação que ainda não existe — ver a nota no `Kpi`. */
+.pw-delta-vazio { visibility: hidden; }
+
+/*
+  ── O degrau do CAMPEÃO é um cartão ────────────────────────────────────────
+
+  O 1º lugar sai do plano do pódio e ganha o mesmo cartão branco dos outros
+  blocos. É a hierarquia dita por PROFUNDIDADE em vez de por cor — o que
+  libera ouro/prata/bronze para sumirem sem que o pódio perca o campeão.
+*/
+.pw-degrau.pw-campeao {
+  background: var(--p-cartao, #fff);
+  border: 1px solid var(--p-aro, rgba(20, 20, 46, 0.055));
+  box-shadow: var(--p-sombra);
+  border-radius: clamp(14px, 5cqmin, 56px);
+  padding: 0.6em 0.5em 0;
+  /* O cartão não pode roubar largura dos vizinhos: o padding entra para dentro
+     da mesma coluna de `flex: 1` que os outros dois degraus têm. */
+  box-sizing: border-box;
+}
+/* O degrau desce até a borda de baixo do cartão, sem cantos soltos. */
+.pw-degrau.pw-campeao .pw-base { border-radius: clamp(8px, 2cqmin, 20px) clamp(8px, 2cqmin, 20px) 0 0; }
+
+/*
+  ── As ABAS de período (Hoje · Semana · Mês) ───────────────────────────────
+
+  A tela do ranking mostra os três períodos, um de cada vez, trocando sozinha.
+  Sem esta fileira, "R$ 19.808" significa uma coisa diferente a cada sete
+  segundos e ninguém sabe qual — que é pior do que mostrar só o mês.
+
+  A aba acesa é a INVERTIDA (tinta cheia, letra branca); as apagadas são texto
+  fraco sem caixa. Duas caixas com bordas diferentes, a três metros, viram duas
+  manchas cinzas.
+*/
+.pw-abas {
+  flex-direction: row !important;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5em;
+  min-width: 0;
+}
+.pw-aba {
+  padding: 0.34em 0.95em;
+  border-radius: 999px;
+  font-size: calc(var(--esc, 1) * clamp(9px, min(26cqh, 3.4cqi), 44px));
+  font-weight: 700;
+  color: var(--p-fraco, #9394b1);
+  white-space: nowrap;
+  transition: color var(--duration-fast, 0.15s) var(--ease-smooth, ease);
+}
+.pw-aba[data-on="1"] {
+  background: var(--p-primaria, #6c4cf0);
+  color: #fff;
+}
+
+/*
+  ── A faixa da EQUIPE: fios entre os números ───────────────────────────────
+  Três medidas na mesma faixa branca coladas viram uma frase só. O fio vertical
+  é o que diz "isto acabou, aquilo começou" sem gastar uma palavra.
+*/
+.pw-equipe-fio {
+  flex: none;
+  width: 1px;
+  align-self: stretch;
+  margin: 0.35em 0;
+  background: var(--p-trilho, #eae8f4);
+}
+
+/* O selo do "lidera" já existia; aqui ele só passa a usar o mesmo tom chapado
+   dos outros — `color-mix` com transparente mudava de cor conforme o bloco
+   estivesse sobre cartão ou sobre o fundo da parede. */
+.pw-lidera-selo { background: var(--p-selo, #ece7fe); }
+.pw-lidera-selo svg { color: var(--p-primaria, #6c4cf0); }
+
+/* A porcentagem da batalha, nos dois lados, é da marca: o lado que perde não
+   fica cinza — perder por 43% não é estar sem dado. */
+.pw-batalha .pw-pct span { color: var(--p-primaria, #6c4cf0); }
+
+/* O rótulo da meta e o selo andam juntos, na mesma linha do valor. */
+.pw-meta-tit { display: flex; align-items: center; gap: 0.55em; min-width: 0; }
+/* Dentro de uma faixa de meta o selo divide a linha com o rótulo — medido pela
+   ALTURA da caixa, senão numa faixa de tela cheia ele vira um quadrado de 60px
+   ao lado de um rótulo de 20. */
+.pw-selo-min { width: clamp(18px, 26cqh, 108px); border-radius: 30%; }
+
+
+/*
+  ── O que ainda faltava vestir de claro ────────────────────────────────────
+*/
+
+/* O rótulo é TINTA, não cinza. No desenho novo "FATURAMENTO DO MÊS" e
+   "PEDIDOS" são pretos como o número que explicam — a hierarquia vem do
+   TAMANHO (o rótulo é um terço) e não de apagar a cor. Cinza claro sobre
+   branco a três metros é o que some primeiro. */
+.pw-rotulo { color: var(--p-texto, #14142e); }
+/* Onde o rótulo é mesmo legenda de gráfico, ele continua apagado. */
+.pw-curva-topo .pw-rotulo,
+.pw-anel-centro .pw-rotulo,
+.pw-comp-item .pw-rotulo,
+.pw-linha.pw-cabecalho { color: var(--p-fraco, #9394b1); }
+
+/* A porcentagem da meta é da MARCA quando não há semáforo: um "52%" preto de
+   119px ao lado de um faturamento preto é o mesmo peso para duas coisas
+   diferentes. */
+.pw-meta-baixo strong.faixa-neutro { color: var(--p-primaria, #6c4cf0); }
+
+/* A batalha põe os dois times na cor da casa: quem está na frente é dito pela
+   barra, não por um valor de outra cor. */
+.pw-batalha .pw-numero { color: var(--p-primaria, #6c4cf0); }
+.pw-batalha .pw-rotulo { color: var(--p-fraco, #9394b1); }
+
+/* A composição vira cartão como os vizinhos — solta no fundo, ela era a única
+   peça sem moldura da tela financeira. */
+.pw-comp {
+  background: var(--p-cartao, #fff);
+  border: 1px solid var(--p-aro, rgba(20, 20, 46, 0.055));
+  box-shadow: var(--p-sombra);
+  border-radius: clamp(14px, 3.2cqmin, 56px);
+  padding: 0.7em 0.95em;
+}
+
+/* Os quatro cartões do tráfego, na mesma receita dos outros. */
+.pw-card {
+  background: var(--p-cartao, #fff);
+  border: 1px solid var(--p-aro, rgba(20, 20, 46, 0.055));
+  box-shadow: var(--p-sombra);
+  border-radius: clamp(14px, 3.2cqmin, 56px);
+}
+
+/*
+  ── A segunda linha da curva: o que CUSTOU, por baixo do que trouxe ────────
+
+  Tracejada e mais clara de propósito. Duas linhas cheias da mesma cor a três
+  metros viram uma faixa; o tracejado diz "esta é a outra" sem gastar um
+  segundo matiz — e o bloco tem duas escalas, então a linha de baixo não é
+  comparável em ALTURA com a de cima, só em FORMATO. Cheia, ela convidaria
+  justamente a comparação errada.
+*/
+.pw-curva-b {
+  stroke: var(--p-primaria-clara, #a78bfa);
+  stroke-dasharray: 6 5;
+  opacity: 0.85;
+}
+.pw-curva-legenda {
+  display: flex;
+  gap: 1.2em;
+  flex: none;
+  font-size: calc(var(--esc, 1) * clamp(8px, min(9cqh, 2.2cqi), 35px));
+  font-weight: 700;
+  color: var(--p-fraco, #9394b1);
+}
+.pw-curva-legenda span { display: inline-flex; align-items: center; gap: 0.45em; min-width: 0; }
+.pw-curva-marca {
+  width: 1.4em;
+  height: 0.25em;
+  border-radius: 999px;
+  background: var(--p-primaria, #6c4cf0);
+  flex: none;
+}
+.pw-curva-marca-b {
+  background: repeating-linear-gradient(
+    90deg,
+    var(--p-primaria-clara, #a78bfa) 0 0.34em,
+    transparent 0.34em 0.6em
+  );
+}
+
+/*
+  ── A faixa do INSIGHT ─────────────────────────────────────────────────────
+  Rodapé de uma linha: selo, rótulo, fio, frase. É o único bloco da parede que
+  fala em frase inteira, e por isso ele é o mais BAIXO da tela — quem lê de
+  longe vê os números; quem chega perto lê a conclusão.
+*/
+.pw-insight {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 0.8em;
+  min-width: 0;
+}
+.pw-insight .pw-rotulo { flex: none; }
+/* Faixa larga sem moldura nem fio, como o Insight do Widgets.kt (a referência). */
+.pw-insight-fio {
+  display: none;
+  flex: none;
+  width: 1px;
+  align-self: stretch;
+  margin: 0.3em 0;
+  background: var(--p-trilho, #eae8f4);
+}
+.pw-insight-frase {
+  flex: 1;
+  min-width: 0;
+  font-size: calc(var(--esc, 1) * clamp(10px, min(34cqh, 2.6cqi), 44px));
+  font-weight: 600;
+  color: var(--p-fraco, #9394b1);
+}
+
+/*
+  A CURVA é da marca, não da tinta do texto.
+
+  `.mono-serie` nasce em `--mono-tinta`, que na parede clara é o quase-preto do
+  número. Uma linha preta sobre cartão branco lê como moldura de tabela, não
+  como série — e ao lado de quatro cartões roxos ela parece de outro sistema.
+  A área embaixo herda o mesmo `currentColor` do bloco.
+*/
+.pw-curva { color: var(--p-primaria, #6c4cf0); }
+.pw-curva .mono-serie { stroke: var(--p-primaria, #6c4cf0); }
+
+/*
+  Num cartão COM selo o rótulo mede pela largura que sobra, não pela do cartão.
+
+  O selo come ~48px e o `7cqi` de sempre continuava calculando como se a linha
+  inteira fosse do texto: "VENDAS ATRIBUÍDAS" saía em 20px numa faixa de 195px e
+  virava "VENDAS ATRIBUÍD…". O rótulo é o que diz DE QUE número se trata —
+  cortado, o cartão perde o nome.
+*/
+.pw-kpi-selo .pw-rotulo { font-size: calc(var(--esc, 1) * clamp(11px, min(13cqh, 5.4cqi), 48px)); }
+
+/*
+  ── Desempenho por canal ───────────────────────────────────────────────────
+
+  Uma COLUNA por plataforma de anúncio, dividindo a faixa por igual. Com uma
+  plataforma só (hoje, o Meta) a coluna ocupa o cartão inteiro em vez de deixar
+  um vazio à direita — a faixa não promete um lugar para quem não existe.
+
+  Os três números dentro de cada coluna são uma grade de rótulo-em-cima:
+  "INVESTIMENTO / R$ 16.732" lado a lado com "VENDAS" e "ROAS" é a leitura do
+  desenho, e é o que separa o que a plataforma custou do que ela trouxe sem
+  gastar uma frase.
+*/
+.pw-canais {
+  justify-content: center;
+  gap: 0.5em;
+  padding: 0.7em 0.95em;
+  border-radius: clamp(14px, 3.2cqmin, 56px);
+  background: var(--p-cartao, #fff);
+  border: 1px solid var(--p-aro, rgba(20, 20, 46, 0.055));
+  box-shadow: var(--p-sombra);
+  min-width: 0;
+}
+.pw-canais-linha { display: flex; align-items: stretch; min-width: 0; flex: 1; }
+.pw-canal {
+  display: flex;
+  align-items: center;
+  gap: 0.7em;
+  flex: 1 1 0;
+  min-width: 0;
+  padding-inline: 0.6em;
+}
+.pw-canal:first-child { padding-inline-start: 0; }
+.pw-canal-fio {
+  flex: none;
+  width: 1px;
+  align-self: stretch;
+  margin: 0.3em 0.6em 0.3em 0;
+  background: var(--p-trilho, #eae8f4);
+}
+.pw-canal-corpo { display: flex; flex-direction: column; min-width: 0; flex: 1; gap: 0.25em; }
+.pw-canal-nums {
+  display: flex;
+  gap: 1.1em;
+  min-width: 0;
+}
+.pw-canal-nums > span { display: flex; flex-direction: column; min-width: 0; gap: 0.1em; }
+.pw-canal-nums em {
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--p-fraco, #9394b1);
+  font-size: calc(var(--esc, 1) * clamp(7px, min(9cqh, 1.5cqi), 30px));
+  white-space: nowrap;
+}
+.pw-canal-nums strong {
+  font-weight: 800;
+  color: var(--p-texto, #14142e);
+  font-variant-numeric: tabular-nums;
+  font-size: calc(var(--esc, 1) * clamp(10px, min(16cqh, 2.4cqi), 48px));
+  white-space: nowrap;
+}
+
+/*
+  O insight, quando é uma COLUNA estreita em vez de uma faixa larga, empilha:
+  selo e rótulo em cima, a frase embaixo, em até três linhas. Na faixa larga
+  continua tudo numa linha só. Sem isto, num bloco de 3 colunas a frase inteira
+  virava reticências depois da terceira palavra — o bloco existe para ser lido.
+*/
+@container (max-width: 420px) {
+  /* Coluna estreita (< 420, como `estreito` no Widgets.kt): cartão, empilha, até 4 linhas. */
+  .pw-insight {
+    flex-direction: column !important; align-items: flex-start; justify-content: center; gap: 0.4em;
+    padding: 0.5em 0.9em;
+    border-radius: clamp(14px, 3.2cqmin, 56px);
+    background: var(--p-cartao, #fff);
+    border: 1px solid var(--p-aro, rgba(20, 20, 46, 0.055));
+    box-shadow: var(--p-sombra);
+  }
+  .pw-insight-fio { display: none; }
+  .pw-insight-frase {
+    white-space: normal;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 4;
+    line-clamp: 4;
+    font-size: calc(var(--esc, 1) * clamp(10px, min(14cqh, 4.6cqi), 40px));
+  }
+}
+
+
+/*
+  ── O gráfico é um cartão como os outros ───────────────────────────────────
+  Ele era o único bloco da tela de tráfego sem moldura: quatro cartões brancos
+  em cima, a meta num cartão ao lado, e o desenho solto no meio do fundo — lia
+  como coisa inacabada, não como bloco.
+*/
+.pw-curva {
+  border-radius: clamp(14px, 3.2cqmin, 56px);
+  padding: 0.7em 0.95em;
+  gap: 0.35em;
+}
+/* A legenda mora COLADA no título, e DEPOIS dele: no rodapé ela dividia a
+   atenção com a faixa de datas, e sem a ordem explícita ela subia para cima do
+   próprio título — quem lê primeiro a legenda não sabe de que gráfico é. */
+.pw-curva-topo { order: -2; }
+.pw-curva-legenda { order: -1; margin-bottom: 0.1em; }
+/* As datas são referência de eixo — o menor texto do bloco, não uma linha de
+   conteúdo. Em 16px elas competiam com o próprio desenho. */
+.pw-curva-eixo { font-size: calc(var(--esc, 1) * clamp(7px, min(8cqh, 1.6cqi), 26px)); }
+
+/*
+  Meta ainda não definida: a mensagem fica CENTRADA, com o selo, em vez de um
+  parágrafo cinza encostado na borda de uma caixa branca de meia tela. O bloco
+  precisa parecer "esperando configuração", e não "quebrou".
+*/
+.pw-meta-vazia {
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+  text-align: center;
+}
+
+
+/*
+  A barra do produto mede pela LINHA, não pelo bloco.
+
+  `.pw-barra-fina` é `clamp(4px, 8cqh, 26px)`, e `cqh` cai no slot inteiro: numa
+  faixa de 546px ela batia no teto e saía com 26px de altura dentro de uma linha
+  de texto de 17px. A barra ficava mais alta que o nome do produto, empurrava a
+  sexta linha para fora do cartão, e ainda fazia a lista parecer um gráfico de
+  barras — que é outro bloco. Em `em`, ela acompanha a linha em que vive.
+*/
+.pw-produto .pw-barra-fina { height: 0.4em; }
+
+
+/*
+  ── Duas barras no mesmo dia ───────────────────────────────────────────────
+
+  Substituíram as duas linhas sobrepostas do gráfico de tráfego. Duas curvas da
+  mesma cor, cada uma na sua escala, eram a mesma montanha desenhada duas
+  vezes; duas barras coladas no mesmo dia, na mesma régua, é a comparação que o
+  olho faz sem esforço — a clara chegando perto da escura é o dia em que o
+  anúncio comeu a venda.
+
+  A segunda barra é mais estreita e mais clara de propósito: ela QUALIFICA o
+  dia, não disputa com ele.
+*/
+.pw-barras-par {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 0.14em;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+}
+.pw-barras-par > .pw-barras-barra { flex: 1 1 0; min-width: 0; }
+.pw-barras-barra-b {
+  flex: 0 0 38% !important;
+  background: var(--p-selo, #ece7fe);
+}
+
+.pw-barras-topo-linha {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.8em;
+  min-width: 0;
+  flex: none;
+}
+.pw-barras-legenda {
+  display: flex;
+  gap: 0.9em;
+  flex: none;
+  font-size: calc(var(--esc, 1) * clamp(8px, min(9cqh, 2.2cqi), 30px));
+  font-weight: 700;
+  color: var(--p-fraco, #9394b1);
+}
+.pw-barras-legenda span { display: inline-flex; align-items: center; gap: 0.4em; }
+.pw-barras-marca {
+  width: 0.7em;
+  height: 0.7em;
+  border-radius: 3px;
+  background: var(--p-primaria, #6c4cf0);
+  flex: none;
+}
+.pw-barras-marca-b { background: var(--p-selo, #ece7fe); }
+
+
+/*
+  ── A pele clara nos painéis de SETOR ──────────────────────────────────────
+
+  Produção, Logística e Máquinas não são feitos de blocos: são telas escritas à
+  mão, e o acabamento delas vem do `.glass` do `globals.css` — branco a 10% com
+  desfoque, desenhado para viver sobre preto. Sobre a lavanda da parede nova
+  aquilo é branco-sobre-branco: o cartão some, sobram números soltos no fundo.
+  (É a mesma armadilha do translúcido empilhado que já mordeu o ERP.)
+
+  Aqui o vidro vira o MESMO cartão dos blocos, sem tocar no `.glass` global —
+  quem paga a conta é o escopo `.pele-clara`, posto pelo `KioskShell` quando a
+  parede é clara. O desenho das telas não muda: só a cor.
+
+  Sem `backdrop-filter`: o fundo é chapado (não há o que borrar) e o desfoque
+  custa GPU num aparelho ligado 24h.
+*/
+.pele-clara .glass {
+  background: var(--p-cartao, #fff);
+  border: 1px solid var(--p-aro, rgba(20, 20, 46, 0.055));
+  box-shadow: var(--p-sombra);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+/* O realce radial do vidro é luz sobre fundo escuro; no claro vira uma mancha
+   cinza no canto do cartão. */
+.pele-clara .glass-spec::after { display: none; }
+
+/*
+  A tinta das telas de setor.
+
+  O `KioskShell` já troca `--text`/`--text-dim` por luminância, mas os dois
+  nascem do cinza do ERP (#0f0f12 / #44454c) — vizinhos, e num painel a três
+  metros o rótulo apagado precisa ser MAIS apagado que isso para a hierarquia
+  existir. A parede usa a própria escala.
+*/
+.pele-clara {
+  --text: var(--p-texto);
+  --text-dim: var(--p-fraco);
+  --border: var(--p-trilho);
+  --surface: color-mix(in srgb, var(--p-texto) 5%, transparent);
+  --surface-2: color-mix(in srgb, var(--p-texto) 8%, transparent);
+}
+
+/* Barra de progresso e trilho escritos na mão nas telas de setor: o
+   `rgba(255,255,255,.1)` de fundo desaparece no claro. */
+.pele-clara [class*="-trilho"],
+.pele-clara .st-barra,
+.pele-clara .mq-barra { background: var(--p-trilho, #eae8f4); }
+
+/* ── Painel comercial enxuto: vendas no pódio, "1º LUGAR" no degrau, "Faltam" ── */
+.pw-podio-vendas {
+  font-size: calc(var(--esc, 1) * clamp(10px, 3.2cqh, 22px));
+  color: var(--p-fraco, #9394b1);
+  font-weight: 600;
+  flex: none;
+  white-space: nowrap;
+}
+.pw-base { display: grid; place-items: center; }
+.pw-base-rotulo {
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  color: var(--p-texto, #14142e);
+  font-size: calc(var(--esc, 1) * clamp(11px, 4cqh, 30px));
+  white-space: nowrap;
+}
+.pw-base.pw-pos1 .pw-base-rotulo { color: #fff; }
+.pw-equipe-faltam .pw-numero { color: var(--p-primaria, #6c4cf0); }
+
+/*
+  ── Parede mais viva (14/09/2026) ──────────────────────────────────────────
+  Mesma informação, menos papel em branco. Continua UM roxo só (em intensidades)
+  e nenhum brilho em número — o que muda é onde a cor mora: a liderança vira o
+  cartão cheio da tela, o campeão ganha coroa e fundo lavanda, a tabela vira
+  linhas-pílula e a faixa da equipe ganha selos. Espelho no Compose:
+  `tv-central/.../ui/widgets/Widgets.kt` (Podio, Ranking, Lidera, Equipe).
+*/
+.pw-lidera {
+  background: linear-gradient(135deg, var(--p-primaria-clara, #a78bfa), var(--p-primaria, #6c4cf0));
+  border-color: transparent;
+}
+.pw-lidera .pw-rotulo,
+.pw-lidera-linha .pw-numero { color: #fff; }
+.pw-lidera-linha em { color: rgba(255, 255, 255, 0.82); }
+.pw-lidera-selo { background: rgba(255, 255, 255, 0.2); }
+.pw-lidera-selo svg { color: #fff; }
+
+.pw-degrau.pw-campeao {
+  background: linear-gradient(180deg, var(--p-selo, #ece7fe), var(--p-cartao, #fff) 60%);
+}
+.pw-coroa {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: clamp(14px, 16cqi, 56px);
+  color: var(--p-primaria, #6c4cf0);
+  margin-bottom: -0.6cqh;
+}
+.pw-coroa svg { width: 100%; height: auto; }
+.pw-base { overflow: hidden; }
+.pw-base-num {
+  font-weight: 900;
+  line-height: 1;
+  font-size: calc(var(--esc, 1) * clamp(10px, min(12cqh, 30cqi), 96px));
+  color: var(--p-primaria, #6c4cf0);
+  opacity: 0.5;
+}
+.pw-base.pw-pos1 .pw-base-num { color: #fff; opacity: 0.9; }
+
+.pw-tabela { grid-template-rows: repeat(var(--linhas, 7), minmax(0, 1fr)); }
+.pw-linha:not(.pw-cabecalho) {
+  background: var(--p-fundo, #f5f4fa);
+  border-bottom: none;
+  border-radius: 999px;
+  margin: 0.12em 0;
+  padding: 0 0.7em 0 0.25em;
+}
+.pw-linha.pw-cabecalho { border-bottom: none; padding: 0 0.7em 0 0.25em; }
+.pw-pos-num {
+  display: inline-grid;
+  place-items: center;
+  width: 1.5em;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--p-selo, #ece7fe);
+  color: var(--p-primaria, #6c4cf0);
+  font-size: 0.8em;
+  font-weight: 900;
+}
+
+.pw-equipe-item { display: flex; align-items: center; gap: 0.6em; flex: none; min-width: 0; }
+.pw-equipe-selo { width: clamp(20px, 44cqh, 96px); }
+.pw-equipe .pw-barra-fina { height: clamp(8px, 14cqh, 28px); }
+
+/*
+  ── Pódio em ouro, prata e bronze (14/09/2026) ─────────────────────────────
+  Pedido do dono: o pódio volta aos três metais — exceção ao "um roxo só", que
+  continua valendo pro resto da parede. Tons calibrados pro fundo CLARO (o
+  prata antigo, #c7c7cc, sumia no branco). `--*-tinta` é a letra sobre o metal.
+  Espelho: `METAIS` no Widgets.kt da TV.
+*/
+.pw-podio {
+  --ouro-topo: #ffe27a;   --ouro: #e0a800;   --ouro-tinta: #5c4200;
+  --prata-topo: #eef0f4;  --prata: #a9afbc;  --prata-tinta: #3f4450;
+  --bronze-topo: #f3c29a; --bronze: #c27a45; --bronze-tinta: #4a2a12;
+}
+.pw-avatar.pw-pos1 { border-color: var(--ouro); }
+.pw-avatar.pw-pos2 { border-color: var(--prata); }
+.pw-avatar.pw-pos3 { border-color: var(--bronze); }
+.pw-avatar.pw-pos1 b { background: var(--ouro); color: var(--ouro-tinta); }
+.pw-avatar.pw-pos2 b { background: var(--prata); color: var(--prata-tinta); }
+.pw-avatar.pw-pos3 b { background: var(--bronze); color: var(--bronze-tinta); }
+.pw-base.pw-pos1 { background: linear-gradient(180deg, var(--ouro-topo), var(--ouro)); }
+.pw-base.pw-pos2 { background: linear-gradient(180deg, var(--prata-topo), var(--prata)); }
+.pw-base.pw-pos3 { background: linear-gradient(180deg, var(--bronze-topo), var(--bronze)); }
+.pw-base.pw-pos1 .pw-base-num,
+.pw-base.pw-pos1 .pw-base-rotulo { color: var(--ouro-tinta); }
+.pw-base.pw-pos2 .pw-base-num,
+.pw-base.pw-pos2 .pw-base-rotulo { color: var(--prata-tinta); }
+.pw-base.pw-pos3 .pw-base-num,
+.pw-base.pw-pos3 .pw-base-rotulo { color: var(--bronze-tinta); }
+.pw-base .pw-base-num { opacity: 0.6; }
+.pw-coroa { color: var(--ouro); }
+.pw-degrau.pw-campeao { background: linear-gradient(180deg, #fff4d1, var(--p-cartao, #fff) 60%); }
+.pw-podio:has(.pw-podio-vendas) .pw-base.pw-pos1 { min-height: 26cqh; }
+.pw-podio:has(.pw-podio-vendas) .pw-base.pw-pos2 { min-height: 18cqh; }
+.pw-podio:has(.pw-podio-vendas) .pw-base.pw-pos3 { min-height: 10cqh; }
+
+/* Aba de período que o dado não cobre mais (sem sincronizar hoje): apagada. */
+.pw-aba[data-off="1"] { opacity: 0.35; }
+
+/*
+  ── Batalha em PLACAR (25/09/2026) ──────────────────────────────────────────
+  Dois lados + a diferença no meio, cabo e a frase "lidera por". Corporativo:
+  quem lidera ganha BORDA e pílula na cor da casa (sem gradiente de cartão);
+  o número é sempre escuro. Meta batida = pílula verde (estado, não marca).
+  Barra de progresso anima só `transform` (scaleX). Espelho: `Batalha` no
+  Widgets.kt da TV.
+*/
+.pw-placar { gap: 2.2cqh; justify-content: space-between; }
+.pw-placar-lados {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: stretch;
+  gap: 1.4cqw;
+  flex: 1;
+  min-height: 0;
+}
+.pw-placar-meio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15em;
+  min-width: 0;
+  font-size: calc(var(--esc, 1) * clamp(10px, min(5cqh, 1.8cqi), 26px));
+}
+.pw-placar-x {
+  font-weight: 900;
+  line-height: 1;
+  color: var(--p-apagado, #a9aac2);
+  font-size: 2.6em;
+}
+.pw-placar-dif-rot {
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--p-fraco, #9394b1);
+}
+.pw-placar-dif {
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  color: var(--p-primaria, #6c4cf0);
+  font-size: 1.5em;
+  white-space: nowrap;
+}
+.pw-time {
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.3em;
+  min-width: 0;
+  padding: clamp(10px, 4cqmin, 28px) clamp(12px, 5cqmin, 32px);
+  border-radius: clamp(14px, 4cqmin, 28px);
+  background: var(--p-fundo, #f5f4fa);
+  box-shadow: inset 0 0 0 2px transparent;
+  transition: box-shadow var(--duration-slow, 400ms) var(--ease-smooth-out, ease-out), background-color var(--duration-slow, 400ms) var(--ease-smooth-out, ease-out);
+}
+.pw-time[data-lider="1"] {
+  background: #fff;
+  box-shadow: inset 0 0 0 3px var(--p-primaria, #6c4cf0), 0 10px 30px -18px var(--p-primaria, #6c4cf0);
+}
+.pw-time-topo { display: flex; align-items: center; gap: 0.55em; min-width: 0; }
+.pw-time .pw-selo { width: clamp(20px, 12cqi, 64px); }
+.pw-time[data-lider="1"] .pw-selo { background: var(--p-primaria, #6c4cf0); color: #fff; }
+.pw-time .pw-rotulo { flex: 1; min-width: 0; }
+.pw-batalha .pw-time .pw-rotulo { color: var(--p-texto, #14142e); }
+.pw-batalha .pw-time .pw-numero { color: var(--p-texto, #14142e); }
+.pw-time .pw-numero {
+  /* Teto também pela ALTURA do bloco (`cqh`): num bloco baixo o valor medido só
+     pela largura saía cortado embaixo e empurrava a linha de baixo pra fora. */
+  font-size: calc(var(--esc, 1) * clamp(14px, min(15cqi, 13cqh), 110px));
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pw-time-pilula {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  flex: none;
+  padding: 0.2em 0.6em;
+  border-radius: 999px;
+  background: var(--p-primaria, #6c4cf0);
+  color: #fff;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: calc(var(--esc, 1) * clamp(9px, 4.5cqi, 20px));
+}
+.pw-time-pilula[data-tom="ok"] { background: var(--ok, #16a34a); }
+.pw-time-meta { display: flex; flex-direction: column; gap: 0.35em; min-width: 0; }
+.pw-time-trilho {
+  height: clamp(6px, 3cqi, 14px);
+  border-radius: 999px;
+  background: var(--p-trilho, #eae8f4);
+  overflow: hidden;
+}
+.pw-time[data-lider="0"] .pw-time-trilho { background: #fff; }
+.pw-time-barra {
+  height: 100%;
+  width: 100%;
+  border-radius: inherit;
+  background: var(--p-primaria, #6c4cf0);
+  transform-origin: left center;
+  transition: transform var(--duration-slow, 400ms) var(--ease-smooth-out, ease-out);
+}
+.pw-time[data-lider="0"] .pw-time-barra { background: var(--p-primaria-clara, #a78bfa); }
+.pw-time[data-bateu="1"] .pw-time-barra { background: var(--ok, #16a34a); }
+.pw-time-sub {
+  font-weight: 600;
+  color: var(--p-fraco, #9394b1);
+  font-size: calc(var(--esc, 1) * clamp(10px, 5cqi, 26px));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pw-time-sub b { color: var(--p-texto, #14142e); font-weight: 900; }
+@media (prefers-reduced-motion: reduce) {
+  .pw-time, .pw-time-barra { transition: none; }
+}
+.pw-batalha-fim {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+  color: var(--p-fraco, #9394b1);
+  font-weight: 700;
+  font-size: calc(var(--esc, 1) * clamp(11px, min(6cqh, 2.4cqi), 30px));
+  min-width: 0;
+}
+.pw-batalha-fim svg { color: var(--p-primaria, #6c4cf0); flex: none; }
+.pw-batalha-fim strong { color: var(--p-primaria, #6c4cf0); font-weight: 900; white-space: nowrap; }
+/* Coroa + foto + nome + valor + degrau alto na mesma coluna: a foto do
+   campeão cede (era 30cqh) pra o valor não sumir atrás do degrau de ouro. */
+.pw-avatar { max-width: 22cqh; }
+.pw-avatar.pw-pos1 { max-width: 24cqh; }
+
+/*
+  ── Comemoração da meta do mês (25/09/2026) ─────────────────────────────────
+  Pop-up central: escala+esmaecer que termina em `transform: none`, brilho
+  parado atrás do cartão, confete que cai UMA vez. Só transform/opacity.
+  Espelho: `Comemoracao.kt`.
+*/
+.pw-comemora {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  overflow: hidden;
+  background: rgba(20, 20, 46, 0.28);
+  animation: pwComemoraVeu var(--duration-slow, 400ms) var(--ease-smooth-out, ease-out) both;
+}
+.pw-comemora-cartao {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.4dvh;
+  max-width: min(92vw, 1100px);
+  padding: 5dvh 6vw;
+  border-radius: 40px;
+  background: #fff;
+  color: var(--p-texto, #14142e);
+  text-align: center;
+  box-shadow: 0 0 0 3px var(--p-primaria, #6c4cf0), 0 30px 120px -20px rgba(108, 76, 240, 0.55);
+  animation: pwComemoraEntra var(--duration-slow, 400ms) var(--ease-bounce, cubic-bezier(0.34, 1.36, 0.64, 1)) both;
+}
+.pw-comemora-selo {
+  display: grid;
+  place-items: center;
+  width: 12dvh;
+  height: 12dvh;
+  border-radius: 50%;
+  background: var(--p-primaria, #6c4cf0);
+  color: #fff;
+  box-shadow: 0 0 0 1.4dvh var(--p-selo, #ece7fe);
+}
+.pw-comemora-selo svg { width: 55%; height: 55%; }
+.pw-comemora-rotulo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--p-primaria, #6c4cf0);
+  font-size: clamp(16px, 2.4dvh, 34px);
+}
+.pw-comemora-titulo { margin: 0; font-weight: 900; font-size: clamp(22px, 4.6dvh, 64px); line-height: 1.1; }
+.pw-comemora-valor {
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  font-size: clamp(40px, 11dvh, 160px);
+  line-height: 1;
+}
+.pw-comemora-pct { font-weight: 800; color: var(--ok, #16a34a); font-size: clamp(18px, 3.4dvh, 46px); }
+.pw-comemora-msg { margin: 0; font-weight: 600; color: var(--p-fraco, #9394b1); font-size: clamp(16px, 2.6dvh, 36px); }
+.pw-comemora-confete {
+  position: absolute;
+  top: 0;
+  border-radius: 2px;
+  opacity: 0;
+  animation-name: pwConfete;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+  animation-iteration-count: 1;
+}
+@keyframes pwComemoraVeu { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pwComemoraEntra {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes pwConfete {
+  0% { opacity: 1; transform: translateY(-6dvh) rotate(0deg); }
+  85% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(105dvh) rotate(var(--giro, 360deg)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pw-comemora, .pw-comemora-cartao { animation: none; }
+  .pw-comemora-confete { display: none; }
+}
+
+/* Meta numa célula baixa (espelho do `baixo` do Widgets.kt, < 90): só barra e %.
+   Título e frase do ritmo saem — a três metros viram ruído espremido. */
+@container (max-height: 89px) {
+  .pw-meta .pw-meta-topo,
+  .pw-meta .pw-meta-baixo span { display: none; }
+}

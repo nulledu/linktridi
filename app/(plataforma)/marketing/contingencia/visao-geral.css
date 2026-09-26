@@ -1,0 +1,123 @@
+/* Contingência › Visão Geral. Monta em cima do esqueleto da Operação
+   (`og-*`: grade principal + coluna de 340px, CartaoPainel, listas) e só
+   acrescenta o que é desta tela. Nenhuma faixa de grade rígida mora inline. */
+
+/* Cinco números no topo; abaixo de 1200px viram grade que se conta sozinha e,
+   no celular, o carrossel com encaixe da `.kpi-row`. */
+.cv-kpis { display: grid; gap: 16px; grid-template-columns: repeat(5, minmax(0, 1fr)); }
+@media (max-width: 1399px) {
+  .cv-kpis { grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); }
+}
+
+/* Contingência de Tráfego: quatro células com fio fino. */
+.cv-celulas { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); }
+.cv-celula {
+  display: flex; flex-direction: column; gap: 6px; min-width: 0;
+  padding: 14px 14px 12px; border-radius: 14px; border: 1px solid var(--border);
+}
+.cv-celula-rot { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; color: var(--text-dim); line-height: 1.25; }
+.cv-celula-icone { width: 24px; height: 24px; flex: none; display: grid; place-items: center; border-radius: 8px; }
+.cv-celula b { font-size: 26px; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.cv-celula-sub { font-size: 11.5px; color: var(--text-dim); line-height: 1.3; }
+
+/* Listas de atalho (Acesso rápido, Análises): a linha inteira é o botão. */
+.cv-atalhos { gap: 8px; grid-template-columns: minmax(0, 1fr); }
+.cv-atalhos > li { min-width: 0; }
+.cv-atalhos > li + li { border-top: 0; }
+.cv-atalho {
+  width: 100%; font: inherit; text-align: left; cursor: pointer; background: none;
+  border: 1px solid var(--border); padding: 8px 12px; border-radius: 14px;
+}
+.cv-atalho:focus-visible { outline: var(--foco-largura) solid var(--foco-cor); outline-offset: var(--foco-offset); }
+
+/* Contagem ao lado do título das pendências. */
+.cv-conta {
+  display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px; margin-left: 8px;
+  border-radius: 999px; font-size: 11.5px; font-weight: 700; vertical-align: 2px;
+  background: color-mix(in srgb, var(--primary) 14%, transparent); color: var(--primary);
+}
+
+/* Linha de pendência: ícone redondo no tom, texto, ação à direita. */
+.cv-acao { display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 8px 0; min-width: 0; }
+.cv-acao-icone {
+  width: 34px; height: 34px; flex: none; display: grid; place-items: center; border-radius: 50%;
+  color: var(--cv-tom); background: color-mix(in srgb, var(--cv-tom) 13%, transparent);
+}
+.cv-quebra { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+
+.cv-ponto { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+
+/* Rodapé em três: etapas (larga), análises, estado. */
+.cv-rodape { display: grid; gap: 20px; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1.1fr) minmax(0, .8fr); align-items: stretch; min-width: 0; }
+@media (max-width: 1199px) {
+  .cv-rodape { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cv-rodape > :first-child { grid-column: 1 / -1; }
+}
+@media (max-width: 899px) {
+  .cv-rodape { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* "Tudo sob controle": cartão lavanda na cor da pessoa, arte de ícones. */
+.cv-calma {
+  display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-end; gap: 8px;
+  min-height: 0; padding: 22px; min-width: 0; position: relative; overflow: hidden;
+  background: linear-gradient(160deg, color-mix(in srgb, var(--primary) 5%, var(--surface)), color-mix(in srgb, var(--primary) 14%, var(--surface)));
+}
+.cv-calma h2 { font-size: 15px; font-weight: 800; color: var(--primary); margin-top: auto; }
+.cv-calma p { font-size: 12.5px; color: var(--text-dim); line-height: 1.45; }
+.cv-calma-mais { color: var(--text) !important; }
+.cv-calma-arte {
+  position: relative; align-self: flex-end; width: 76px; height: 76px; display: grid; place-items: center;
+  border-radius: 22px; color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 16%, transparent);
+}
+.cv-calma-escudo {
+  position: absolute; right: -8px; bottom: -8px; width: 38px; height: 38px; display: grid; place-items: center;
+  border-radius: 12px; background: var(--primary);
+  box-shadow: 0 6px 18px -6px color-mix(in srgb, var(--primary) 70%, transparent);
+}
+.cv-calma[data-alerta] h2 { color: var(--text); }
+
+/* Cabeçalho da tela (fora do embutido): título, última atualização, Atualizar. */
+.cv-cab { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; min-width: 0; }
+.cv-cab-trilha { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--text-dim); text-decoration: none; }
+.cv-cab-trilha:hover { color: var(--text); }
+.cv-cab-dir { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-left: auto; }
+.cv-atualizado { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; color: var(--text-dim); white-space: nowrap; }
+.cv-atualizado::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--ok); flex: none; }
+
+@media (max-width: 560px) {
+  .cv-cab-dir { width: 100%; justify-content: space-between; margin-left: 0; }
+  .cv-atualizado { white-space: normal; }
+  .cv-acao { flex-wrap: wrap; }
+  .cv-acao > :last-child { margin-left: 46px; }
+  .cv-calma { padding: 18px; }
+  /* Quatro células em 2×2: uma coluna só gastava uma tela pra quatro números. */
+  .cv-celulas { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .cv-celula { padding: 12px; }
+  .cv-celula b { font-size: 22px; }
+}
+
+/* ── Editor aberto a partir de um número (EditorVisao) ─────────────────────
+   Nome à esquerda, selects de status/proxy, lápis que abre a ficha inteira.
+   A grade mora em classe: inline não colapsa no celular. */
+.cv-ed-lista { display: grid; grid-template-columns: minmax(0, 1fr); }
+.cv-ed-linha {
+  display: grid; grid-template-columns: minmax(0, 1fr) 170px auto; gap: 8px 10px; align-items: center;
+  padding: 8px 0; border-top: 1px solid var(--border); min-width: 0;
+}
+.cv-ed-linha:first-child { border-top: 0; }
+.cv-ed-linha[data-com-proxy] { grid-template-columns: minmax(0, 1fr) 160px 160px auto; }
+.cv-ed-linha[aria-busy] { opacity: .6; }
+.cv-editor .ct-sel { min-height: var(--tap); }
+@media (max-width: 640px) {
+  .cv-ed-linha, .cv-ed-linha[data-com-proxy] { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; }
+  .cv-ed-linha > :first-child { grid-column: 1 / -1; }
+  .cv-ed-linha:not([data-com-proxy]) > select { grid-column: span 2; }
+}
+
+/* Célula do tráfego e linha da tabela viram alvo: o lápis diz "isto edita". */
+.cv-celula-btn { font: inherit; color: inherit; text-align: left; background: none; cursor: pointer; width: 100%; }
+.cv-celula-btn:hover { background: var(--surface-2); }
+.cv-celula-btn:focus-visible { outline: var(--foco-largura) solid var(--foco-cor); outline-offset: var(--foco-offset); }
+.cv-lapis { margin-left: auto; flex: none; color: var(--text-dim); display: inline-grid; }

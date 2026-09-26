@@ -1,0 +1,133 @@
+/* Design (Visão geral + Projetos · Controle agora · Biblioteca · Programações).
+   Mesma pele da Operação e da Produção (`og-*`, `pv-*`); aqui só o que é do
+   Design: miniaturas de arte, a biblioteca em grade e o kanban de 6–7 colunas.
+   Nenhuma faixa de grade rígida inline. */
+
+.dv-barra { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; min-width: 0; }
+.dv-barra > :first-child { min-width: 0; max-width: 100%; }
+.dv-barra-dir { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; min-width: 0; }
+.dv-filtros { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; min-width: 0; }
+.dv-filtros > * { min-width: 0; }
+.dv-filtros .gp-gatilho, .dv-filtros > div { flex: 0 1 220px; }
+.dv-link {
+  display: inline-flex; align-items: center; gap: 6px; min-height: var(--tap); font-size: 13px; font-weight: 600;
+  color: var(--primary-texto, var(--primary)); text-decoration: none;
+}
+.dv-link:hover { text-decoration: underline; }
+
+/* Miniatura de arte (projeto, arquivo recente). */
+.dv-mini {
+  flex: none; display: grid; place-items: center; object-fit: cover; border-radius: 10px;
+  background: var(--surface-2); border: 1px solid var(--border);
+}
+
+/* Cartão de projeto (kanban). É `<button>`: zera o que o navegador põe. */
+.dv-card { width: 100%; text-align: left; font: inherit; color: var(--text); cursor: pointer; }
+.dv-card[data-prioridade="alta"] { border-color: color-mix(in srgb, var(--perigo) 45%, var(--border)); }
+.dv-card-topo { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.dv-card-topo b { font-size: 13.5px; }
+.dv-meta-i { display: inline-flex; align-items: center; gap: 4px; min-width: 0; }
+.dv-mais {
+  min-height: var(--tap); border: 1px dashed var(--border); border-radius: 12px; background: none;
+  font: inherit; font-size: 12.5px; font-weight: 600; color: var(--text-dim); cursor: pointer;
+}
+.dv-mais:hover { color: var(--text); border-color: var(--text-dim); }
+
+/* Kanban com mais colunas que a tela: rola DENTRO do bloco, nunca a página. */
+.pv-kanban.dv-kanban { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(min(100%, 250px), 1fr); overflow-x: auto; scroll-snap-type: x proximity; padding-bottom: 6px; }
+.pv-kanban.dv-kanban > * { scroll-snap-align: start; }
+@media (min-width: 1400px) { .pv-kanban.dv-kanban-6 { grid-auto-columns: minmax(0, 1fr); } }
+.pv-kanban.dv-kanban[data-uma] { grid-auto-flow: row; grid-template-columns: minmax(0, 1fr); overflow-x: visible; }
+.pv-kanban.dv-kanban[data-uma] .pv-coluna-lista { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); max-height: none; }
+
+/* Lista de projetos: "tabela" de grid que vira card no celular (.tab-linha). */
+.dv-tabela { display: grid; min-width: 0; border-radius: 18px; overflow: hidden; background: var(--card, var(--surface)); border: 1px solid var(--border); }
+.dv-tab-cab, .dv-tab-linha {
+  display: grid; grid-template-columns: minmax(0, 2.4fr) minmax(0, 1.1fr) minmax(0, 1.1fr) minmax(0, .8fr) minmax(0, .8fr) minmax(0, .9fr);
+  gap: 12px; align-items: center; padding: 10px 16px; min-width: 0;
+}
+.dv-tab-cab { font-size: 11.5px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: .04em; border-bottom: 1px solid var(--border); }
+.dv-tab-linha { width: 100%; border: 0; border-top: 1px solid var(--border); background: none; font: inherit; color: var(--text); text-align: left; cursor: pointer; min-height: 60px; }
+.dv-tab-linha:first-of-type { border-top: 0; }
+.dv-tab-linha:hover { background: var(--surface-2); }
+.dv-tab-proj { display: flex; align-items: center; gap: 10px; min-width: 0; }
+@media (max-width: 899px) {
+  .dv-tab-cab { display: none; }
+  .dv-tab-linha { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px 12px; padding: 14px 16px; }
+  .dv-tab-proj { grid-column: 1 / -1; }
+  .dv-tab-linha [data-l]::before { content: attr(data-l); display: block; font-size: 10.5px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 2px; }
+}
+
+/* Visão geral. */
+.dv-pessoa { display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 6px 0; min-width: 0; }
+.dv-pessoa .og-linha-sub { margin-top: 4px; }
+.dv-grade-mini { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 76px), 1fr)); gap: 10px; }
+.dv-arq-mini { display: grid; justify-items: center; gap: 4px; min-width: 0; text-decoration: none; color: var(--text); }
+.dv-arq-mini .og-linha-sub { max-width: 100%; }
+.dv-prazo { width: auto; min-width: 62px; }
+.dv-fluxo { display: flex; align-items: center; justify-content: space-between; gap: 6px; min-width: 0; }
+.dv-fluxo-passo {
+  flex: 1; min-width: 0; display: grid; justify-items: center; gap: 2px; padding: 10px 4px; border-radius: 14px;
+  background: color-mix(in srgb, var(--primary) 8%, transparent); color: var(--text); text-decoration: none; text-align: center;
+}
+.dv-fluxo-passo b { font-size: 20px; }
+.dv-fluxo-passo span { font-size: 11px; color: var(--text-dim); line-height: 1.2; }
+
+/* Detalhe do projeto. */
+.dv-fatos { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 150px), 1fr)); gap: 12px; }
+.dv-fato { display: grid; gap: 4px; min-width: 0; }
+.dv-item { display: grid; gap: 10px; padding-top: 14px; border-top: 1px solid var(--border); min-width: 0; }
+.dv-artes { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 130px), 1fr)); gap: 10px; }
+.dv-arte {
+  position: relative; display: grid; aspect-ratio: 1; border-radius: 14px; overflow: hidden; text-decoration: none;
+  background: var(--surface-2); border: 1px solid var(--border);
+}
+.dv-arte[data-tom="ok"] { border-color: color-mix(in srgb, var(--ok) 55%, var(--border)); }
+.dv-arte[data-tom="perigo"] { border-color: color-mix(in srgb, var(--perigo) 55%, var(--border)); }
+.dv-arte img { width: 100%; height: 100%; object-fit: contain; background: #fff; }
+.dv-arte-pdf { display: grid; place-items: center; align-content: center; gap: 4px; font-size: 12px; font-weight: 700; color: var(--text-dim); }
+.dv-arte-rot {
+  position: absolute; left: 6px; bottom: 6px; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700;
+  background: color-mix(in srgb, var(--card, var(--surface)) 92%, transparent); color: var(--text);
+}
+.dv-motivo { display: flex; gap: 6px; align-items: flex-start; font-size: 13px; color: var(--text); }
+
+/* Biblioteca. */
+.dv-grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 170px), 1fr)); gap: 14px; }
+.dv-arquivo {
+  display: grid; grid-template-rows: auto auto; min-width: 0; padding: 0; overflow: hidden; border-radius: 16px; cursor: pointer;
+  border: 1px solid var(--border); background: var(--card, var(--surface)); font: inherit; color: var(--text); text-align: left;
+}
+.dv-previa { display: block; width: 100%; aspect-ratio: 1; object-fit: contain; background: #fff; }
+.dv-previa-ext { display: grid; place-items: center; align-content: center; gap: 6px; background: var(--surface-2); font-size: 12px; color: var(--text-dim); }
+.dv-arquivo-info { display: grid; gap: 2px; padding: 10px 12px 12px; min-width: 0; }
+.dv-previa-mini { width: 44px; height: 44px; flex: none; border-radius: 10px; overflow: hidden; border: 1px solid var(--border); }
+.dv-previa-mini .dv-previa { height: 100%; }
+.dv-previa-mini .dv-previa-ext b { display: none; }
+.dv-previa-grande { border-radius: 16px; overflow: hidden; border: 1px solid var(--border); max-height: 50dvh; display: grid; }
+.dv-previa-grande .dv-previa { max-height: 50dvh; }
+.dv-soltar {
+  display: grid; justify-items: center; gap: 6px; padding: 22px 16px; min-height: 120px; border-radius: 16px; cursor: pointer;
+  border: 1.5px dashed color-mix(in srgb, var(--primary) 45%, var(--border)); background: color-mix(in srgb, var(--primary) 5%, transparent);
+  font: inherit; color: var(--text); text-align: center;
+}
+.dv-soltar b { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+@media (max-width: 560px) {
+  .dv-barra-dir { width: 100%; }
+  .dv-barra-dir > .ui-btn, .dv-barra-dir > button:last-child { flex: 1; }
+  .dv-filtros .gp-gatilho, .dv-filtros > div { flex: 1 1 100%; }
+  .dv-grade { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .pv-kanban.dv-kanban { grid-auto-columns: minmax(min(84%, 300px), 1fr); scroll-snap-type: x mandatory; }
+}
+
+/* Painel de gestão. */
+.dv-gargalo { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; min-width: 0; }
+.dv-gargalo b { font-size: 34px; line-height: 1; }
+.dv-gargalo span { font-size: 14px; color: var(--text-dim); min-width: 0; }
+.dv-gargalo span b { font-size: inherit; color: var(--text); }
+.dv-tag {
+  display: inline-block; margin-left: 8px; padding: 1px 8px; border-radius: 999px; vertical-align: 1px;
+  font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em;
+  color: var(--text-dim); background: var(--surface-2);
+}

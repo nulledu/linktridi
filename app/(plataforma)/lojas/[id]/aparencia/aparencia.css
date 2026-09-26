@@ -1,0 +1,306 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+ * Editor de aparência
+ *
+ * Três estados, uma peça: em tela larga são três colunas (seções, prévia,
+ * ajustes); em tela média os ajustes deslizam por cima da prévia; no celular a
+ * prévia sobe, a lista desce e os ajustes viram FOLHA presa na base. O painel é
+ * sempre o mesmo elemento com a mesma classe `is-aberto` — três componentes
+ * diferentes seriam três lugares pra esquecer de mexer.
+ *
+ * A altura é `dvh` em todo lugar. Com `vh`, no celular, o rodapé com "Salvar" e
+ * "Publicar" nasce atrás da barra do navegador — os dois botões que a pessoa
+ * veio apertar.
+ * ─────────────────────────────────────────────────────────────────────────── */
+
+.ap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+}
+
+/* ── Barra de cima ────────────────────────────────────────────────────────── */
+.ap-topo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.ap-topo-esq,
+.ap-topo-dir {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.ap-topo-dir { margin-left: auto; }
+.ap-tpl select { min-height: var(--tap); min-width: 160px; }
+
+.ap-sujo {
+  display: inline-flex;
+  align-items: center;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: var(--aviso-fraco, rgba(255, 176, 32, 0.16));
+  color: var(--aviso-forte, #a86400);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.ap-aviso,
+.ap-recado {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-size: 13px;
+}
+.ap-aviso { background: var(--aviso-fraco, rgba(255, 176, 32, 0.14)); color: var(--aviso-forte, #a86400); }
+.ap-recado { background: var(--surface-2, rgba(127, 127, 127, 0.1)); }
+.ap-aviso code { font-size: 12px; }
+
+/* ── Corpo ────────────────────────────────────────────────────────────────── */
+/*
+ * Duas colunas por padrão, três só quando sobra tela.
+ *
+ * O editor não ocupa a janela inteira: ele vive dentro do módulo, com a barra
+ * lateral de Lojas ao lado. Num monitor de 1280 sobram ~1000px, e três colunas
+ * fixas deixavam a PRÉVIA com 324px — a coluna mais importante virava a menor.
+ * Abaixo de 1500 os ajustes deslizam por cima da prévia, como painel; acima,
+ * cabem os três lado a lado.
+ */
+.ap-corpo {
+  position: relative;
+  display: grid;
+  /* `min(100%, …)` e não `280px` cru: idêntico no computador, e no celular a
+     coluna colapsa em vez de empurrar a página pra fora. */
+  grid-template-columns: minmax(min(100%, 240px), 280px) 1fr;
+  gap: 10px;
+  align-items: stretch;
+  min-height: 0;
+  height: calc(100dvh - 210px);
+}
+
+@media (min-width: 1500px) {
+  .ap-corpo { grid-template-columns: minmax(min(100%, 260px), 300px) 1fr minmax(min(100%, 300px), 340px); }
+}
+
+.ap-lista,
+.ap-ajustes {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border: 1px solid var(--borda, rgba(127, 127, 127, 0.22));
+  border-radius: 16px;
+  background: var(--surface, transparent);
+  overflow: hidden;
+}
+.ap-lista-corpo,
+.ap-ajustes-corpo {
+  overflow-y: auto;
+  padding: 10px 12px 16px;
+  min-height: 0;
+}
+.ap-abas { padding: 8px 8px 0; }
+
+.ap-grupo {
+  margin: 14px 0 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+.ap-grupo-secoes:first-child .ap-grupo { margin-top: 4px; }
+.ap-vazio { margin: 8px 0; font-size: 13px; opacity: 0.7; }
+
+/* ── Linha de seção ───────────────────────────────────────────────────────── */
+.ap-linha {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  border-radius: 10px;
+  min-height: var(--tap);
+}
+.ap-linha.is-ativa { background: var(--surface-2, rgba(127, 127, 127, 0.12)); }
+.ap-linha.is-off .ap-linha-nome { opacity: 0.45; text-decoration: line-through; }
+.ap-linha[draggable="true"] { cursor: grab; }
+
+.ap-linha-nome,
+.ap-bloco-nome,
+.ap-add-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  min-height: var(--tap);
+  padding: 0 8px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 10px;
+}
+.ap-linha-nome span,
+.ap-bloco-nome span,
+.ap-add-item span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* As ações ficam sempre visíveis — nada de aparecer só no hover, que no
+   celular equivale a não existir. */
+.ap-linha-acoes,
+.ap-bloco-acoes { display: flex; align-items: center; flex-shrink: 0; }
+
+.ap-bloco {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-height: var(--tap);
+  padding-left: 6px;
+  border-left: 2px solid var(--borda, rgba(127, 127, 127, 0.22));
+}
+.ap-add-bloco { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+
+.ap-add { margin-top: 6px; }
+.ap-add-lista {
+  display: flex;
+  flex-direction: column;
+  margin-top: 4px;
+  border: 1px solid var(--borda, rgba(127, 127, 127, 0.22));
+  border-radius: 12px;
+  overflow: hidden;
+}
+.ap-add-item:hover { background: var(--surface-2, rgba(127, 127, 127, 0.12)); }
+
+/* ── Prévia ───────────────────────────────────────────────────────────────── */
+.ap-previa {
+  display: flex;
+  justify-content: center;
+  min-width: 0;
+  min-height: 0;
+  border: 1px solid var(--borda, rgba(127, 127, 127, 0.22));
+  border-radius: 16px;
+  overflow: hidden;
+  background: #fff;
+}
+.ap-previa iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+}
+.ap-previa--estreita iframe {
+  width: 390px;
+  max-width: 100%;
+  border-left: 1px solid var(--borda, rgba(127, 127, 127, 0.22));
+  border-right: 1px solid var(--borda, rgba(127, 127, 127, 0.22));
+}
+
+/* ── Painel de ajustes ────────────────────────────────────────────────────── */
+/* Painel deslizante — o estado entre "cabe em três colunas" e "é folha de
+   celular". Mesma peça, mesma classe `is-aberto`. */
+@media (min-width: 901px) and (max-width: 1499px) {
+  /* O painel fechado fica ESTACIONADO fora do corpo (translateX 101%). Sem
+     recortar aqui, essa cópia parada aparece como uma fatia no canto direito
+     da tela — o painel "fechado" continuava visível. */
+  .ap-corpo { overflow: hidden; }
+  .ap-ajustes {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(360px, 60%);
+    z-index: 5;
+    background: var(--fundo, #111);
+    box-shadow: -12px 0 40px rgba(0, 0, 0, 0.35);
+    transform: translateX(101%);
+    transition: transform var(--duration-normal, 250ms) var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1));
+  }
+  .ap-ajustes.is-aberto { transform: none; }
+}
+
+.ap-ajustes-cab {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 8px 10px 14px;
+  border-bottom: 1px solid var(--borda, rgba(127, 127, 127, 0.22));
+}
+/* Só quando as três colunas cabem o painel está sempre lá — e aí o "fechar"
+   não tem o que fechar. Nos outros dois casos ele desliza, e o botão é a
+   única saída. */
+@media (min-width: 1500px) {
+  .ap-ajustes-cab .ui-btn { visibility: hidden; }
+}
+
+.ap-cor { display: flex; align-items: center; gap: 8px; }
+.ap-faixa { display: flex; align-items: center; gap: 8px; }
+/* `flex: 1 1 0` na barra e base FIXA no número. Com `flex: 1` só na barra, o
+   `width: 100%` que o `.ui-input` traz deixava o campo numérico crescer e
+   empurrar a barra pra 20px — e o excedente saía pela borda do painel. */
+.ap-faixa input[type="range"] { flex: 1 1 0; min-width: 0; width: auto; height: var(--tap); }
+.ap-faixa-num { flex: 0 0 84px; width: 84px; min-width: 0; }
+
+.ap-chave {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: var(--tap);
+  font-size: 14px;
+  cursor: pointer;
+}
+.ap-chave input { width: 20px; height: 20px; flex-shrink: 0; }
+
+.ap-imagem { display: flex; align-items: center; gap: 8px; }
+.ap-imagem img,
+.ap-imagem-vazia {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid var(--borda, rgba(127, 127, 127, 0.22));
+}
+.ap-imagem-vazia { display: flex; align-items: center; justify-content: center; opacity: 0.5; }
+
+/* ── Celular ──────────────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .ap-corpo {
+    grid-template-columns: 1fr;
+    grid-template-rows: 46dvh auto;
+    height: auto;
+  }
+  .ap-previa { order: -1; height: 46dvh; }
+  .ap-previa--estreita iframe { width: 100%; border: 0; }
+  .ap-lista { max-height: none; }
+
+  /* Os ajustes viram folha presa embaixo, com rolagem interna e o cabeçalho
+     alcançável com o polegar. */
+  .ap-ajustes {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1200;
+    max-height: 80dvh;
+    border-radius: 20px 20px 0 0;
+    background: var(--fundo, #fff);
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.25);
+    transform: translateY(101%);
+    transition: transform var(--duration-normal, 250ms) var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1));
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .ap-ajustes.is-aberto { transform: none; }
+  .ap-topo-dir { width: 100%; margin-left: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ap-ajustes { transition: none; }
+}

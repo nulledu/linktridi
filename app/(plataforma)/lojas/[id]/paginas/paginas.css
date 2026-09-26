@@ -1,0 +1,156 @@
+/* ── Páginas da loja ──────────────────────────────────────────────────────── */
+
+.pg-abas { background: var(--surface-2); margin-bottom: 12px; }
+.pg-conta {
+  margin-left: 5px; padding: 0 5px; border-radius: 999px;
+  background: color-mix(in srgb, currentColor 14%, transparent);
+  font-size: 10.5px; font-weight: 750; font-variant-numeric: tabular-nums;
+}
+.pg-vazio { font-size: 13.5px; color: var(--text-dim); line-height: 1.6; }
+
+.pg-titulo {
+  display: flex; flex-direction: column; gap: 1px;
+  min-height: var(--tap); padding: 0; border: 0; background: none;
+  color: inherit; font: inherit; text-align: left; cursor: pointer; min-width: 0;
+}
+.pg-titulo strong { font-size: 13.5px; font-weight: 700; }
+.pg-titulo small { font-size: 11px; color: var(--text-dim); }
+.pg-titulo:hover strong { text-decoration: underline; }
+
+.pg-selo {
+  display: inline-flex; align-items: center;
+  padding: 2px 9px; border-radius: 999px;
+  font-size: 10.5px; font-weight: 750; white-space: nowrap;
+}
+.pg-quando { color: var(--text-dim); white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+.pg-acoes { display: flex; gap: 2px; justify-content: flex-end; }
+.pg-acao {
+  display: grid; place-items: center;
+  width: var(--tap); height: var(--tap);
+  border: 0; border-radius: var(--r-sm); background: none; cursor: pointer;
+}
+.pg-acao:hover { background: var(--surface-2); }
+
+.pg-status { display: flex; flex-direction: column; gap: 7px; }
+.pg-status > div { display: flex; gap: 6px; flex-wrap: wrap; }
+
+/* ── Escolha do modelo ───────────────────────────────────────────────────────
+ * Cartões grandes e não uma lista: a escolha é feita uma vez por página e o
+ * que a pessoa precisa ler é a explicação, não o nome. */
+.pg-modelos { display: flex; flex-direction: column; gap: 8px; }
+.pg-modelo {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  column-gap: 12px; row-gap: 2px;
+  min-height: var(--tap);
+  padding: 14px 15px;
+  border: 1px solid var(--border); border-radius: var(--r-md);
+  background: var(--surface); color: inherit; font: inherit; text-align: left;
+  cursor: pointer;
+  transition: border-color var(--duration-fast) var(--ease-smooth-out),
+              background var(--duration-fast) var(--ease-smooth-out);
+}
+.pg-modelo > svg { grid-row: 1 / 3; }
+.pg-modelo strong { font-size: 13.5px; font-weight: 700; }
+.pg-modelo small { font-size: 12px; color: var(--text-dim); line-height: 1.45; }
+.pg-modelo:hover { border-color: var(--primary); background: var(--surface-2); }
+@media (prefers-reduced-motion: reduce) { .pg-modelo { transition: none; } }
+
+/* ── Construtor ──────────────────────────────────────────────────────────── */
+.pg-construtor { display: flex; flex-direction: column; gap: 8px; }
+
+.pg-html {
+  border: 1px solid var(--border); border-radius: var(--r-md);
+  padding: 0 13px;
+}
+.pg-html > summary {
+  display: flex; align-items: center;
+  min-height: var(--tap);
+  font-size: 12.5px; font-weight: 650; color: var(--text-dim);
+  cursor: pointer; list-style: none;
+}
+.pg-html > summary::-webkit-details-marker { display: none; }
+.pg-html[open] { padding-bottom: 13px; }
+
+.pb { display: flex; flex-direction: column; gap: 7px; }
+
+.pb-item {
+  border: 1px solid var(--border); border-radius: var(--r-md);
+  background: var(--surface);
+  overflow: hidden;
+}
+.pb-item[data-aberto] { border-color: var(--primary); }
+
+.pb-cab { display: flex; align-items: center; gap: 4px; padding-right: 6px; }
+.pb-abrir {
+  flex: 1; min-width: 0;
+  display: flex; align-items: center; gap: 10px;
+  min-height: var(--tap); padding: 8px 4px 8px 13px;
+  border: 0; background: none; color: inherit; font: inherit;
+  text-align: left; cursor: pointer;
+}
+.pb-cab-txt { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.pb-cab-txt small {
+  font-size: 10.5px; font-weight: 700; letter-spacing: 0.04em;
+  text-transform: uppercase; color: var(--text-dim);
+}
+.pb-cab-txt strong {
+  font-size: 13px; font-weight: 600;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+/* Nunca só no hover: a ação que aparece ao passar o mouse não existe no
+   celular. As setas e a lixeira ficam sempre visíveis. */
+.pb-cab-acoes { display: flex; gap: 1px; flex: none; }
+
+.pb-corpo {
+  display: flex; flex-direction: column; gap: 12px;
+  padding: 4px 13px 14px;
+  border-top: 1px solid var(--border);
+}
+
+.pb-linha-btn { display: flex; flex-direction: column; gap: 7px; }
+.pb-linha-btn > div { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.pb-sub {
+  display: flex; flex-direction: column; gap: 10px;
+  padding: 12px; border-radius: var(--r-sm); background: var(--surface-2);
+}
+.pb-sub-topo { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.pb-sub-topo strong { font-size: 12px; font-weight: 700; color: var(--text-dim); }
+
+.pb-botoes { display: flex; flex-direction: column; gap: 8px; }
+.pb-botao {
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 12px; border-radius: var(--r-sm); background: var(--surface-2);
+}
+.pb-botao-topo { display: flex; align-items: center; gap: 6px; }
+.pb-botao-topo input { flex: 1; min-width: 0; }
+.pb-estilos { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.pb-produtos { display: flex; gap: 6px; flex-wrap: wrap; }
+.pb-nada { margin: 0; font-size: 12.5px; color: var(--text-dim); }
+
+.pb-cor { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pb-cor input { flex: 1; min-width: 120px; }
+
+/* ── Escolher o tipo do bloco novo ───────────────────────────────────────── */
+.pb-tipos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
+  gap: 7px;
+  padding: 12px; border-radius: var(--r-md);
+  border: 1px dashed var(--border); background: var(--surface-2);
+}
+.pb-tipo {
+  display: flex; flex-direction: column; gap: 3px;
+  min-height: var(--tap); padding: 11px;
+  border: 1px solid var(--border); border-radius: var(--r-sm);
+  background: var(--surface); color: inherit; font: inherit; text-align: left;
+  cursor: pointer;
+}
+.pb-tipo strong { font-size: 12.5px; font-weight: 700; }
+.pb-tipo small { font-size: 11px; color: var(--text-dim); line-height: 1.4; }
+.pb-tipo:hover { border-color: var(--primary); }
+.pb-tipos > .ui-btn { grid-column: 1 / -1; justify-self: start; }

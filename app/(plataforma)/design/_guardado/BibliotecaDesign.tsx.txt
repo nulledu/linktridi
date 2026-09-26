@@ -1,0 +1,278 @@
+"use client";
+
+import { useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
+import { Icon } from "../../Icon";
+import { Abas } from "../../ui/Abas";
+import { Selo } from "../../ui/primitives";
+import { VazioPainel } from "../../ui/CartaoPainel";
+import { Botao, BotaoApagar, Campo, PainelLateral, Acoes } from "../../ui/controles";
+import { GlassSelect } from "../../GlassPicker";
+import { toast } from "../../Toast";
+import { enviarArquivoPrivado } from "../../ui/enviarArquivo";
+import { CATEGORIAS_MATERIAL, TIPOS_DO_PROJETO, ehImagem, extensao, type CategoriaMaterial } from "@/lib/design-biblioteca";
+import { emMB, tetoDoEnvio } from "@/lib/armazenamento/referencia";
+import type { ArquivoProjeto } from "@/lib/design-projetos";
+import { useBiblioteca, type MaterialDesign } from "../dados";
+import { refCurta } from "../parts";
+
+type Origem = "projetos" | "setor";
+type Item =
+  | { origem: "projetos"; chave: string; url: string; nome: string; sub: string; categoria: string; quando: string | null; a: ArquivoProjeto }
+  | { origem: "setor"; chave: string; url: string; nome: string; sub: string; categoria: string; quando: string | null; m: MaterialDesign };
+
+const dataCurta = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit", timeZone: "America/Sao_Paulo" }) : "—");
+
+/**
+ * Biblioteca: duas origens numa tela.
+ *  · Dos projetos — o que já mora no pedido do ERP (arte do cliente, arte
+ *    final vetorizada, reprovadas, logo). Nada a subir: chega com o pedido.
+ *  · Do setor — template, fonte, mockup, editável, referência, elemento: o
+ *    que o Design junta ao longo do tempo. Sobe pro B2 (área `design/`).
+ * Todo arquivo pode apontar pra um projeto — é o que liga material a pedido.
+ */
+export function BibliotecaDesign({ inicial }: { inicial: { projeto?: string; enviar?: string } }) {
+  const [origem, setOrigem] = useState<Origem>(inicial.enviar ? "setor" : "projetos");
+  const [vista, setVista] = useState<"grade" | "lista">("grade");
+  const [tipo, setTipo] = useState("");
+  const [categoria, setCategoria] = useState("");
+  const [busca, setBusca] = useState("");
+  const [q, setQ] = useState("");
+  const [limite, setLimite] = useState(60);
+  const [aberto, setAberto] = useState<Item | null>(null);
+  const [enviando, setEnviando] = useState(!!inicial.enviar);
+  const projeto = inicial.projeto ?? "";
+  useEffect(() => { const t = setTimeout(() => setQ(busca), 300); return () => clearTimeout(t); }, [busca]);
+
+  const qs = useMemo(() => {
+    const p = new URLSearchParams({ limite: String(limite) });
+    if (tipo) p.set("tipo", tipo);
+    if (categoria) p.set("categoria", categoria);
+    if (q.trim()) p.set("q", q.trim());
+    if (projeto) p.set("projeto", projeto);
+    return p.toString();
+  }, [tipo, categoria, q, limite, projeto]);
+  const l = useBiblioteca(qs);
+  const d = l.estado === "ok" ? l.dado : null;
+
+  const itens: Item[] = !d ? [] : origem === "projetos"
+    ? d.arquivos.map((a) => ({
+      origem: "projetos" as const, chave: `${a.url}|${a.projetoId}`, url: a.url, nome: refCurta(a.ref), sub: a.produto,
+      categoria: TIPOS_DO_PROJETO.find((t) => t.chave === a.tipo)?.nome ?? a.tipo, quando: a.quando, a,
+    }))
+    : d.materiais.map((m) => ({
+      origem: "setor" as const, chave: m.id, url: m.url, nome: m.nome, sub: m.pedido_ref ? refCurta(m.pedido_ref) : (m.tags.join(", ") || "Sem projeto"),
+      categoria: CATEGORIAS_MATERIAL.find((c) => c.chave === m.categoria)?.nome ?? m.categoria, quando: m.created_at, m,
+    }));
+
+  return (
+    <div className="pv-pilha">
+      <div className="dv-barra">
+        <Abas valor={origem} onMuda={(v) => { setOrigem(v); setLimite(60); }} ariaLabel="Origem dos arquivos"
+          itens={[
+            { valor: "projetos", rotulo: <><Icon name="palette" size={15} color="currentColor" /> Dos projetos</>, badge: d ? <span className="pv-conta mt-num">{Object.values(d.contagem).reduce((a, b) => a + b, 0)}</span> : undefined },
+            { valor: "setor", rotulo: <><Icon name="folder" size={15} color="currentColor" /> Do setor</>, badge: d?.materiaisDisponivel ? <span className="pv-conta mt-num">{d.materiais.length}</span> : undefined },
+          ]} />
+        <div className="dv-barra-dir">
+          <Abas valor={vista} onMuda={setVista} ariaLabel="Visualização"
+            itens={[
+              { valor: "grade", rotulo: <Icon name="layout-grid" size={16} color="currentColor" /> },
+              { valor: "lista", rotulo: <Icon name="list" size={16} color="currentColor" /> },
+            ]} />
+          <Botao variante="primario" icone="upload" onClick={() => setEnviando(true)}>Enviar material</Botao>
+        </div>
+      </div>
+
+      <div className="dv-filtros">
+        <label className="pv-busca">
+          <Icon name="search" size={16} color="var(--text-dim)" />
+          <input className="ui-input" type="search" placeholder={origem === "projetos" ? "Buscar por pedido ou produto…" : "Buscar por nome, etiqueta, pedido…"}
+            value={busca} onChange={(e) => setBusca(e.target.value)} aria-label="Buscar na biblioteca" />
+        </label>
+        {origem === "projetos" ? (
+          <GlassSelect value={tipo} onChange={setTipo} aria-label="Tipo de arquivo"
+            options={[{ value: "", label: "Todos os tipos" }, ...TIPOS_DO_PROJETO.map((t) => ({ value: t.chave, label: `${t.nome}${d ? ` (${d.contagem[t.chave] ?? 0})` : ""}` }))]} />
+        ) : (
+          <GlassSelect value={categoria} onChange={setCategoria} aria-label="Categoria"
+            options={[{ value: "", label: "Todas as categorias" }, ...CATEGORIAS_MATERIAL.map((c) => ({ value: c.chave, label: c.nome }))]} />
+        )}
+        {projeto && <Link href="/design/biblioteca" className="dv-link"><Icon name="x" size={14} /> Só do projeto #{projeto}</Link>}
+      </div>
+
+      {l.estado === "carregando" && <VazioPainel texto="Carregando a biblioteca…" />}
+      {l.estado === "erro" && <VazioPainel texto="Não deu pra abrir a biblioteca agora." />}
+      {d && origem === "setor" && !d.materiaisDisponivel && (
+        <VazioPainel texto="Os materiais do setor ainda não têm tabela: rode supabase/design_materiais.sql no Supabase." />
+      )}
+      {d && origem === "projetos" && d.erp === "erro" && <VazioPainel texto="O ERP não respondeu — os arquivos dos projetos voltam na próxima leitura." />}
+      {d && itens.length === 0 && (origem === "projetos" || d.materiaisDisponivel) && (
+        <VazioPainel texto={origem === "setor" ? "Nenhum material ainda. Envie templates, fontes, mockups e referências do setor." : "Nenhum arquivo com esses filtros."} />
+      )}
+
+      {itens.length > 0 && vista === "grade" && (
+        <div className="dv-grade">
+          {itens.map((it) => (
+            <button type="button" key={it.chave} className="dv-arquivo ui-card-alvo" onClick={() => setAberto(it)}>
+              <Previa url={it.url} mime={it.origem === "setor" ? it.m.mime : null} />
+              <span className="dv-arquivo-info">
+                <span className="og-linha-tit">{it.nome}</span>
+                <span className="og-linha-sub">{it.categoria} · {it.sub}</span>
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+      {itens.length > 0 && vista === "lista" && (
+        <ul className="og-lista mc-card og-cartao">
+          {itens.map((it) => (
+            <li key={it.chave}>
+              <button type="button" className="og-alerta pv-linha-btn" onClick={() => setAberto(it)}>
+                <span className="dv-previa-mini"><Previa url={it.url} mime={it.origem === "setor" ? it.m.mime : null} /></span>
+                <span style={{ flex: 1, minWidth: 0 }}>
+                  <span className="og-linha-tit">{it.nome}</span>
+                  <span className="og-linha-sub">{it.categoria} · {it.sub}</span>
+                </span>
+                <span className="og-hora">{dataCurta(it.quando)}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      {d && origem === "projetos" && d.totalArquivos > d.arquivos.length && (
+        <Botao onClick={() => setLimite((n) => Math.min(240, n + 60))} disabled={limite >= 240}>
+          {limite >= 240 ? `Mostrando ${d.arquivos.length} de ${d.totalArquivos.toLocaleString("pt-BR")} — refine a busca` : "Carregar mais"}
+        </Botao>
+      )}
+
+      {aberto && <DetalheArquivo it={aberto} onFechar={() => setAberto(null)} onRemovido={() => { setAberto(null); l.recarregar(); }} />}
+      {enviando && <EnviarMaterial projetoInicial={projeto} onFechar={() => setEnviando(false)} onEnviado={() => { setEnviando(false); setOrigem("setor"); l.recarregar(); }} />}
+    </div>
+  );
+}
+
+function Previa({ url, mime }: { url: string; mime: string | null }) {
+  const [falhou, setFalhou] = useState(false);
+  if (ehImagem(url, mime) && !falhou) {
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img className="dv-previa" src={url} alt="" loading="lazy" onError={() => setFalhou(true)} />;
+  }
+  return <span className="dv-previa dv-previa-ext"><Icon name="file-text" size={26} color="var(--text-dim)" /><b>{extensao(url)}</b></span>;
+}
+
+function DetalheArquivo({ it, onFechar, onRemovido }: { it: Item; onFechar: () => void; onRemovido: () => void }) {
+  async function remover() {
+    if (it.origem !== "setor") return;
+    const r = await fetch(`/api/design/biblioteca?id=${it.m.id}`, { method: "DELETE" });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) { toast.erro(String(d.detalhe ?? "Não deu pra remover.")); return; }
+    toast.ok("Material removido.");
+    onRemovido();
+  }
+  const projetoRef = it.origem === "projetos" ? it.a.ref : it.m.pedido_ref;
+  return (
+    <PainelLateral centrado icone="folder" titulo={it.nome} subtitulo={it.categoria} onFechar={onFechar}
+      rodape={
+        <Acoes>
+          {it.origem === "setor" && <BotaoApagar titulo="Remover" aoConfirmar={() => void remover()} />}
+          <Botao variante="primario" icone="download" onClick={() => window.open(it.url, "_blank", "noopener")}>Abrir arquivo</Botao>
+        </Acoes>
+      }>
+      <div className="pv-pilha">
+        <div className="dv-previa-grande"><Previa url={it.url} mime={it.origem === "setor" ? it.m.mime : null} /></div>
+        <div className="dv-fatos">
+          <div className="dv-fato"><span className="og-linha-sub" style={{ marginTop: 0 }}>Origem</span><Selo tom={it.origem === "projetos" ? "info" : "destaque"}>{it.origem === "projetos" ? "Pedido (ERP)" : "Material do setor"}</Selo></div>
+          <div className="dv-fato"><span className="og-linha-sub" style={{ marginTop: 0 }}>Data</span><span>{dataCurta(it.quando)}</span></div>
+          {it.origem === "setor" && it.m.criado_nome && <div className="dv-fato"><span className="og-linha-sub" style={{ marginTop: 0 }}>Enviado por</span><span>{it.m.criado_nome}</span></div>}
+          {it.origem === "setor" && it.m.tamanho && <div className="dv-fato"><span className="og-linha-sub" style={{ marginTop: 0 }}>Tamanho</span><span>{emMB(it.m.tamanho)}</span></div>}
+        </div>
+        {it.origem === "setor" && it.m.descricao && <p style={{ fontSize: 13.5 }}>{it.m.descricao}</p>}
+        {it.origem === "setor" && it.m.tags.length > 0 && <div className="pv-card-pe">{it.m.tags.map((t) => <Selo key={t} tom="neutro">{t}</Selo>)}</div>}
+        {projetoRef && (
+          <Link className="dv-link" href={`/design/projetos?q=${encodeURIComponent(refCurta(projetoRef))}`}>
+            <Icon name="palette" size={15} /> Ver o projeto {refCurta(projetoRef)}
+          </Link>
+        )}
+        {it.origem === "projetos" && (
+          <Link className="dv-link" href={`/design/biblioteca?projeto=${it.a.projetoId}`}><Icon name="folder" size={15} /> Todos os arquivos deste projeto</Link>
+        )}
+      </div>
+    </PainelLateral>
+  );
+}
+
+function EnviarMaterial({ projetoInicial, onFechar, onEnviado }: { projetoInicial: string; onFechar: () => void; onEnviado: () => void }) {
+  const [arquivo, setArquivo] = useState<File | null>(null);
+  const [nome, setNome] = useState("");
+  const [categoria, setCategoria] = useState<CategoriaMaterial>("template");
+  const [tags, setTags] = useState("");
+  const [pedido, setPedido] = useState(projetoInicial);
+  const [descricao, setDescricao] = useState("");
+  const [pct, setPct] = useState<number | null>(null);
+  const [erro, setErro] = useState<string | undefined>();
+  const input = useRef<HTMLInputElement>(null);
+
+  function escolher(f: File | null) {
+    setErro(undefined);
+    if (!f) return;
+    const teto = tetoDoEnvio("design", f.type || "application/octet-stream");
+    if (teto > 0 && f.size > teto) { setErro(`${f.name} tem ${emMB(f.size)}; o limite desse tipo é ${emMB(teto)}. Compacte ou envie o link do Drive.`); return; }
+    setArquivo(f);
+    if (!nome) setNome(f.name.replace(/\.[^.]+$/, ""));
+  }
+
+  async function enviar() {
+    if (!arquivo) { setErro("Escolha o arquivo."); return; }
+    if (!nome.trim()) { setErro("Dê um nome ao material."); return; }
+    try {
+      setPct(0);
+      const up = await enviarArquivoPrivado(arquivo, "design", setPct, null);
+      const pedidoId = /^\d+$/.test(pedido.trim()) ? Number(pedido.trim()) : null;
+      const r = await fetch("/api/design/biblioteca", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: up.url, nome: nome.trim(), categoria, mime: up.mime, tamanho: up.tamanho, descricao: descricao.trim() || null,
+          tags: tags.split(",").map((t) => t.trim()).filter(Boolean), pedidoId, pedidoRef: pedidoId ? null : pedido.trim() || null }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) { setErro(String(d.detalhe ?? "Não deu pra salvar o material.")); setPct(null); return; }
+      toast.ok("Material na biblioteca.");
+      onEnviado();
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Falhou o envio. Tente de novo.");
+      setPct(null);
+    }
+  }
+
+  return (
+    <PainelLateral centrado soFechaNoX icone="upload" titulo="Enviar material" subtitulo="Template, fonte, mockup, editável, referência…" onFechar={onFechar}
+      rodape={
+        <Acoes>
+          <Botao onClick={onFechar}>Cancelar</Botao>
+          <Botao variante="primario" icone="upload" carregando={pct != null} onClick={() => void enviar()}>
+            {pct != null ? `Enviando ${Math.round(pct)}%` : "Enviar"}
+          </Botao>
+        </Acoes>
+      }>
+      <div className="pv-pilha">
+        <input ref={input} type="file" hidden onChange={(e) => escolher(e.target.files?.[0] ?? null)} />
+        <button type="button" className="dv-soltar" onClick={() => input.current?.click()}
+          onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); escolher(e.dataTransfer.files?.[0] ?? null); }}>
+          <Icon name="upload" size={22} color="var(--primary)" />
+          <b>{arquivo ? arquivo.name : "Escolher ou soltar o arquivo"}</b>
+          <span className="og-linha-sub">{arquivo ? emMB(arquivo.size) : "Imagem até 25 MB · editável, fonte ou pacote até 150 MB"}</span>
+        </button>
+        <Campo label="Nome" erro={erro}><input className="ui-input" value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Ex.: Mockup carimbo redondo" /></Campo>
+        <Campo label="Categoria">
+          <GlassSelect value={categoria} onChange={(v) => setCategoria(v as CategoriaMaterial)} aria-label="Categoria"
+            options={CATEGORIAS_MATERIAL.map((c) => ({ value: c.chave, label: c.nome }))} />
+        </Campo>
+        <Campo label="Projeto relacionado" dica="Número do pedido no ERP ou o nome do cliente. Opcional.">
+          <input className="ui-input" value={pedido} onChange={(e) => setPedido(e.target.value)} placeholder="Ex.: 74153" />
+        </Campo>
+        <Campo label="Etiquetas" dica="Separe por vírgula: redondo, floral, natal…">
+          <input className="ui-input" value={tags} onChange={(e) => setTags(e.target.value)} />
+        </Campo>
+        <Campo label="Descrição"><textarea className="ui-input" rows={3} value={descricao} onChange={(e) => setDescricao(e.target.value)} /></Campo>
+      </div>
+    </PainelLateral>
+  );
+}

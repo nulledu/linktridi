@@ -1,0 +1,19 @@
+/* BarraFerramentas (ui/BarraFerramentas.tsx) — Toolbar do HeroUI com a régua do app. */
+.ui-barra {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+  min-width: 0;
+  max-width: 100%;
+}
+.ui-barra::-webkit-scrollbar { display: none; }
+.ui-barra > * { flex: none; }
+.ui-barra-sep { align-self: stretch; margin-block: 4px; }
+.ui-barra .toggle-button[data-selected="true"] {
+  background: var(--tf-accent, var(--primary));
+  color: #fff;
+}
+@media (max-width: 767px) {
+  .ui-barra .button,
+  .ui-barra .toggle-button { min-height: var(--tap); min-width: var(--tap); }
+}

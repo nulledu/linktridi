@@ -1,0 +1,69 @@
+/* ── Dados da loja ────────────────────────────────────────────────────────── */
+
+.dd-duo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(min(100%, 280px), 340px);
+  gap: 14px;
+  align-items: start;
+}
+/* A prévia desce pro fim antes de espremer: ela é referência, e referência
+   espremida deixa de ser referência. */
+@media (max-width: 900px) { .dd-duo { grid-template-columns: 1fr; } }
+
+.dd-form, .dd-previas { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+
+.dd-imagem { display: flex; align-items: center; gap: 9px; }
+.dd-imagem input { flex: 1; min-width: 0; }
+.dd-previa-img {
+  width: 40px; height: 40px; flex: none; border-radius: 10px;
+  display: grid; place-items: center; overflow: hidden;
+  background: var(--surface-2); border: 1px solid var(--border);
+}
+.dd-previa-img img { width: 100%; height: 100%; object-fit: contain; }
+.dd-previa-img--fav { width: 32px; height: 32px; border-radius: 8px; }
+
+.dd-rot {
+  margin: 16px 0 8px;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.05em;
+  text-transform: uppercase; color: var(--text-dim);
+}
+.dd-rot:first-child { margin-top: 0; }
+
+/* ── Aba do navegador ─────────────────────────────────────────────────────── */
+.dd-aba {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px; border-radius: 9px 9px 0 0;
+  background: var(--surface-2); border: 1px solid var(--border); border-bottom: 0;
+  max-width: 240px;
+}
+.dd-aba-ico {
+  width: 16px; height: 16px; flex: none; border-radius: 4px; overflow: hidden;
+  display: grid; place-items: center; background: var(--surface);
+}
+.dd-aba-ico img { width: 100%; height: 100%; object-fit: contain; }
+.dd-aba-txt {
+  flex: 1; min-width: 0; font-size: 12px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* ── Resultado de busca ───────────────────────────────────────────────────── */
+.dd-busca { display: flex; flex-direction: column; gap: 3px; }
+.dd-busca-url { font-size: 11.5px; color: var(--text-dim); overflow-wrap: anywhere; }
+.dd-busca-tit {
+  font-size: 15px; font-weight: 600; line-height: 1.3;
+  /* Azul de link é o que o buscador desenha — a prévia mente se usar a cor da
+     marca da pessoa. */
+  color: var(--info, #4c6ef5);
+}
+.dd-busca-desc { font-size: 12.5px; line-height: 1.5; color: var(--text-dim); }
+
+/* ── Cabeçalho da vitrine ─────────────────────────────────────────────────── */
+.dd-cab {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 54px; padding: 10px 14px; border-radius: 10px;
+  background: var(--surface-2); border: 1px solid var(--border);
+}
+.dd-cab img { max-height: 34px; max-width: 100%; object-fit: contain; }
+.dd-cab strong { font-size: 15px; font-weight: 700; }
+
+.dd-nota { margin: 8px 0 0; font-size: 11.5px; color: var(--text-dim); line-height: 1.5; }

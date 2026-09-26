@@ -1,0 +1,143 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import { Icon } from "../../Icon";
+import { Abas } from "../../ui/Abas";
+import { VazioPainel } from "../../ui/CartaoPainel";
+import { Fila } from "../../ui/micro";
+import { GlassSelect } from "../../GlassPicker";
+import { STATUS_DESIGN, type StatusDesign } from "@/lib/design-fluxo";
+import type { ProjetoLinha } from "@/lib/design-projetos";
+import { useListaProjetos } from "../dados";
+import { CartaoProjeto, ContaArquivos, DetalheProjeto, Miniatura, SeloPrioridade, SeloStatus, naEtapa, refCurta } from "../parts";
+
+export interface FiltroInicial { status?: string; prioridade?: string; resp?: string; q?: string }
+
+const TOM_COR: Record<string, string> = { neutro: "var(--text-dim)", destaque: "var(--primary)", info: "var(--info)", atencao: "var(--atencao)", perigo: "var(--perigo)", ok: "var(--ok)" };
+
+/**
+ * Projetos: todos os trabalhos do Design (pedidos nas etapas de arte), em
+ * Kanban pelas sete etapas do fluxo ou em Lista. Filtrar e buscar acontece no
+ * servidor sobre a leitura em cache — a tela recebe só a página que mostra.
+ */
+export function ProjetosDesign({ inicial }: { inicial: FiltroInicial }) {
+  const [vista, setVista] = useState<"kanban" | "lista">("kanban");
+  const [status, setStatus] = useState<"todos" | StatusDesign>((STATUS_DESIGN.some((s) => s.chave === inicial.status) ? inicial.status : "todos") as "todos" | StatusDesign);
+  const [prioridade, setPrioridade] = useState(inicial.prioridade ?? "");
+  const [resp, setResp] = useState(inicial.resp ?? "");
+  const [busca, setBusca] = useState(inicial.q ?? "");
+  const [q, setQ] = useState(inicial.q ?? "");
+  const [aberto, setAberto] = useState<ProjetoLinha | null>(null);
+
+  // Busca só depois de parar de digitar: cada letra seria uma ida ao servidor.
+  useEffect(() => { const t = setTimeout(() => setQ(busca), 300); return () => clearTimeout(t); }, [busca]);
+
+  const qs = useMemo(() => {
+    const p = new URLSearchParams();
+    if (status !== "todos") p.set("status", status);
+    if (prioridade) p.set("prioridade", prioridade);
+    if (resp) p.set("resp", resp);
+    if (q.trim()) p.set("q", q.trim());
+    p.set("limite", vista === "kanban" ? "30" : "200");
+    if (vista === "kanban") p.set("agrupar", "status");
+    return p.toString();
+  }, [status, prioridade, resp, q, vista]);
+  const l = useListaProjetos(qs);
+  const d = l.estado === "ok" ? l.dado : null;
+
+  const colunas = STATUS_DESIGN.filter((s) => status === "todos" || s.chave === status);
+
+  return (
+    <div className="pv-pilha">
+      <div className="dv-barra">
+        <Abas valor={vista} onMuda={setVista} ariaLabel="Visualização"
+          itens={[
+            { valor: "kanban", rotulo: <><Icon name="layout-kanban" size={15} color="currentColor" /> Kanban</> },
+            { valor: "lista", rotulo: <><Icon name="list" size={15} color="currentColor" /> Lista</> },
+          ]} />
+        <label className="pv-busca">
+          <Icon name="search" size={16} color="var(--text-dim)" />
+          <input className="ui-input" type="search" placeholder="Buscar pedido, cliente, produto…" value={busca}
+            onChange={(e) => setBusca(e.target.value)} aria-label="Buscar projetos" />
+        </label>
+      </div>
+
+      <Abas valor={status} onMuda={setStatus} ariaLabel="Filtrar por etapa"
+        itens={[
+          { valor: "todos" as const, rotulo: "Todos", badge: d ? <span className="pv-conta mt-num">{Object.values(d.porStatus).reduce((a, b) => a + b, 0)}</span> : undefined },
+          ...STATUS_DESIGN.map((s) => ({ valor: s.chave, rotulo: s.nome, badge: d ? <span className="pv-conta mt-num">{d.porStatus[s.chave] ?? 0}</span> : undefined })),
+        ]} />
+
+      <div className="dv-filtros">
+        <GlassSelect value={resp} onChange={setResp} aria-label="Responsável" searchable
+          options={[{ value: "", label: "Todos os responsáveis" }, { value: "sem", label: "Sem responsável" }, ...(d?.responsaveis ?? []).map((r) => ({ value: r, label: r }))]} />
+        <GlassSelect value={prioridade} onChange={setPrioridade} aria-label="Prioridade"
+          options={[{ value: "", label: "Qualquer prioridade" }, { value: "alta", label: "Alta" }, { value: "media", label: "Média" }, { value: "baixa", label: "Baixa" }]} />
+        {d && <span className="og-linha-sub" style={{ marginTop: 0 }}>{d.total.toLocaleString("pt-BR")} {d.total === 1 ? "projeto" : "projetos"}</span>}
+      </div>
+
+      {l.estado === "carregando" && <VazioPainel texto="Carregando os projetos…" />}
+      {(l.estado === "erro" || l.estado === "indisponivel") && <VazioPainel texto="Não deu pra ler o ERP agora." />}
+
+      {d && vista === "kanban" && (
+        <div className="pv-kanban dv-kanban" data-uma={colunas.length === 1 ? "1" : undefined}>
+          {colunas.map((c) => {
+            const itens = d.projetos.filter((p) => p.status === c.chave);
+            const total = d.porStatus[c.chave] ?? 0;
+            return (
+              <section key={c.chave} className="pv-coluna" aria-label={c.nome}>
+                <header className="pv-coluna-cab">
+                  <span className="og-cartao-icone" style={{ background: `color-mix(in srgb, ${TOM_COR[c.tom]} 14%, transparent)` }} aria-hidden>
+                    <Icon name={c.icone} size={16} color={TOM_COR[c.tom]} />
+                  </span>
+                  <b>{c.nome}</b>
+                  <span className="pv-conta mt-num">{total}</span>
+                </header>
+                {itens.length === 0 ? <p className="pv-coluna-vazia">Nada aqui.</p> : (
+                  <Fila className="pv-coluna-lista">
+                    {itens.map((p) => <CartaoProjeto key={p.id} p={p} onAbrir={setAberto} etapa={false} />)}
+                    {total > itens.length && (
+                      <button type="button" className="dv-mais" onClick={() => { setStatus(c.chave); setVista("lista"); }}>
+                        Ver os {total.toLocaleString("pt-BR")} em lista
+                      </button>
+                    )}
+                  </Fila>
+                )}
+              </section>
+            );
+          })}
+        </div>
+      )}
+
+      {d && vista === "lista" && (
+        d.projetos.length === 0 ? <VazioPainel texto="Nenhum projeto com esses filtros." /> : (
+          <div className="dv-tabela" role="table" aria-label="Projetos">
+            <div className="dv-tab-cab" role="row">
+              <span role="columnheader">Projeto</span><span role="columnheader">Status</span><span role="columnheader">Responsável</span>
+              <span role="columnheader">Na etapa</span><span role="columnheader">Prioridade</span><span role="columnheader">Arquivos</span>
+            </div>
+            {d.projetos.map((p) => (
+              <button type="button" key={p.id} role="row" className="dv-tab-linha" onClick={() => setAberto(p)}>
+                <span role="cell" className="dv-tab-proj">
+                  <Miniatura url={p.thumb} tamanho={36} />
+                  <span style={{ minWidth: 0 }}>
+                    <span className="og-linha-tit">{refCurta(p.ref)}</span>
+                    <span className="og-linha-sub">{p.produto}{p.itens > 1 ? ` +${p.itens - 1}` : ""}</span>
+                  </span>
+                </span>
+                <span role="cell" data-l="Status"><SeloStatus s={p.status} /></span>
+                <span role="cell" data-l="Responsável" className="og-linha-sub" style={{ marginTop: 0 }}>{p.responsavel ?? "—"}</span>
+                <span role="cell" data-l="Na etapa" className="og-hora">{naEtapa(p)}</span>
+                <span role="cell" data-l="Prioridade"><SeloPrioridade p={p.prioridade} /></span>
+                <span role="cell" data-l="Arquivos"><ContaArquivos p={p} /></span>
+              </button>
+            ))}
+            {d.total > d.projetos.length && <p className="og-limpo" style={{ padding: 12 }}>Mostrando {d.projetos.length} de {d.total.toLocaleString("pt-BR")}. Refine com a busca ou os filtros.</p>}
+          </div>
+        )
+      )}
+
+      {aberto && <DetalheProjeto p={aberto} onFechar={() => setAberto(null)} />}
+    </div>
+  );
+}

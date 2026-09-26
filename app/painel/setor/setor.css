@@ -1,0 +1,278 @@
+/* ── Painéis de setor (Produção / Logística) — peças de parede ──────────────
+   Movimento sai da escala do transitions.dev instalada no :root do
+   globals.css (--duration-*, --ease-*). Três regras da casa respeitadas:
+   • nenhum keyframe termina em translateY(0)/scale(1) — sempre `none`
+     (transform residual vira bloco de contenção de `position: fixed`);
+   • nada de loop pesado: o único movimento contínuo é o anel da chamada
+     (só enquanto ela existe) e ele anima SÓ transform/opacity, no compositor;
+   • entrada é vertical — percurso horizontal empurra o bloco pra fora do pai
+     e a sobra vira largura de documento.
+
+   Medidas em PIXEL: o palco é fixo (1280×720 deitado, 720×1280 em pé) e o
+   `KioskShell` escala o conjunto inteiro pra tela real. */
+
+/* ── Tokens da parede de setor ───────────────────────────────────────────────
+   Saem dos `--p-*` da pele clara (widgets.css): mesmo cartão, mesmo aro, mesma
+   sombra e o MESMO roxo da parede de vendas. Estado continua sendo estado
+   (verde/âmbar/vermelho calibrados pro claro) — é a única cor além do roxo. */
+.st-painel {
+  --st-cartao: var(--p-cartao, #fff);
+  --st-aro: var(--p-aro, rgba(20, 20, 46, 0.055));
+  --st-sombra: var(--p-sombra, 0 1px 2px rgba(20, 20, 46, 0.04), 0 14px 32px -14px rgba(20, 20, 46, 0.14));
+  --st-texto: var(--p-texto, #14142e);
+  --st-fraco: var(--p-fraco, #9394b1);
+  --st-apagado: var(--p-apagado, #a9aac2);
+  --st-roxo: var(--p-primaria, #6c4cf0);
+  --st-roxo-claro: var(--p-primaria-clara, #a78bfa);
+  --st-selo: var(--p-selo, #ece7fe);
+  --st-trilho: var(--p-trilho, #eae8f4);
+  --st-ok: var(--p-ok, #17a34a);
+  --st-atencao: var(--p-atencao, #c2830b);
+  --st-perigo: var(--p-perigo, var(--perigo));
+  --st-raio: 22px;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+  min-height: 0;
+  color: var(--st-texto);
+  animation: stPainelIn var(--duration-very-slow, 500ms) var(--ease-smooth-out, ease-out);
+}
+@keyframes stPainelIn {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Cartão: UMA receita, a mesma do `.pw-cartao` da parede de vendas. */
+.st-card {
+  background: var(--st-cartao);
+  border: 1px solid var(--st-aro);
+  box-shadow: var(--st-sombra);
+  border-radius: var(--st-raio);
+  padding: 16px 18px;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* Rótulo de seção: maiúsculas espaçadas, cinza — a hierarquia é o número. */
+.st-rotulo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--st-fraco);
+  white-space: nowrap;
+  min-width: 0;
+}
+.st-rotulo-extra { margin-left: auto; letter-spacing: 0.02em; text-transform: none; font-weight: 700; }
+
+/* Quadradinho do ícone: roxo a 12% chapado (sem translúcido empilhado). */
+.st-selo-ico {
+  width: 40px;
+  height: 40px;
+  border-radius: 13px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  background: var(--st-selo);
+}
+
+.st-num {
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* ── Cabeçalho ──────────────────────────────────────────────────────────── */
+.st-cab { display: flex; align-items: center; gap: 14px; min-width: 0; flex: none; }
+.st-cab-marca {
+  width: 52px; height: 52px; border-radius: 16px; flex: none;
+  display: grid; place-items: center;
+  background: linear-gradient(160deg, var(--st-roxo-claro), var(--st-roxo));
+}
+.st-cab-titulo { font-size: 30px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.05; }
+.st-cab-sub { font-size: 14px; color: var(--st-fraco); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.st-cab-direita { margin-left: auto; display: flex; align-items: center; gap: 8px; flex: none; }
+
+/* Pílula de estado: ponto + texto, fundo a 12% da cor do estado. */
+.st-pilula {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 14px; border-radius: 999px;
+  font-size: 14px; font-weight: 800; white-space: nowrap;
+  background: color-mix(in srgb, var(--st-cor, var(--st-fraco)) 12%, var(--st-cartao));
+  color: var(--st-cor, var(--st-fraco));
+  border: 1px solid color-mix(in srgb, var(--st-cor, var(--st-fraco)) 22%, transparent);
+}
+.st-pilula-neutra { --st-cor: var(--st-fraco); background: var(--st-cartao); border-color: var(--st-aro); box-shadow: var(--st-sombra); }
+.st-ponto { width: 9px; height: 9px; border-radius: 999px; background: currentColor; flex: none; }
+
+/* ── Faixa de STATUS: a primeira frase da parede ────────────────────────── */
+.st-status {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 18px;
+  border-radius: var(--st-raio);
+  background: color-mix(in srgb, var(--st-cor) 10%, var(--st-cartao));
+  border: 1px solid color-mix(in srgb, var(--st-cor) 24%, transparent);
+  box-shadow: var(--st-sombra);
+  min-width: 0;
+  flex: none;
+  transition: background-color var(--duration-slow, 400ms) var(--ease-smooth-out, ease-out),
+              border-color var(--duration-slow, 400ms) var(--ease-smooth-out, ease-out);
+}
+.st-status-ico {
+  width: 44px; height: 44px; border-radius: 14px; flex: none;
+  display: grid; place-items: center; background: var(--st-cor);
+}
+.st-status-titulo { font-size: 22px; font-weight: 800; color: var(--st-cor); line-height: 1.1; white-space: nowrap; }
+.st-status-det { font-size: 14.5px; font-weight: 600; color: var(--st-texto); opacity: 0.72; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ── Indicador (KPI) ─────────────────────────────────────────────────────── */
+.st-kpi { display: flex; flex-direction: column; gap: 10px; }
+.st-kpi-topo { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.st-kpi-titulo { font-size: 15px; font-weight: 700; line-height: 1.15; min-width: 0; color: var(--st-texto); }
+.st-kpi-nota { font-size: 13px; font-weight: 600; color: var(--st-fraco); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 6px; }
+/* Problema aceso: faixa de cor na borda esquerda, nada piscando. */
+.st-kpi[data-aceso="1"] { box-shadow: inset 4px 0 0 var(--st-cor), var(--st-sombra); }
+
+/* ── Barra de progresso ─────────────────────────────────────────────────── */
+/* Camadas empilhadas, cada uma `scaleX(fração)` a partir da esquerda: o
+   avanço anima só transform (compositor), nunca largura. A camada de trás é a
+   soma (feito + em curso), a da frente só o feito. */
+.st-prog { position: relative; height: 14px; border-radius: 999px; background: var(--st-trilho); overflow: hidden; }
+.st-prog > span {
+  position: absolute;
+  inset: 0;
+  transform-origin: left center;
+  background: linear-gradient(90deg, var(--st-roxo-claro), var(--st-roxo));
+  transition: transform var(--duration-very-slow, 500ms) var(--ease-smooth-out, ease-out);
+}
+.st-prog > span.st-prog-curso { background: color-mix(in srgb, var(--st-roxo) 28%, var(--st-trilho)); }
+
+/* ── Lista de alertas ───────────────────────────────────────────────────── */
+.st-alerta {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 12px; border-radius: 14px;
+  background: color-mix(in srgb, var(--st-cor) 7%, var(--st-cartao));
+  min-width: 0;
+}
+.st-alerta-ico { width: 36px; height: 36px; border-radius: 11px; flex: none; display: grid; place-items: center; background: color-mix(in srgb, var(--st-cor) 16%, var(--st-cartao)); }
+.st-alerta-txt { flex: 1; min-width: 0; font-size: 15px; font-weight: 700; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.st-alerta-sub { display: block; font-size: 12.5px; font-weight: 600; color: var(--st-fraco); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.st-alerta-num { font-size: 26px; font-weight: 800; color: var(--st-cor); font-variant-numeric: tabular-nums; flex: none; }
+
+/* Estado vazio: ícone apagado + frase — nunca um bloco em branco. */
+.st-vazio {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 10px; text-align: center; color: var(--st-fraco); font-size: 15px; font-weight: 600;
+  padding: 18px; flex: 1; min-height: 0;
+}
+
+/* Tela de espera / erro do painel inteiro. */
+.st-espera { display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; max-width: 520px; }
+.st-espera-titulo { font-size: 26px; font-weight: 800; color: var(--st-texto, #14142e); }
+.st-espera-det { font-size: 16px; color: var(--st-fraco, #9394b1); line-height: 1.4; }
+
+/* ── Grades dos dois painéis ───────────────────────────────────────────────
+   Classe e não `style` inline: faixa rígida inline não colapsa por media
+   query (trava de `rolagem-horizontal`). */
+.st-g2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.st-g3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.st-prod-principal { display: grid; grid-template-columns: minmax(0, 1.25fr) repeat(3, minmax(0, 1fr)); gap: 14px; flex: none; }
+.st-prod-corpo { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr) minmax(0, 1.3fr); gap: 14px; }
+.st-equipe-grade { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: min-content; gap: 10px; overflow: hidden; min-height: 0; }
+@media (max-width: 900px) {
+  .st-prod-principal { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .st-prod-corpo, .st-equipe-grade { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Os cartões de pessoa/fila/crítico usam `.glass`; na pele clara ele já vira
+   cartão branco (widgets.css). Dentro do cartão de seção, a linha é chapada
+   num tom de trilho — cartão dentro de cartão com sombra vira ruído. */
+.st-card .glass { box-shadow: none; background: color-mix(in srgb, var(--st-roxo) 3%, var(--st-cartao)); }
+
+/* A chamada de aceite entra como quem chega: sobe e assenta. */
+@keyframes stChamadaIn {
+  from { opacity: 0; transform: translateY(26px) scale(0.97); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* O anel de quem precisa agir: uma ONDA que sai do retrato e some. Só
+   transform + opacity num pseudo-elemento — fica no compositor, não repinta
+   o retrato nem a sombra a cada quadro (a versão antiga animava `filter`). */
+@keyframes stAnelOnda {
+  from { opacity: 0.55; transform: scale(1); }
+  to   { opacity: 0; transform: scale(1.18); }
+}
+
+/* Linhas de lista entram em escada — o atraso vem de --st-i por item. */
+@keyframes stLinhaIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.st-chamada-wrap {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  z-index: 8;
+  /* Véu CHAPADO (sem backdrop-filter): o desfoque custa GPU num aparelho
+     ligado 24 h e o fundo claro não tem o que borrar. */
+  background: color-mix(in srgb, var(--p-fundo, var(--bg, #f5f4fa)) 82%, transparent);
+  animation: stVeuIn var(--duration-slow) var(--ease-smooth-out);
+}
+@keyframes stVeuIn { from { opacity: 0; } to { opacity: 1; } }
+
+.st-chamada {
+  animation: stChamadaIn var(--duration-very-slow) var(--ease-smooth-out);
+}
+
+.st-anel { position: relative; }
+.st-anel::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: inherit;
+  border: 3px solid var(--st-anel-cor, var(--atencao));
+  pointer-events: none;
+  animation: stAnelOnda 2.2s var(--ease-out, ease-out) infinite;
+}
+
+.st-linha {
+  animation: stLinhaIn var(--duration-slow) var(--ease-smooth-out) both;
+  animation-delay: calc(var(--st-i, 0) * var(--duration-stagger, 40ms));
+}
+
+/* Foto de quem não está: a ausência se lê de longe, sem rótulo. */
+.st-foto-ausente { filter: grayscale(1); opacity: 0.55; }
+
+/* Selo "NOVA" da fila — pop de selo, só entrada. */
+.st-nova {
+  animation: stNovaIn var(--duration-very-slow) var(--ease-bounce) both;
+}
+@keyframes stNovaIn {
+  from { opacity: 0; transform: scale(0.6); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Troca de tela do bloco que alterna: só opacidade + subida curta. */
+.st-troca { animation: stLinhaIn var(--duration-slow) var(--ease-smooth-out); }
+
+@media (prefers-reduced-motion: reduce) {
+  .st-painel, .st-chamada, .st-chamada-wrap, .st-linha, .st-nova, .st-troca { animation: none; }
+  .st-anel::after { animation: none; opacity: 0.5; }
+  .st-prog > span, .st-status { transition: none; }
+}
+
+/* Corpo antigo do painel de produção — mantido pra quem ainda o usa. */
+.st-corpo { grid-template-columns: 1fr 380px; }
+@media (max-width: 900px) {
+  .st-corpo { grid-template-columns: minmax(0, 1fr); }
+}

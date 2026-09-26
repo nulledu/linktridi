@@ -1,0 +1,51 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+ * Loja Online — visão geral do canal
+ * ─────────────────────────────────────────────────────────────────────────── */
+
+
+/* Texto à esquerda, prévia à direita; uma coluna no celular. */
+.lo-ar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(min(100%, 200px), 280px);
+  gap: 18px; align-items: center; margin-bottom: 14px;
+}
+@media (max-width: 760px) { .lo-ar { grid-template-columns: 1fr; } }
+
+.lo-ar-txt { min-width: 0; }
+.lo-url {
+  display: inline-block; margin: 2px 0 14px;
+  font-size: 14px; font-weight: 700; color: var(--primary-texto);
+  overflow-wrap: anywhere;
+}
+.lo-ar-acoes { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* A prévia é a loja de verdade encolhida: renderiza em 1280 e é reduzida por
+   `scale`. Sem o `transform`, a loja abriria com o layout de 280px — que é o
+   do celular, e não o que a pessoa quer conferir aqui. */
+.lo-previa {
+  position: relative; width: 100%; aspect-ratio: 16 / 11;
+  border: 1px solid var(--border); border-radius: 14px;
+  overflow: hidden; background: #fff;
+  pointer-events: none;
+}
+.lo-previa iframe {
+  position: absolute; top: 0; left: 0;
+  width: 1280px; height: 880px; border: 0;
+  transform: scale(0.22);
+  transform-origin: top left;
+}
+
+
+.lo-progresso-txt { margin: 0 0 8px; font-size: 12.5px; color: var(--text-dim); }
+.lo-progresso {
+  height: 7px; border-radius: 999px; overflow: hidden;
+  background: var(--surface-2); margin-bottom: 10px;
+}
+.lo-progresso span {
+  display: block; height: 100%; border-radius: 999px;
+  background: var(--primary);
+  transition: width var(--duration-normal, 250ms) var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1));
+}
+@media (prefers-reduced-motion: reduce) { .lo-progresso span { transition: none; } }
+
+.lo-ar-tit { margin: 0 0 2px; font-size: 15px; font-weight: 700; letter-spacing: -0.01em; }

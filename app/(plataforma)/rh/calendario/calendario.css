@@ -1,0 +1,252 @@
+/* ── Calendário do RH ────────────────────────────────────────────────────────
+   Só o que estilo inline não faz bem: a grade que muda de forma por faixa de
+   tela e os estados de ponteiro. Cores e tempos vêm dos tokens da fundação. */
+
+.rhcal-grade {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  overflow: hidden;
+  background: var(--border);
+  gap: 1px;
+  min-width: 0;
+}
+.rhcal-semana {
+  background: var(--surface-2);
+  color: var(--text-dim);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  text-align: center;
+  padding: 9px 0;
+}
+.rhcal-celula {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 108px;
+  min-width: 0;
+  padding: 8px;
+  background: var(--surface);
+  border: none;
+  font: inherit;
+  color: inherit;
+  text-align: start;
+  cursor: pointer;
+  transition: background var(--duration-quick, 150ms) var(--ease-out, ease-out);
+}
+.rhcal-celula[data-fora="1"] { background: color-mix(in srgb, var(--surface-2) 55%, var(--surface)); color: var(--text-dim); }
+/* O fundo do dia diz o que ele é. Feriado é forte (o dia inteiro é
+   diferente); evento é leve (tem algo marcado). Fora do mês, metade. */
+.rhcal-celula[data-tem="evento"] { background: color-mix(in srgb, var(--rhcal-cor) 9%, var(--surface)); }
+.rhcal-celula[data-tem="feriado"] { background: color-mix(in srgb, var(--rhcal-cor) 18%, var(--surface)); }
+.rhcal-celula[data-fora="1"][data-tem="evento"] { background: color-mix(in srgb, var(--rhcal-cor) 5%, var(--surface)); }
+.rhcal-celula[data-fora="1"][data-tem="feriado"] { background: color-mix(in srgb, var(--rhcal-cor) 10%, var(--surface)); }
+.rhcal-celula[data-tem="feriado"] .rhcal-num { color: color-mix(in srgb, var(--rhcal-cor) 80%, var(--text)); }
+.rhcal-celula[data-hoje="1"] { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--primary) 55%, transparent); }
+.rhcal-celula[data-escolhido="1"], .rhcal-celula[data-tem][data-escolhido="1"] { background: color-mix(in srgb, var(--primary) 12%, var(--surface)); }
+@media (hover: hover) {
+  .rhcal-celula:hover { background: color-mix(in srgb, var(--primary) 5%, var(--surface)); }
+  .rhcal-celula[data-tem="evento"]:hover { background: color-mix(in srgb, var(--rhcal-cor) 15%, var(--surface)); }
+  .rhcal-celula[data-tem="feriado"]:hover { background: color-mix(in srgb, var(--rhcal-cor) 24%, var(--surface)); }
+}
+.rhcal-celula:focus-visible { outline: var(--foco-largura) solid var(--foco-cor); outline-offset: var(--foco-offset-dentro); z-index: 1; }
+
+.rhcal-num {
+  display: inline-grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  flex: none;
+}
+.rhcal-celula[data-hoje="1"] .rhcal-num { background: var(--primary); color: var(--primary-contraste, #fff); }
+
+/* Feriado é FAIXA no topo da célula, não pílula: é o que separa "o dia é
+   diferente" de "tem coisa marcada". */
+.rhcal-faixa {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 7px;
+  border-radius: 7px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.2;
+  min-width: 0;
+  color: color-mix(in srgb, var(--rhcal-cor) 82%, var(--text));
+  background: color-mix(in srgb, var(--rhcal-cor) 16%, transparent);
+}
+.rhcal-faixa > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.rhcal-pilula {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 6px;
+  border-radius: 7px;
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.2;
+  min-width: 0;
+  color: var(--text);
+  background: color-mix(in srgb, var(--surface) 70%, transparent);
+  border-left: 3px solid var(--rhcal-cor);
+}
+.rhcal-pilula > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.rhcal-mais { font-size: 11px; font-weight: 700; color: var(--text-dim); padding: 2px 6px; }
+
+/* Pontos do celular: a célula só diz QUE tem, a lista abaixo diz O QUÊ. */
+.rhcal-pontos { display: flex; flex-wrap: wrap; gap: 3px; margin-top: auto; }
+.rhcal-ponto { width: 6px; height: 6px; border-radius: 50%; background: var(--rhcal-cor); }
+
+/* ── Celular ── */
+@media (max-width: 767px) {
+  .rhcal-celula { min-height: var(--tap); padding: 5px 4px; gap: 3px; }
+  .rhcal-num { width: 24px; height: 24px; font-size: 12px; }
+  .rhcal-semana { padding: 7px 0; font-size: 10px; letter-spacing: .04em; }
+}
+
+/* ── Visão anual ── */
+.rhcal-ano {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: 14px;
+}
+.rhcal-mini {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+.rhcal-mini > span {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  border-radius: 6px;
+  color: var(--text-dim);
+  position: relative;
+}
+.rhcal-mini > span[data-fora="1"] { visibility: hidden; }
+.rhcal-mini > span[data-hoje="1"] { background: var(--primary); color: var(--primary-contraste, #fff); font-weight: 800; }
+.rhcal-mini > span[data-tem="1"]::after {
+  content: "";
+  position: absolute;
+  bottom: 1px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--rhcal-cor, var(--primary));
+}
+.rhcal-mini > span[data-hoje="1"]::after { background: var(--primary-contraste, #fff); }
+
+/* Botão-cartão do mês: `<button>` inteiro é o alvo. */
+.rhcal-mes-btn {
+  all: unset;
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  cursor: pointer;
+  border-radius: var(--r-md);
+}
+.rhcal-mes-btn:focus-visible { outline: var(--foco-largura) solid var(--foco-cor); outline-offset: var(--foco-offset); }
+
+@media (prefers-reduced-motion: reduce) {
+  .rhcal-celula { transition: none; }
+}
+
+/* ── Faixa fina: hoje + próximos ── */
+.rhcal-faixa-topo {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 18px;
+  align-items: center;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  min-width: 0;
+}
+.rhcal-hoje-btn {
+  display: flex; align-items: center; gap: 10px;
+  background: none; border: none; padding: 0; cursor: pointer;
+  font: inherit; color: inherit; text-align: start; min-height: var(--tap); flex: none;
+}
+.rhcal-hoje-carimbo {
+  width: 44px; display: grid; place-items: center; padding: 5px 0; border-radius: 12px; flex: none;
+  background: color-mix(in srgb, var(--primary) 12%, transparent); color: var(--primary-texto);
+}
+.rhcal-hoje-carimbo strong { font-size: 18px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+.rhcal-hoje-carimbo small { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.rhcal-proximos { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.rhcal-proximos-rot { font-size: 11px; font-weight: 800; letter-spacing: .1em; color: var(--text-dim); text-transform: uppercase; flex: none; }
+/* A regra local precisa repetir a rolagem da `.tab-strip`: ela tem a mesma
+   especificidade e, ganhando a ordem, apagaria o `overflow-x` da fundação —
+   e os "Próximos" voltariam a sair pela direita da tela. */
+.rhcal-proximos-lista {
+  display: flex; gap: 6px; margin: 0; padding: 0; list-style: none;
+  min-width: 0; max-width: 100%; align-items: center;
+  overflow-x: auto; overflow-y: hidden; scrollbar-width: none; overscroll-behavior-x: contain;
+}
+.rhcal-proximos-lista::-webkit-scrollbar { display: none; }
+.rhcal-proximos-lista > * { flex: none; }
+/* A legenda é INFORMAÇÃO, não navegação: são nove chips e cada um explica uma
+   cor do calendário. Rolando de lado (o padrão da `.tab-strip`), os últimos
+   — "Férias", "Folga compensatória" — ficavam fora da tela e a pessoa não
+   descobria o que a cor significa. Aqui ela QUEBRA LINHA: ocupa duas fileiras
+   e nada fica escondido, em qualquer largura. */
+.rhcal-legenda { min-width: 0; }
+.rhcal-legenda .ui-chips {
+  display: flex; flex-wrap: wrap; overflow: visible; max-width: 100%;
+  scroll-snap-type: none;
+}
+.rhcal-proximo {
+  display: inline-flex; align-items: center; gap: 6px; max-width: 200px; min-height: 34px;
+  padding: 0 10px 0 6px; border-radius: var(--r-pill); border: 1px solid var(--border);
+  background: var(--surface-2); cursor: pointer; font: inherit; color: inherit; white-space: nowrap;
+  transition: border-color var(--duration-quick, 150ms) var(--ease-out, ease-out), background var(--duration-quick, 150ms) var(--ease-out, ease-out);
+}
+@media (hover: hover) { .rhcal-proximo:hover { border-color: color-mix(in srgb, var(--rhcal-cor) 55%, var(--border)); background: color-mix(in srgb, var(--rhcal-cor) 8%, var(--surface-2)); } }
+.rhcal-proximo-dia {
+  font-size: 10.5px; font-weight: 800; letter-spacing: .02em; text-transform: uppercase; padding: 3px 6px; border-radius: 7px;
+  color: color-mix(in srgb, var(--rhcal-cor) 85%, var(--text)); background: color-mix(in srgb, var(--rhcal-cor) 16%, transparent); flex: none;
+}
+.rhcal-proximo-titulo { font-size: 12.5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+@media (max-width: 767px) {
+  .rhcal-faixa-topo { grid-template-columns: 1fr; gap: 10px; padding: 10px 12px; }
+}
+
+/* ── Barra do calendário ── */
+.rhcal-barra { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; min-width: 0; }
+.rhcal-barra-nav { display: flex; align-items: center; gap: 8px; min-width: 0; flex-wrap: wrap; }
+.rhcal-barra-acoes { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.rhcal-barra-titulo { min-width: 168px; text-align: center; font-size: 17px; font-weight: 800; letter-spacing: -.01em; }
+@media (max-width: 767px) {
+  .rhcal-barra-titulo { min-width: 0; font-size: 15px; }
+  .rhcal-barra-acoes { width: 100%; }
+  .rhcal-barra-acoes > * { flex: 1; }
+}
+
+/* ── Legenda (chips) ── */
+.rhcal-legenda { margin-bottom: 12px; }
+.rhcal-legenda .ui-chip { font-size: 12px; }
+
+/* ── Grade maior: o calendário é a tela ── */
+@media (min-width: 768px) {
+  .rhcal-celula { min-height: clamp(112px, calc((100dvh - 330px) / 6), 170px); padding: 8px 8px 6px; }
+  .rhcal-num { width: 28px; height: 28px; font-size: 13.5px; }
+  .rhcal-pilula, .rhcal-faixa { font-size: 12px; padding: 4px 7px; }
+}
+.rhcal-celula[data-fds="1"]:not([data-tem]) { background: color-mix(in srgb, var(--surface-2) 40%, var(--surface)); }
+.rhcal-celula[data-fora="1"][data-fds="1"]:not([data-tem]) { background: color-mix(in srgb, var(--surface-2) 70%, var(--surface)); }
+

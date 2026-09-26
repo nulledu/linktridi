@@ -1,0 +1,20 @@
+/* ── Estoque · micro-interações do módulo ─────────────────────────────────────
+   Tempo e curva só da escala do `:root`. Keyframe termina em `transform: none`.
+   Nada aqui é ancestral de popover. */
+
+/* Contador de quantidade (Kinetics 017 · Quantity Stepper): o número salta a
+   cada toque no −/+, pra o dedo saber que o toque chegou mesmo quando o
+   algarismo muda pouco (36 → 37). Só na entrada existe o repique. */
+.est-qtd-pop { animation: estQtdPop var(--duration-fast) var(--ease-bounce); }
+@keyframes estQtdPop {
+  0% { transform: scale(0.92); }
+  100% { transform: none; }
+}
+
+/* Salvar que deu certo (Kinetics 072): o botão assenta em verde com o check
+   antes do painel fechar — "salvou" deixa de ser uma suposição. */
+.est-salvo.ui-btn[data-v="primario"] { background: var(--ok); }
+
+@media (prefers-reduced-motion: reduce) {
+  .est-qtd-pop { animation: none !important; }
+}

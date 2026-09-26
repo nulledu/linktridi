@@ -1,0 +1,35 @@
+/* Campo de texto do tutorial (EditorTexto). Prefixo `cte-rte` — `ct-` é da
+   Central de Trabalho no globals.css e colide (ver memória do prefixo). */
+.cte-rte { display:flex; flex-direction:column; min-width:0; border:1px solid var(--border); border-radius:var(--r-sm); background:var(--surface); transition:border-color var(--duration-quick) var(--ease-smooth-out), box-shadow var(--duration-quick) var(--ease-smooth-out); }
+.cte-rte:focus-within { border-color:var(--primary); box-shadow:0 0 0 3px color-mix(in srgb, var(--primary) 16%, transparent); }
+
+.cte-rte-barra { display:flex; align-items:center; gap:2px; flex-wrap:wrap; padding:4px; border-bottom:1px solid var(--border); }
+.cte-rte-barra button { display:grid; place-items:center; width:34px; height:34px; padding:0; border:0; border-radius:8px; background:transparent; color:var(--text-dim); cursor:pointer; transition:background var(--duration-quick) var(--ease-smooth-out), color var(--duration-quick) var(--ease-smooth-out); }
+.cte-rte-barra button:hover { background:var(--surface-2); color:var(--text); }
+.cte-rte-barra button[aria-pressed="true"] { background:color-mix(in srgb, var(--primary) 14%, transparent); color:var(--primary-texto); }
+.cte-rte-barra button:disabled { opacity:.4; cursor:default; }
+.cte-rte-barra button:focus-visible { outline: var(--foco-largura) solid var(--foco-cor); outline-offset: 1px; }
+.cte-rte-sep { width:1px; height:18px; margin:0 3px; background:var(--border); }
+/* Dedo: 44px de alvo (responsivo por ponteiro, não por largura — tablet tem
+   1024px e dedo). */
+@media (pointer: coarse) { .cte-rte-barra button { width:var(--tap); height:var(--tap); } }
+
+.cte-rte-link { display:flex; align-items:center; gap:6px; flex-wrap:wrap; padding:6px; border-bottom:1px solid var(--border); background:var(--surface-2); }
+.cte-rte-link input { flex:1 1 180px; min-width:0; min-height:var(--ctl-sm, 34px); padding:6px 10px; border:1px solid var(--border); border-radius:8px; background:var(--surface); color:var(--text); font:inherit; font-size:13px; }
+
+/* A área editável — o texto com a cara que ele vai ter. */
+.cte-rte .ProseMirror { outline:none; }
+.cte-rte-area { min-height:calc(var(--linhas, 3) * 1.6em + 20px); padding:10px 12px; color:var(--text); font-size:14px; line-height:1.6; overflow-wrap:anywhere; cursor:text; }
+.cte-rte-area p { margin:0 0 .6em; }
+.cte-rte-area p:last-child { margin-bottom:0; }
+.cte-rte-area ul, .cte-rte-area ol { margin:0 0 .6em; padding-left:1.4em; }
+.cte-rte-area ul { list-style:disc; }
+.cte-rte-area ol { list-style:decimal; }
+.cte-rte-area li > p { margin:0; }
+.cte-rte-area a { color:var(--primary-texto); text-decoration:underline; text-underline-offset:2px; }
+.cte-rte-area strong { font-weight:750; }
+.cte-rte-area p.is-editor-empty:first-child::before { content:attr(data-placeholder); float:left; height:0; color:var(--text-dim); pointer-events:none; }
+/* Enquanto o editor carrega (import dinâmico): o mesmo tamanho, sem salto. */
+.cte-rte-carregando { min-height:calc(3 * 1.6em + 62px); }
+
+@media (prefers-reduced-motion: reduce) { .cte-rte, .cte-rte-barra button { transition:none; } }

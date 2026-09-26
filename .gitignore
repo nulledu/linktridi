@@ -1,0 +1,30 @@
+.env*
+!.env.example
+# Credenciais da conta de teste. NÃO APAGUE esta linha: o `*.local` mais abaixo
+# não cobre este arquivo (ele termina em .md, não em .local), então é só ela que
+# impede a senha de ir pro repositório num `git add -A`.
+ACESSO-DEV.local.md
+node_modules
+
+# Cache do compilador Kotlin nos apps Android — artefato de build. Cada app tem
+# o seu; o do totem já estava aqui, o do galpão apareceu depois e ficava sujando
+# o `git status` de toda sessão.
+tridimarket-app/.kotlin//
+estoque-app/.kotlin/
+ponto-app/.kotlin/
+
+# Working dir do CLI do Supabase (link do projeto, credencial temporária).
+supabase/.temp/
+.next/
+*.local
+.vercel
+dist/
+.DS_Store
+.worktrees/
+
+# Modelo grande de rosto (174MB — acima do teto de 100MB do GitHub).
+# Baixar 1x: curl -L https://github.com/deepinsight/insightface/releases/download/v0.7/buffalo_l.zip | tar -xf - -C /tmp && cp /tmp/buffalo_l/w600k_r50.onnx ponto-app/app/src/main/assets/
+ponto-app/app/src/main/assets/w600k_r50.onnx
+# Gerado por scripts/ponto-quantizar.py a partir do fp32 acima (42MB, também
+# acima do que vale versionar) — regenerável em ~2min.
+ponto-app/app/src/main/assets/w600k_r50_int8.onnx

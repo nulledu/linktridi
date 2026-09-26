@@ -1,0 +1,27 @@
+/* ── Calendário do sistema (ui/calendario.tsx) — Calendar/RangeCalendar do HeroUI
+   O CSS do HeroUI mora em `@layer components`; este arquivo é sem camada e
+   vence sem `!important`. O que muda em cima dele:
+
+   - Largura: o HeroUI fixa 252px (`w-63`). Aqui a grade enche a folha que a
+     abriu — 272px no computador, a largura da tela na folha do celular, onde
+     cada dia passa dos 44px de toque sozinho.
+   - Cor: o `--accent` dele vira a cor de AÇÃO da marca (`--primary-acao`), e o
+     meio do intervalo é a marca misturada — acompanha o destaque da pessoa e
+     qualquer escopo de tokens (.tf-scope etc.). */
+
+.ui-calendario {
+  --accent: var(--primary-acao, var(--primary));
+  --accent-foreground: var(--on-primary, #fff);
+  --accent-soft: color-mix(in srgb, var(--primary) 18%, transparent);
+  --accent-soft-foreground: var(--primary-texto, var(--primary));
+  --accent-hover: color-mix(in srgb, var(--primary-acao, var(--primary)) 88%, #000);
+  --foreground: var(--text);
+  --muted: var(--text-dim);
+  --default: color-mix(in srgb, var(--text) 8%, transparent);
+  --default-foreground: var(--text);
+  --focus: var(--primary);
+  width: 100%;
+  max-width: none;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}

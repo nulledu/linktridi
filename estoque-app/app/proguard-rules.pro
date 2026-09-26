@@ -1,0 +1,1 @@
+# TridiEstoque release rules.

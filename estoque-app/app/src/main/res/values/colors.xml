@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Espelho em XML dos tokens de ui/EstoqueTheme.kt. Existem porque duas
+     coisas são desenhadas ANTES de qualquer Composable rodar: o fundo da
+     janela (senão a abertura pisca branco antes do primeiro quadro) e o ícone
+     do launcher. -->
+<resources>
+    <color name="galpao_fundo">#FF0D1117</color>
+    <color name="galpao_texto">#FFF0F3F6</color>
+    <color name="galpao_acento">#FF00C8E0</color>
+</resources>

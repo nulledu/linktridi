@@ -1,0 +1,517 @@
+/* Leitura de um tutorial — escrito MOBILE-FIRST: o que está fora de media
+   query é o celular, e as janelas maiores só acrescentam. A ordem importa
+   porque a página é lida no telefone, encostada na bancada, com uma mão.
+   Cores só pelas variáveis da central (--color-*), definidas no <main>: a
+   central pode ter fundo escuro, e tudo aqui precisa funcionar nos dois. */
+
+.tut-leitura{--tut-barra-h:0px;width:min(920px,calc(100% - 28px))!important;max-width:920px!important;min-height:100dvh;margin-inline:auto;padding-top:16px;padding-bottom:64px;color:var(--color-text)}
+.tut-leitura[data-barra]{--tut-barra-h:72px;padding-bottom:calc(var(--tut-barra-h) + var(--safe-b,0px) + 28px)}
+/* Alvo de 44px e o rótulo da central inteiro — cortar em "Central de…" tira
+   justamente a informação de PARA ONDE se volta. */
+.tut-voltar{display:inline-flex;align-items:center;gap:7px;min-height:44px;margin-bottom:12px;color:var(--color-text);font-weight:700;font-size:14px;text-decoration:none}
+.tut-voltar:hover{text-decoration:underline}
+/* A capa aparece INTEIRA, na proporção dela: 16/9 só guarda o lugar até a
+   imagem chegar (`auto 16/9`), depois vale a proporção real. Com `cover` e
+   16/9 fixo, a arte da capa (título, logo) saía recortada em cima e embaixo.
+   Largura/altura `auto` com tetos: a imagem encolhe INTEIRA, sem faixa do
+   lado nem corte (o canto arredondado acompanha a imagem, não uma caixa
+   maior). O teto de altura só pega capa alta; no celular ele segura o título
+   perto da dobra. */
+.tut-leitura-capa{display:block;width:auto;height:auto;max-width:100%;max-height:45dvh;margin-inline:auto;aspect-ratio:auto 16/9;border-radius:16px}
+.tut-cabeca{max-width:760px;margin:18px auto 20px}
+.tut-cabeca>p{margin:0 0 7px;color:var(--color-primary);font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
+/* Categoria clicável: alvo de 44px sem mexer no ritmo da linha. */
+.tut-cabeca-cat{display:inline-block;padding:14px 0;margin:-14px 0;color:inherit;text-decoration:none}
+.tut-cabeca-cat:hover{text-decoration:underline}
+.tut-cabeca-cat:focus-visible{outline:3px solid var(--color-primary);outline-offset:2px;border-radius:4px}
+.tut-cabeca h1{margin:0;font-size:28px;line-height:1.06;letter-spacing:-.03em}
+.tut-cabeca-descricao{margin-top:11px;color:var(--color-text-muted);font-size:15.5px;line-height:1.55}
+
+/* Ações do cabeçalho. No celular o passo a passo (a ação principal) ocupa a
+   linha inteira e as outras dividem a de baixo — nenhuma com menos de 44px. */
+.tut-leitura-acoes{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.tut-leitura-acoes>.tut-botao{flex:1 1 auto;min-height:var(--tap,44px);padding-inline:16px}
+.tut-leitura-acoes>.tut-botao-modo{flex-basis:100%}
+/* Botão de liga/desliga (tela acesa): ligado muda de cor, não só de ícone. */
+.tut-botao[data-sec][aria-pressed="true"]{border-color:var(--color-primary);background:color-mix(in srgb,var(--color-primary) 14%,var(--color-background))}
+/* "2 de 5 passos feitos · Recomeçar" */
+.tut-andamento{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin:12px 0 0;color:var(--color-text-muted);font-size:14px;font-weight:650}
+.tut-andamento>svg{flex:none;color:var(--color-primary)}
+.tut-recomecar{display:inline-flex;align-items:center;gap:5px;min-height:var(--tap,44px);margin-left:auto;padding:0 10px;border:0;border-radius:999px;background:transparent;color:var(--color-text);font:inherit;font-size:14px;font-weight:750;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+
+/* ── Você vai precisar ──
+   Só os materiais (tempo/dificuldade/passos saíram em 24/09/26). Material
+   ligado a produto é LINK: quem não tem a tinta certa compra dali. */
+.tut-precisa{max-width:760px;margin:0 auto 22px;padding:14px 16px;border:1px solid color-mix(in srgb,var(--color-text) 12%,transparent);border-radius:16px;background:color-mix(in srgb,var(--color-text) 3%,var(--color-background))}
+.tut-precisa>h2{margin:0 0 10px;color:var(--color-text-muted);font-size:13px;font-weight:800;letter-spacing:.02em;text-transform:uppercase}
+.tut-precisa-lista{display:grid;gap:2px;margin:0;padding:0;list-style:none}
+.tut-precisa-lista a,.tut-precisa-item{display:flex;align-items:center;gap:10px;min-height:var(--tap,44px);padding:4px 6px;border-radius:10px;color:var(--color-text);font-size:15px;line-height:1.3;text-decoration:none}
+.tut-precisa-lista a{font-weight:700}
+.tut-precisa-lista a>svg{flex:none;color:var(--color-primary)}
+.tut-precisa-lista a>span:not(.sr-only){flex:1 1 auto;min-width:0;text-decoration:underline;text-decoration-color:color-mix(in srgb,var(--color-primary) 45%,transparent);text-underline-offset:3px}
+.tut-precisa-lista a:hover{background:color-mix(in srgb,var(--color-text) 6%,transparent)}
+.tut-precisa-item:before{flex:none;width:6px;height:6px;margin:0 7px 0 6px;border-radius:50%;background:var(--color-text-muted);content:""}
+
+.tut-conteudo{max-width:760px;margin:auto}
+.tut-bloco{margin:0 0 30px}
+.tut-bloco h2{margin:0 0 9px;font-size:20px;line-height:1.15;letter-spacing:-.02em}
+.tut-texto .rte{font-size:16.5px;line-height:1.7}
+.tut-passo .rte{font-size:16px;line-height:1.65}
+/* Link escrito no texto rico precisa PARECER link: sem sublinhado, num
+   parágrafo de tutorial, ninguém descobre que dá pra clicar. */
+.tut-conteudo .rte a,.tut-modo .rte a{color:var(--color-primary);text-decoration:underline;text-underline-offset:2px;overflow-wrap:anywhere}
+.tut-conteudo img{max-width:100%}
+/* Texto rico do editor: parágrafos com respiro e listas com marcador. A página
+   pública não carrega o reset da vitrine, e o item de lista do editor vem com
+   parágrafo dentro — sem o `li>p` cada item ganharia um espaço de parágrafo.
+   O modo passo a passo mora no <body> (portal), fora de .tut-conteudo, e
+   precisa das mesmas regras. */
+.tut-conteudo .rte p,.tut-modo .rte p{margin:0 0 .9em}
+.tut-conteudo .rte p:last-child,.tut-modo .rte p:last-child{margin-bottom:0}
+.tut-conteudo .rte ul,.tut-conteudo .rte ol,.tut-modo .rte ul,.tut-modo .rte ol{margin:0 0 .9em;padding-left:1.35em}
+.tut-conteudo .rte ul,.tut-modo .rte ul{list-style:disc}
+.tut-conteudo .rte ol,.tut-modo .rte ol{list-style:decimal}
+.tut-conteudo .rte li,.tut-modo .rte li{margin:.3em 0;padding-left:.15em}
+.tut-conteudo .rte li>p,.tut-modo .rte li>p{margin:0}
+.tut-conteudo .rte strong,.tut-modo .rte strong{font-weight:750}
+
+/* ── Passo ──
+   Número + trilho ligando um ao outro. Feito, o número vira um check e o
+   texto vai pro cinza de apoio: continua legível pra reler (o --color-text-
+   muted é calibrado pra leitura), mas o olho já pula pro próximo. */
+.tut-passo{position:relative;display:grid;grid-template-columns:38px minmax(0,1fr);gap:13px}
+.tut-passo:not(:last-child):before{position:absolute;top:39px;bottom:-30px;left:18px;width:2px;background:color-mix(in srgb,var(--color-primary) 24%,transparent);content:""}
+.tut-passo-num{position:relative;z-index:1;display:grid;place-items:center;width:38px;height:38px;border:2px solid var(--color-primary);border-radius:50%;background:var(--color-primary);color:var(--color-primary-contrast,#fff);font-size:14px;font-weight:850;transition:background-color var(--duration-fast,250ms) var(--ease-smooth-out,ease-out),color var(--duration-fast,250ms) var(--ease-smooth-out,ease-out)}
+.tut-passo-num>*{grid-area:1/1}
+.tut-passo-check{opacity:0}
+.tut-passo[data-feito] .tut-passo-num{background:var(--color-background);color:var(--color-primary)}
+.tut-passo[data-feito] .tut-passo-n{opacity:0}
+.tut-passo[data-feito] .tut-passo-check{opacity:1}
+.tut-passo-corpo>small{display:flex;align-items:center;gap:8px;margin:2px 0 5px;color:var(--color-primary);font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase}
+.tut-passo-corpo>h2,.tut-passo-corpo>.rte{transition:color var(--duration-fast,250ms) var(--ease-smooth-out,ease-out)}
+.tut-passo-corpo>figure,.tut-passo-corpo>.tut-leitura-video{transition:opacity var(--duration-fast,250ms) var(--ease-smooth-out,ease-out)}
+.tut-passo[data-feito] .tut-passo-corpo>h2,.tut-passo[data-feito] .tut-passo-corpo>.rte{color:var(--color-text-muted)}
+.tut-passo[data-feito] .tut-passo-corpo>figure,.tut-passo[data-feito] .tut-passo-corpo>.tut-leitura-video{opacity:.6}
+.tut-passo figure,.tut-figura{margin:16px 0 0}
+.tut-passo img,.tut-figura img{display:block;width:100%;border-radius:16px}
+.tut-figura figcaption,.tut-leitura-video figcaption{margin-top:8px;color:var(--color-text-muted);font-size:12px;text-align:center}
+
+/* "Feito" no FIM do passo — é onde a pessoa está quando termina de fazer.
+   Marcado, muda de cor E de texto: o estado não depende de enxergar um
+   ícone pequeno. */
+.tut-passo-rodape{margin-top:14px}
+.tut-feito{display:inline-flex;align-items:center;gap:8px;min-height:var(--tap,44px);padding:0 18px 0 14px;border:1.5px solid color-mix(in srgb,var(--color-text) 18%,transparent);border-radius:999px;background:transparent;color:var(--color-text);font:inherit;font-size:14.5px;font-weight:750;cursor:pointer;transition:background-color var(--duration-quick,150ms) var(--ease-smooth-out,ease-out),border-color var(--duration-quick,150ms) var(--ease-smooth-out,ease-out)}
+.tut-feito:hover{background:color-mix(in srgb,var(--color-text) 6%,transparent)}
+.tut-feito[aria-pressed="true"]{border-color:var(--color-primary);background:color-mix(in srgb,var(--color-primary) 14%,var(--color-background))}
+.tut-feito[aria-pressed="true"]>svg{color:var(--color-primary)}
+
+/* ── Vídeo: fachada antes do player ──
+   O que nasce é uma imagem com botão de play; o iframe só entra depois do
+   clique (ver VideoTutorial.tsx). Os dois ocupam a MESMA caixa 16/9 pra troca
+   não empurrar o texto de baixo. */
+.tut-leitura-video{margin:16px 0 0}
+.tut-leitura-video iframe,.tut-leitura-video video,.tut-video-capa{display:block;width:100%;aspect-ratio:16/9;border:0;border-radius:16px;background:#000}
+/* O arquivo enviado não troca de caixa, então fica com a proporção DELE (a da
+   capa ou a dos metadados; 16/9 só até um dos dois chegar). Preso em 16/9, o
+   vídeo em pé gravado no celular virava uma faixa de 92px a 320px. O teto de
+   altura segura o vertical dentro da tela. */
+.tut-leitura-video video{aspect-ratio:auto 16/9;max-height:min(70dvh,560px)}
+.tut-video-capa{position:relative;overflow:hidden;padding:0;cursor:pointer}
+.tut-video-capa img{width:100%;height:100%;object-fit:cover}
+.tut-video-play{position:absolute;top:50%;left:50%;display:grid;place-items:center;width:64px;height:64px;border-radius:50%;background:var(--color-primary);color:var(--color-primary-contrast,#fff);box-shadow:0 8px 26px rgba(0,0,0,.35);transform:translate(-50%,-50%);transition:transform var(--duration-quick,150ms) var(--ease-smooth-out,ease-out)}
+.tut-video-capa:hover .tut-video-play{transform:translate(-50%,-50%) scale(1.06)}
+.tut-video-capa:active .tut-video-play{transform:translate(-50%,-50%) scale(.96)}
+.tut-video-capa:focus-visible{outline:3px solid var(--color-primary);outline-offset:3px}
+
+/* MODO IMERSIVO (VideoTutorial.tsx). Não é o fullscreen do navegador: a MESMA
+   caixa do player vira `position: fixed` — mover o nó pra um portal remontaria
+   o iframe e o YouTube recomeçaria. A vaga segura a altura na página (style
+   inline, medida no abrir), então os cards de baixo não se mexem.
+   O véu tem `pointer-events: none`: a página continua rolando e clicável por
+   trás, o vídeo não fecha sozinho. Só a caixa e o × recebem toque.
+   Caixa do YouTube/Vimeo: a maior 16/9 que cabe entre as margens (min() de
+   largura × altura em dvh), então desktop, tablet, retrato e paisagem saem da
+   mesma conta sem deformar. Arquivo: largura cheia com teto de altura — o
+   <video> desenha "contain" sozinho, na proporção dele. */
+.tut-video-vaga{position:relative}
+.tut-video-caixa{position:relative}
+.tut-video-palco{position:relative}
+.tut-video-palco[data-imersivo]{--tv-pt:calc(var(--safe-t,env(safe-area-inset-top,0px)) + 64px);--tv-pb:calc(var(--safe-b,env(safe-area-inset-bottom,0px)) + 20px);
+  position:fixed;z-index:1200;inset:0;display:grid;grid-template:minmax(0,1fr)/minmax(0,1fr);place-items:center;
+  padding:var(--tv-pt) max(16px,3vw,env(safe-area-inset-right,0px)) var(--tv-pb) max(16px,3vw,env(safe-area-inset-left,0px));
+  background:rgba(8,8,10,.74);pointer-events:none;
+  animation:tutVideoVeu var(--duration-fast,250ms) var(--ease-smooth-out,ease-out)}
+.tut-video-palco[data-imersivo]>*{pointer-events:auto}
+.tut-video-palco[data-imersivo] .tut-video-caixa{width:min(100%,calc((100dvh - var(--tv-pt) - var(--tv-pb)) * var(--tv-ar,16/9)));
+  border-radius:16px;box-shadow:0 24px 70px rgba(0,0,0,.5);
+  animation:tutVideoAbre var(--duration-fast,250ms) var(--ease-smooth-out,ease-out)}
+.tut-video-palco[data-imersivo][data-tipo="arquivo"] .tut-video-caixa{width:100%;box-shadow:none}
+.tut-video-palco[data-imersivo][data-tipo="arquivo"] video{max-height:calc(100dvh - var(--tv-pt) - var(--tv-pb))}
+.tut-video-palco[data-saindo]{animation:tutVideoVeuSai var(--duration-quick,150ms) var(--ease-smooth-out,ease-out) forwards}
+.tut-video-palco[data-saindo] .tut-video-caixa,.tut-video-palco[data-saindo] .tut-video-sair{animation:tutVideoFecha var(--duration-quick,150ms) var(--ease-smooth-out,ease-out) forwards}
+@keyframes tutVideoVeu{from{background-color:rgba(8,8,10,0)}}
+@keyframes tutVideoVeuSai{to{background-color:rgba(8,8,10,0)}}
+@keyframes tutVideoAbre{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+@keyframes tutVideoFecha{to{opacity:0;transform:scale(.97)}}
+/* ENCAIXADO: rolou a página com o vídeo aberto → o véu sai e o vídeo sobe pra
+   uma faixa escura no topo (o tutorial aparece embaixo, como os comentários
+   no YouTube). A faixa tem a altura do vídeo, não mais: o resto da tela é do
+   conteúdo. Deitado: largura cheia até 40% da altura. Em pé: metade da tela. */
+.tut-video-palco[data-imersivo]{--tv-dock-h:min(40dvh,calc((100vw - 24px) / var(--tv-ar,16/9)))}
+.tut-video-palco[data-imersivo][data-formato="vertical"],.tut-video-palco[data-imersivo][data-formato="tres-quatro"]{--tv-dock-h:50dvh}
+.tut-video-palco[data-encaixado]{place-items:start center;padding:calc(var(--safe-t,env(safe-area-inset-top,0px)) + 8px) 12px 0;
+  background:linear-gradient(to bottom,rgba(8,8,10,.94) calc(var(--safe-t,env(safe-area-inset-top,0px)) + var(--tv-dock-h) + 16px),transparent 0);
+  animation:none}
+.tut-video-palco[data-encaixado] .tut-video-caixa{width:min(100%,calc(var(--tv-dock-h) * var(--tv-ar,16/9)));box-shadow:0 12px 30px rgba(0,0,0,.35);
+  animation:tutVideoEncaixa var(--duration-fast,250ms) var(--ease-smooth-out,ease-out)}
+.tut-video-palco[data-encaixado][data-tipo="arquivo"] .tut-video-caixa{width:100%}
+.tut-video-palco[data-encaixado][data-tipo="arquivo"] video{max-height:var(--tv-dock-h)}
+@keyframes tutVideoEncaixa{from{opacity:.4}to{opacity:1}}
+/* No aberto o arrasto vertical no vídeo é gesto nosso (VideoTutorial.tsx). */
+.tut-video-palco[data-imersivo] .tut-video-caixa{touch-action:none}
+
+/* PROPORÇÃO MEDIDA (--tv-ar, VideoTutorial.tsx): a do CONTEÚDO do vídeo do
+   YouTube, sem as barras pretas — 16/9, 9/16 (Shorts), 3/4 gravado dentro de
+   um 16:9… A caixa toma essa proporção e o iframe/miniatura são ampliados
+   por dentro (`estiloDoRecorte`), então o preto fica fora do overflow.
+   Em pé, a caixa fica centrada e com teto de altura pra não virar uma parede
+   de 570px a 320px. */
+.tut-video-vaga .tut-video-capa,.tut-video-vaga .ytp-own{aspect-ratio:var(--tv-ar,16/9)}
+.tut-video-vaga[data-formato="vertical"]{width:min(100%,calc(min(70dvh,560px) * var(--tv-ar,9/16)));margin-inline:auto}
+/* 3:4 (YouTube/Vimeo embutido): ocupa a coluna toda, com teto de altura de 82dvh. */
+.tut-video-vaga[data-formato="tres-quatro"]{width:min(100%,calc(min(82dvh,760px) * .75));margin-inline:auto}
+.tut-video-capa img[data-recorte]{position:absolute;max-width:none;max-height:none;object-fit:fill}
+
+/* Passo já feito fica a 60% — aberto, o vídeo não herda o esmaecido. */
+.tut-passo[data-feito] .tut-passo-corpo>.tut-leitura-video[data-imersivo]{opacity:1}
+
+/* Botões da camada: vidro escuro sobre qualquer fundo, alvo de 44px. O × fica
+   no canto de cima da TELA (fora da caixa), longe da barra de controles. */
+.tut-video-sair,.tut-video-expandir{display:grid;place-items:center;width:var(--tap,44px);height:var(--tap,44px);padding:0;border:0;border-radius:50%;
+  background:rgba(20,20,22,.62);color:#fff;cursor:pointer;backdrop-filter:blur(8px);
+  transition:background var(--duration-quick,150ms) var(--ease-smooth-out,ease-out)}
+.tut-video-sair:hover,.tut-video-expandir:hover{background:rgba(40,40,44,.85)}
+.tut-video-sair:focus-visible,.tut-video-expandir:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.tut-video-sair{position:fixed;z-index:1;top:calc(var(--safe-t,env(safe-area-inset-top,0px)) + 10px);right:max(12px,3vw,env(safe-area-inset-right,0px));background:rgba(255,255,255,.14);animation:tutVideoAbre var(--duration-fast,250ms) var(--ease-smooth-out,ease-out)}
+.tut-video-expandir{position:absolute;z-index:4;top:10px;right:10px}
+
+/* Player PRÓPRIO por cima do YouTube (PlayerYoutube.tsx). Mesma caixa 16/9 dos
+   outros vídeos pra não empurrar o texto; o iframe do YT preenche por baixo e a
+   nossa barra fica por cima. `controls=0` no embed apaga o chrome deles. */
+.ytp-own{position:relative;width:100%;aspect-ratio:16/9;border-radius:16px;overflow:hidden;background:#000;isolation:isolate;container-type:inline-size}
+.ytp-quadro{position:absolute;inset:0}
+.ytp-own iframe{position:absolute;inset:0;width:100%;height:100%;aspect-ratio:auto;border:0;border-radius:0}
+/* Camada de toque: play/pause sem deixar o clique chegar no iframe do YouTube
+   (que abriria o vídeo lá). Fica ATRÁS da barra. */
+.ytp-tela{position:absolute;inset:0;z-index:1;width:100%;height:100%;padding:0;border:0;background:transparent;cursor:pointer;-webkit-appearance:none;appearance:none}
+.ytp-tela:focus-visible{outline:3px solid var(--color-primary);outline-offset:-3px}
+
+.ytp-carregando{position:absolute;inset:0;z-index:2;display:grid;place-items:center;pointer-events:none}
+.ytp-carregando span{width:34px;height:34px;border-radius:50%;border:3px solid rgba(255,255,255,.25);border-top-color:#fff;animation:ytp-gira .8s linear infinite}
+@keyframes ytp-gira{to{transform:rotate(1turn)}}
+
+/* Barra: some sozinha enquanto toca, volta em qualquer toque. Fechar é sair da
+   frente — rápido e sem atraso; aparecer é convite. */
+.ytp-barra{position:absolute;left:0;right:0;bottom:0;z-index:3;display:grid;gap:0;padding:28px 8px 6px;
+  background:linear-gradient(to top,rgba(0,0,0,.78) 0%,rgba(0,0,0,.45) 60%,rgba(0,0,0,0));
+  opacity:1;transform:none;transition:opacity var(--duration-quick,150ms) var(--ease-smooth-out,ease-out),transform var(--duration-quick,150ms) var(--ease-smooth-out,ease-out)}
+.ytp-own[data-tocando]:not([data-mostra]) .ytp-barra{opacity:0;transform:translateY(6px);pointer-events:none}
+.ytp-linha{display:flex;align-items:center;gap:2px;min-width:0}
+.ytp-espaco{flex:1 1 auto;min-width:0}
+.ytp-b{display:grid;place-items:center;flex:0 0 auto;min-width:var(--tap,44px);min-height:var(--tap,44px);width:var(--tap,44px);height:var(--tap,44px);
+  padding:0;border:0;border-radius:12px;background:transparent;color:#fff;cursor:pointer;
+  transition:background var(--duration-quick,150ms) var(--ease-smooth-out,ease-out)}
+.ytp-b:hover{background:rgba(255,255,255,.16)}
+.ytp-b:focus-visible{outline:2px solid #fff;outline-offset:-2px}
+.ytp-b-txt{width:auto;min-width:var(--tap,44px);padding:0 8px;font-size:13px;font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums}
+.ytp-t{flex:0 1 auto;min-width:0;padding-left:2px;color:#fff;font-size:12px;font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums;text-shadow:0 1px 2px rgba(0,0,0,.5)}
+.ytp-t-total{opacity:.7}
+/* Estreito: some o total, depois o volume (no celular é o botão físico). */
+@container (max-width:280px){.ytp-t-total{display:none}}
+@container (max-width:230px){.ytp-som{display:none}.ytp-t{display:none}}
+
+/* Barra de progresso: <input range> repintado, linha inteira. O trilho
+   preenchido usa --p; alvo de toque de 28px sem ocupar 44 de altura visual. */
+.ytp-scrub{display:block;width:calc(100% - 12px);margin:0 6px;height:28px;background:transparent;cursor:pointer;-webkit-appearance:none;appearance:none}
+.ytp-scrub::-webkit-slider-runnable-track{height:4px;border-radius:999px;background:linear-gradient(to right,var(--color-primary) var(--p,0%),rgba(255,255,255,.3) var(--p,0%))}
+.ytp-scrub::-moz-range-track{height:4px;border-radius:999px;background:rgba(255,255,255,.3)}
+.ytp-scrub::-moz-range-progress{height:4px;border-radius:999px;background:var(--color-primary)}
+.ytp-scrub::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;margin-top:-6px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.45)}
+.ytp-scrub::-moz-range-thumb{width:16px;height:16px;border:0;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.45)}
+.ytp-scrub:focus-visible{outline:2px solid #fff;outline-offset:2px;border-radius:999px}
+
+.ytp-vel{position:relative;flex:0 0 auto}
+/* Tocar fora fecha (sem depender de hover); fica sob o menu, sobre o vídeo. */
+.ytp-vel-fora{position:fixed;inset:0;z-index:0;padding:0;border:0;background:transparent;cursor:default}
+.ytp-vel-menu{position:absolute;z-index:1;right:0;bottom:calc(100% + 6px);display:grid;gap:2px;min-width:84px;padding:5px;border-radius:14px;
+  background:rgba(20,20,22,.94);backdrop-filter:blur(8px);box-shadow:0 12px 30px rgba(0,0,0,.4);
+  animation:ytp-sobe var(--duration-quick,150ms) var(--ease-smooth-out,ease-out)}
+@keyframes ytp-sobe{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.ytp-vel-op{min-height:var(--tap,44px);padding:0 14px;border:0;border-radius:10px;background:transparent;color:#fff;font-size:14px;font-weight:600;white-space:nowrap;text-align:center;cursor:pointer;font-variant-numeric:tabular-nums}
+.ytp-vel-op:hover{background:rgba(255,255,255,.14)}
+.ytp-vel-op[data-on]{background:var(--color-primary);color:var(--color-primary-contrast,#fff)}
+
+/* Título discreto no topo (o do YouTube fica escondido pelo controls=0). */
+.ytp-titulo{position:absolute;top:0;left:0;right:0;z-index:2;padding:12px 14px 22px;
+  background:linear-gradient(to bottom,rgba(0,0,0,.5),rgba(0,0,0,0));
+  color:#fff;font-size:13px;font-weight:600;line-height:1.3;pointer-events:none;
+  opacity:1;transition:opacity var(--duration-quick,150ms) var(--ease-smooth-out,ease-out);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ytp-own[data-tocando]:not([data-mostra]) .ytp-titulo{opacity:0}
+
+@media(prefers-reduced-motion:reduce){
+  .ytp-barra,.ytp-titulo,.ytp-b{transition:none}
+  .ytp-vel-menu{animation:none}
+  .ytp-carregando span{animation-duration:1.6s}
+}
+
+/* Produto e link: no celular a foto encolhe e o botão ocupa a linha inteira —
+   botão de 40% de largura ao lado de um texto é alvo de polegar ruim. */
+.tut-produto,.tut-link{display:grid;grid-template-columns:82px minmax(0,1fr);align-items:start;gap:14px;padding:15px;border:1px solid color-mix(in srgb,var(--color-text) 12%,transparent);border-radius:18px;background:color-mix(in srgb,var(--color-text) 3%,var(--color-background))}
+.tut-produto>img,.tut-produto-sem{display:grid;width:82px;aspect-ratio:1;place-items:center;object-fit:cover;border-radius:14px;background:color-mix(in srgb,var(--color-text) 7%,transparent)}
+.tut-produto small{color:var(--color-primary);font-weight:750}
+/* Três linhas e para: a descrição vem da ficha do produto e pode ter dez
+   parágrafos — no cartão ela é um resumo, não o produto inteiro. */
+.tut-produto p,.tut-link p{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden;margin:6px 0 12px;color:var(--color-text-muted);font-size:14px;line-height:1.5}
+.tut-produto .tut-botao,.tut-link .tut-botao{width:100%}
+.tut-link{grid-template-columns:auto minmax(0,1fr)}
+.tut-link h2{font-size:18px}
+
+/* ── Aviso ──
+   Cor com sentido FIXO: Atenção é risco (tom quente de alerta), Dica é ajuda
+   (a cor da marca), Lembrete é o depois (neutro). O tom do ícone e do rótulo
+   mistura a cor com a do TEXTO — numa central clara ele escurece, numa escura
+   ele clareia, e o contraste acompanha o tema sem ninguém escolher cor. O
+   corpo do aviso fica sempre na cor do texto. */
+.tut-aviso{--tut-aviso-cor:var(--color-primary);--tut-aviso-tom:color-mix(in srgb,var(--tut-aviso-cor) 64%,var(--color-text));display:grid;grid-template-columns:auto minmax(0,1fr);align-items:start;gap:12px;padding:14px 16px 14px 14px;border:1px solid color-mix(in srgb,var(--tut-aviso-cor) 28%,transparent);border-left:4px solid var(--tut-aviso-tom);border-radius:14px;background:color-mix(in srgb,var(--tut-aviso-cor) 9%,var(--color-background));color:var(--color-text)}
+.tut-aviso[data-estilo="atencao"]{--tut-aviso-cor:#f08c00}
+.tut-aviso[data-estilo="lembrete"]{--tut-aviso-cor:var(--color-text);--tut-aviso-tom:var(--color-text-muted);background:color-mix(in srgb,var(--color-text) 4%,var(--color-background))}
+.tut-aviso-icone{display:grid;place-items:center;width:24px;height:24px;color:var(--tut-aviso-tom)}
+.tut-aviso-rotulo{display:block;margin:2px 0 3px;color:var(--tut-aviso-tom);font-size:12px;font-weight:850;letter-spacing:.08em;text-transform:uppercase}
+.tut-aviso .rte{font-size:15.5px;line-height:1.6}
+
+/* ── Deu errado? ──
+   Cada problema é um cartão: o SINTOMA em destaque (é o que a pessoa
+   reconhece — "saiu borrado") e a solução embaixo. */
+.tut-problemas>h2{display:flex;align-items:center;gap:8px}
+.tut-problemas>h2>svg{flex:none;color:var(--color-primary)}
+.tut-problemas>ul{display:grid;gap:10px;margin:0;padding:0;list-style:none}
+.tut-problema{padding:14px 16px;border:1px solid color-mix(in srgb,var(--color-text) 12%,transparent);border-radius:14px;background:color-mix(in srgb,var(--color-text) 3%,var(--color-background))}
+.tut-problema-sintoma{display:flex;align-items:flex-start;gap:8px;margin:0 0 8px;font-size:16px;line-height:1.35}
+.tut-problema-sintoma>svg{flex:none;margin-top:1px;color:color-mix(in srgb,#f08c00 64%,var(--color-text))}
+.tut-problema-sintoma>strong{font-weight:750}
+.tut-problema .rte{font-size:15.5px;line-height:1.6}
+/* A 320px o rótulo quebra em duas linhas: centralizadas, não penduradas à
+   esquerda dentro do botão. */
+.tut-problemas .tut-fale{width:100%;margin-top:14px;text-align:center}
+
+/* ── Daqui pra cima é acréscimo de tela grande ─────────────────────────────── */
+@media(min-width:620px){
+  .tut-leitura{width:min(920px,calc(100% - clamp(28px,4vw,52px)))!important;padding-top:clamp(24px,4vw,55px);padding-bottom:90px}
+  .tut-leitura[data-barra]{padding-bottom:calc(72px + var(--safe-b,0px) + 34px)}
+  .tut-voltar{margin-bottom:18px;font-size:15px}
+  .tut-leitura-capa{max-height:min(75dvh,720px);border-radius:clamp(18px,3vw,30px)}
+  .tut-cabeca{margin:clamp(26px,5vw,48px) auto}
+  .tut-cabeca h1{font-size:clamp(36px,6vw,66px);line-height:1;letter-spacing:-.045em}
+  .tut-cabeca-descricao{margin-top:16px;font-size:clamp(16px,2vw,20px)}
+  .tut-leitura-acoes>.tut-botao{flex:0 1 auto}
+  .tut-leitura-acoes>.tut-botao-modo{flex-basis:auto}
+  .tut-precisa{padding:18px 20px;margin-bottom:clamp(26px,4vw,40px)}
+  .tut-bloco{margin-bottom:clamp(30px,5vw,58px)}
+  .tut-bloco h2{margin-bottom:10px;font-size:clamp(22px,3vw,31px);letter-spacing:-.025em}
+  .tut-texto .rte{font-size:17px;line-height:1.72}
+  .tut-passo .rte{font-size:17px;line-height:1.7}
+  .tut-passo{grid-template-columns:48px minmax(0,1fr);gap:20px}
+  .tut-passo:not(:last-child):before{top:49px;bottom:calc(-1 * clamp(30px,5vw,58px));left:23px}
+  .tut-passo-num{width:48px;height:48px;font-size:15px}
+  .tut-passo figure,.tut-figura,.tut-leitura-video{margin-top:22px}
+  .tut-passo img,.tut-figura img,.tut-leitura-video iframe,.tut-leitura-video video,.tut-video-capa{border-radius:20px}
+  .tut-produto,.tut-link{align-items:center;gap:24px;padding:22px;border-radius:22px}
+  .tut-produto{grid-template-columns:160px minmax(0,1fr)}
+  .tut-produto>img,.tut-produto-sem{width:160px;border-radius:16px}
+  .tut-produto .tut-botao,.tut-link .tut-botao{width:auto}
+  .tut-link h2{font-size:clamp(22px,3vw,31px)}
+  .tut-aviso{padding:18px 22px 18px 18px}
+  .tut-problemas .tut-fale{width:auto}
+}
+@media(prefers-reduced-motion:reduce){.tut-video-palco,.tut-video-palco .tut-video-caixa,.tut-video-sair{animation:none!important}.tut-video-play{transition:none}.tut-video-capa:hover .tut-video-play,.tut-video-capa:active .tut-video-play{transform:translate(-50%,-50%)}}
+
+/* ── Progresso da leitura ──
+   Barra de 3px no topo. `scaleX` de um bloco de largura fixa — animar `width`
+   refaria layout a cada quadro de rolagem. Por ROLAGEM, sem transição: ela
+   acompanha o dedo, e suavizar daria atraso, não fluidez. Por PASSOS, com
+   transição: ela anda de uma vez quando alguém toca "Feito". */
+.tut-progresso{position:fixed;z-index:45;top:0;right:0;left:0;height:3px;background:transparent;pointer-events:none}
+.tut-progresso>div{width:100%;height:100%;background:var(--color-primary);transform:scaleX(0);transform-origin:0 50%;will-change:transform}
+.tut-progresso[data-modo="passos"]{background:color-mix(in srgb,var(--color-primary) 14%,transparent)}
+.tut-progresso[data-modo="passos"]>div{transition:transform var(--duration-slow,400ms) var(--ease-smooth-out,ease-out)}
+
+/* "Voltar ao topo": só aparece depois de uma tela rolada, e sai da frente da
+   barra de atalhos quando ela existe. */
+.tut-ao-topo{position:fixed;z-index:41;right:14px;bottom:calc(18px + var(--tut-barra-h,0px) + var(--safe-b,0px));display:grid;place-items:center;width:44px;height:44px;border:1px solid color-mix(in srgb,var(--color-text) 12%,transparent);border-radius:50%;background:color-mix(in srgb,var(--color-background) 88%,transparent);color:var(--color-text);cursor:pointer;opacity:0;transform:translateY(8px) scale(.96);pointer-events:none;backdrop-filter:blur(10px);box-shadow:0 6px 20px color-mix(in srgb,var(--color-text) 14%,transparent);transition:opacity var(--duration-quick,150ms) var(--ease-smooth-out,ease-out),transform var(--duration-quick,150ms) var(--ease-smooth-out,ease-out)}
+.tut-ao-topo[data-visivel]{opacity:1;transform:none;pointer-events:auto;transition-duration:var(--duration-fast,250ms)}
+.tut-ao-topo:active{transform:scale(.94)}
+
+/* ── Isso ajudou? ──
+   Vem ANTES das sugestões: a pergunta é sobre o guia que a pessoa acabou de
+   ler; depois dos cartões ela já mudou de assunto. O "ainda não" abre os
+   motivos NO LUGAR da pergunta — sem modal por cima de quem terminou. */
+.tut-ajudou{display:flex;flex-direction:column;align-items:center;gap:10px;max-width:760px;margin:34px auto 0;padding:20px 16px;border:1px solid color-mix(in srgb,var(--color-text) 12%,transparent);border-radius:18px;text-align:center}
+.tut-ajudou>strong{font-size:15px}
+.tut-ajudou-botoes{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+.tut-ajudou .tut-botao{min-height:var(--tap,44px)}
+.tut-ajudou-obrigado{display:inline-flex;align-items:center;gap:8px;margin:0;color:var(--color-text-muted);font-size:14.5px}
+.tut-ajudou-obrigado:focus{outline:none}
+.tut-ajudou-obrigado svg{flex:none;color:var(--color-primary)}
+.tut-motivos{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:8px;width:100%;max-width:560px}
+.tut-motivo{display:flex;align-items:center;gap:9px;min-height:var(--tap,44px);padding:10px 14px;border:1.5px solid color-mix(in srgb,var(--color-text) 16%,transparent);border-radius:14px;background:transparent;color:var(--color-text);font:inherit;font-size:14.5px;font-weight:650;text-align:left;cursor:pointer;transition:background-color var(--duration-quick,150ms) var(--ease-smooth-out,ease-out),border-color var(--duration-quick,150ms) var(--ease-smooth-out,ease-out)}
+.tut-motivo>svg{flex:none;color:var(--color-text-muted)}
+.tut-motivo:hover{background:color-mix(in srgb,var(--color-text) 5%,transparent)}
+.tut-motivo[aria-pressed="true"]{border-color:var(--color-primary);background:color-mix(in srgb,var(--color-primary) 12%,var(--color-background))}
+.tut-motivo[aria-pressed="true"]>svg{color:var(--color-primary)}
+.tut-ajudou .tut-fale{margin-top:4px}
+
+/* ── Continue por aqui ──
+   Fim de tutorial sem saída é o beco que gera chamado: quatro vizinhos da
+   mesma categoria bastam. Lista, não grade — no celular a linha com capa
+   pequena lê melhor que dois cartões apertados. */
+.tut-relacionados{max-width:760px;margin:34px auto 0;padding-top:22px;border-top:1px solid color-mix(in srgb,var(--color-text) 12%,transparent)}
+.tut-relacionados h2{margin:0 0 12px;font-size:17px;letter-spacing:-.02em}
+.tut-relacionados>div{display:grid;gap:8px}
+.tut-relacionado{display:grid;grid-template-columns:52px minmax(0,1fr) auto;align-items:center;gap:12px;padding:9px;border:1px solid color-mix(in srgb,var(--color-text) 10%,transparent);border-radius:14px;color:var(--color-text);text-decoration:none;transition:background var(--duration-quick,150ms) var(--ease-smooth-out,ease-out),transform var(--duration-quick,150ms) var(--ease-smooth-out,ease-out)}
+.tut-relacionado:hover{background:color-mix(in srgb,var(--color-text) 5%,transparent)}
+.tut-relacionado:active{transform:scale(.99)}
+.tut-relacionado-capa{display:grid;place-items:center;width:52px;height:52px;overflow:hidden;border-radius:10px;background:color-mix(in srgb,var(--color-text) 7%,transparent);color:var(--color-text-muted)}
+.tut-relacionado-capa img{width:100%;height:100%;object-fit:cover}
+.tut-relacionado strong{display:block;font-size:14px;line-height:1.25}
+.tut-relacionado small{display:inline-flex;align-items:center;gap:4px;margin-top:3px;color:var(--color-text-muted);font-size:12px}
+@media(min-width:620px){
+  .tut-relacionados{margin-top:48px}
+  .tut-relacionados h2{font-size:20px}
+  .tut-relacionados>div{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .tut-ao-topo{right:max(24px,env(safe-area-inset-right,0px));bottom:calc(24px + var(--tut-barra-h,0px) + var(--safe-b,0px))}
+}
+@media(prefers-reduced-motion:reduce){
+  .tut-ao-topo,.tut-relacionado{transition:none}
+  .tut-ao-topo:active,.tut-relacionado:active{transform:none}
+  .tut-ao-topo[data-visivel]{transform:none}
+}
+
+/* ── Sumário ──
+   Só no computador: trilho fixo à direita (ver a media query de 1024px). No
+   celular não existe — a sanfona saiu em 24/09/26. O número fica em coluna
+   própria pra leitura em diagonal. */
+.tut-sumario{display:none;max-width:760px;margin:0 auto 26px;border:1px solid color-mix(in srgb,var(--color-text) 12%,transparent);border-radius:16px;background:color-mix(in srgb,var(--color-text) 3%,transparent)}
+.tut-sumario ol{display:grid;gap:2px;margin:0;padding:0;list-style:none}
+.tut-sumario a{display:flex;align-items:center;gap:10px;min-height:var(--tap,44px);padding:4px 6px;border-radius:10px;color:var(--color-text);font-size:14.5px;line-height:1.3;text-decoration:none;transition:background-color var(--duration-quick,150ms) var(--ease-smooth-out,ease-out)}
+.tut-sumario a:hover{background:color-mix(in srgb,var(--color-text) 6%,transparent)}
+.tut-sumario a[aria-current="step"]{background:color-mix(in srgb,var(--color-primary) 12%,transparent);font-weight:750}
+.tut-sumario a[data-feito]{color:var(--color-text-muted)}
+/* Tinta do número puxada pra cor do texto, como no aviso: o primário puro sobre
+   o próprio fundo a 16% ficava abaixo de 4,5:1 em 12px (4,2 no roxo, 3,8 no
+   Elegante). Numa central clara ela escurece, numa escura clareia. */
+.tut-sumario-n{display:grid;place-items:center;flex:none;width:24px;height:24px;border-radius:50%;background:color-mix(in srgb,var(--color-primary) 16%,transparent);color:color-mix(in srgb,var(--color-primary) 70%,var(--color-text));font-size:12px;font-weight:800}
+.tut-sumario a[aria-current="step"] .tut-sumario-n{background:var(--color-primary);color:var(--color-primary-contrast,#fff)}
+.tut-sumario-t{min-width:0;overflow-wrap:anywhere}
+
+/* Compartilhar do tutorial e o "copiar link" de cada passo. O pill visível tem
+   24px, mas o alvo de toque tem 44: a área invisível em volta é do botão, sem
+   empurrar a linha do "Passo 2 de 5". Sem `opacity` por cima do cinza de
+   apoio: a .8 ele caía pra ~3,5:1 em 11px numa central clara, e o hover que
+   devolvia a leitura não existe no celular. */
+.tut-copiar-passo{position:relative;display:inline-flex;align-items:center;gap:4px;min-height:24px;padding:2px 7px;border:1px solid color-mix(in srgb,var(--color-text) 14%,transparent);border-radius:999px;background:transparent;color:var(--color-text-muted);font:inherit;font-size:11px;font-weight:750;letter-spacing:0;text-transform:none;cursor:pointer;transition:background var(--duration-quick,150ms) var(--ease-smooth-out,ease-out)}
+.tut-copiar-passo:after{position:absolute;inset:-10px -4px;content:""}
+.tut-copiar-passo:hover{background:color-mix(in srgb,var(--color-text) 7%,transparent)}
+/* Chegando por âncora, o passo se anuncia por um instante em vez de deixar a
+   pessoa procurando onde parou. */
+.tut-passo:target,.tut-passo:focus-visible{outline:none}
+.tut-passo:target .tut-passo-num{box-shadow:0 0 0 5px color-mix(in srgb,var(--color-primary) 22%,transparent)}
+
+/* Foco visível em tudo que se opera pelo teclado — a página é pública e o
+   tema da central não garante anel de foco nenhum. */
+.tut-feito:focus-visible,.tut-recomecar:focus-visible,
+/* ── Modo "um passo por vez" ──
+   Camada fixa em tela cheia, no <body> (portal), acima da barra de atalhos
+   (40) e da barra de progresso (45). Topo com "Passo N de T" e fechar; base
+   no alcance do polegar. Áreas seguras do notch nos quatro lados. Troca de
+   passo por ESMAECER (opacidade e desfoque) — nada entra de lado. */
+.tut-modo{position:fixed;z-index:1000;inset:0;display:flex;flex-direction:column;background:var(--color-background,#fff);color:var(--color-text,#111114);animation:tutModoAbre var(--duration-fast,250ms) var(--ease-smooth-out,ease-out)}
+@keyframes tutModoAbre{from{opacity:0}to{opacity:1}}
+.tut-modo-topo{display:flex;flex:none;align-items:center;justify-content:space-between;gap:12px;padding:max(6px,env(safe-area-inset-top,0px)) max(10px,env(safe-area-inset-right,0px)) 6px max(18px,env(safe-area-inset-left,0px))}
+.tut-modo-conta{color:var(--color-text-muted);font-size:12.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+.tut-modo-fechar{display:grid;flex:none;place-items:center;width:var(--tap,44px);height:var(--tap,44px);padding:0;border:0;border-radius:50%;background:color-mix(in srgb,var(--color-text) 7%,transparent);color:var(--color-text);cursor:pointer}
+.tut-modo-trilha{flex:none;height:3px;background:color-mix(in srgb,var(--color-primary) 16%,transparent)}
+.tut-modo-trilha>div{height:100%;background:var(--color-primary);transform-origin:0 50%;transition:transform var(--duration-medium,350ms) var(--ease-smooth-out,ease-out)}
+/* `touch-action: pan-y pinch-zoom`: o navegador cuida da rolagem vertical e
+   do zoom de pinça, e entrega o arrasto horizontal de UM dedo pro gesto de
+   trocar de passo. Só `pan-y` travava a pinça no palco inteiro — justo a foto
+   do passo, o detalhe que se amplia na bancada (o app deixa o zoom liberado de
+   propósito). A pinça dispara `pointercancel`, que zera o gesto.
+   `overscroll-behavior` segura a rolagem aqui dentro, sem arrastar a página
+   de trás. */
+.tut-modo-palco{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y pinch-zoom}
+.tut-modo-passo{width:min(680px,100%);margin:0 auto;padding:22px max(18px,env(safe-area-inset-right,0px)) 32px max(18px,env(safe-area-inset-left,0px));animation:tutModoTroca var(--duration-fast,250ms) var(--ease-smooth-out,ease-out) both}
+@keyframes tutModoTroca{from{opacity:0;filter:blur(var(--blur-small,2px))}to{opacity:1;filter:none}}
+.tut-modo-passo h2{margin:0 0 14px;font-size:24px;line-height:1.15;letter-spacing:-.02em}
+.tut-modo-passo h2:focus{outline:none}
+.tut-modo-passo .rte{font-size:17px;line-height:1.65}
+.tut-modo-passo figure{margin:18px 0 0}
+.tut-modo-passo img{display:block;width:100%;border-radius:16px}
+.tut-modo-base{display:flex;flex:none;align-items:center;justify-content:space-between;gap:12px;padding:10px max(12px,env(safe-area-inset-right,0px)) calc(10px + var(--safe-b,env(safe-area-inset-bottom,0px))) max(12px,env(safe-area-inset-left,0px));border-top:1px solid color-mix(in srgb,var(--color-text) 10%,transparent);background:var(--color-background,#fff)}
+.tut-modo-anterior,.tut-modo-feito{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:var(--tap,44px);min-height:var(--tap,44px);padding:0 14px;border:1.5px solid color-mix(in srgb,var(--color-text) 18%,transparent);border-radius:999px;background:transparent;color:var(--color-text);font:inherit;font-size:14.5px;font-weight:750;cursor:pointer}
+.tut-modo-anterior:disabled{opacity:.4;cursor:default}
+.tut-modo-feito[aria-pressed="true"]{border-color:var(--color-primary);background:color-mix(in srgb,var(--color-primary) 14%,var(--color-background))}
+.tut-modo-feito[aria-pressed="true"]>svg{color:var(--color-primary)}
+.tut-modo-proximo{min-height:var(--tap,44px);padding:0 18px}
+/* Em 320–399px os três não cabem com texto: o Anterior vira só a seta (o
+   nome continua lá pro leitor de tela) e o Próximo segue escrito — é ele o
+   principal. Conta a 320: 44 + ~88 (Feito) + ~122 (Concluir) + 2×12 de vão
+   ≈ 278 dos 296 úteis — folga pra fonte mais larga do Android. */
+@media(max-width:399px){
+  .tut-modo-anterior{padding:0}
+  .tut-modo-anterior>span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  .tut-modo-feito{padding:0 12px}
+  .tut-modo-proximo{padding:0 16px}
+}
+@media(min-width:620px){
+  .tut-modo-passo{padding-top:34px}
+  .tut-modo-passo h2{font-size:30px}
+  .tut-modo-passo img{border-radius:20px}
+}
+
+/* ── Computador: conteúdo + trilho do sumário ──
+   Duas colunas só quando há sumário (3+ passos). O trilho é `sticky` DENTRO
+   da grade (align-self:start + área que cobre todas as linhas): cola no topo
+   enquanto o conteúdo rola e para no fim do guia. A 1024px o artigo tem 920
+   e a coluna do texto fica com 640 — nada estoura. */
+@media(min-width:1024px){
+  .tut-leitura[data-trilho] .tut-corpo{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,236px);column-gap:44px;align-items:start}
+  .tut-leitura[data-trilho] .tut-corpo>*{grid-column:1;min-width:0}
+  .tut-leitura[data-trilho] .tut-sumario{display:block;position:sticky;top:24px;grid-column:2;grid-row:1/span 8;align-self:start;max-height:calc(100dvh - 48px - var(--tut-barra-h,0px) - var(--safe-b,0px));overflow-y:auto;margin:clamp(26px,5vw,48px) 0 0;padding:14px 8px 10px}
+  .tut-leitura[data-trilho]   .tut-leitura[data-trilho] .tut-sumario-titulo{display:flex}
+  .tut-leitura[data-trilho] .tut-sumario ol{display:grid;padding:0}
+  .tut-leitura[data-trilho] .tut-sumario a{font-size:14px}
+}
+@media(min-width:1180px){
+  .tut-leitura[data-trilho]{width:min(1080px,calc(100% - 52px))!important;max-width:1080px!important}
+}
+
+/* ── Impressão ──
+   Guia de bancada muitas vezes é impresso. Sem isto saía com barra fixa por
+   cima do texto, cartões de sugestão no meio, botões que o papel não aperta
+   e link nenhum legível. */
+@media print{
+  .tut-barra,.tut-ao-topo,.tut-progresso,.tut-relacionados,.tut-voltar,.tut-leitura-acoes,.tut-copiar-passo,.tut-ajudou,
+  .tut-andamento,.tut-passo-rodape,.tut-feito,.tut-botao-modo,.tut-tela,.tut-modo,.tut-motivos,.tut-fale,  .tut-leitura{width:100%!important;max-width:100%!important;padding:0!important}
+  .tut-leitura-capa{max-height:220px}
+  .tut-passo[data-feito] .tut-passo-corpo>*{color:inherit!important;opacity:1!important}
+  .tut-bloco,.tut-passo,.tut-figura,.tut-leitura-video,.tut-aviso,.tut-problema{break-inside:avoid;page-break-inside:avoid}
+  /* Em papel um link é só texto: o endereço vai junto ou a informação some. */
+  .tut-conteudo a[href^="http"]::after{content:" (" attr(href) ")";font-size:11px;word-break:break-all}
+  .tut-video-capa{border:1px solid #999}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .tut-sumario a,.tut-copiar-passo,.tut-feito,.tut-motivo,.tut-passo-num,.tut-passo-corpo>*,.tut-modo-trilha>div,.tut-progresso[data-modo="passos"]>div{transition:none}
+  .tut-modo,.tut-modo-passo{animation:none}
+}

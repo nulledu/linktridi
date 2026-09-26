@@ -1,0 +1,436 @@
+/*
+  Editor do painel. Duas colunas no desktop (tela + inspetor), empilhado no
+  celular. A moldura 16:9 é sagrada: é o formato da TV, então a pré-visualização
+  não pode ter outra proporção — senão o que se arruma aqui não é o que sobe lá.
+*/
+
+.ed { display: flex; flex-direction: column; gap: 14px; }
+
+/* ── abas de slides ────────────────────────────────────────────────────────── */
+/* A fileira de slides cresce com o uso (cada slide novo entra aqui) e o editor
+   agora divide a largura com o inspetor de tema: sem rolagem, o "+ Slide" era
+   CORTADO na borda da coluna — e como a página não rola de lado, ele ficava
+   inalcançável. Mesma regra da `.tab-strip` da fundação. */
+.ed-slides {
+  display: flex; gap: 8px; padding-bottom: 4px;
+  overflow-x: auto; overscroll-behavior-x: contain;
+  scrollbar-width: none; -ms-overflow-style: none;
+}
+.ed-slides::-webkit-scrollbar { display: none; }
+.ed-slides > * { flex: none; }
+.ed-slide {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--tap, 44px);
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
+  background: var(--surface-2, rgba(255, 255, 255, 0.04));
+  color: inherit;
+  font-weight: 700;
+  font-size: 14px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.ed-slide.on { border-color: var(--accent, var(--primary)); box-shadow: 0 0 0 1px var(--accent, var(--primary)) inset; }
+.ed-slide.off { opacity: 0.45; }          /* slide desligado não vai para a TV */
+.ed-slide small { opacity: 0.55; font-weight: 600; }
+.ed-add { border-style: dashed; }
+
+/* ── corpo ─────────────────────────────────────────────────────────────────── */
+/* A segunda faixa é `minmax(0, 300px)` e não `300px` fixos: a coluna de
+   conteúdo do ERP não é a tela — ela já nasce sem a barra lateral (276px) e sem
+   o respiro (72px). Faixa rígida não tem como encolher e o inspetor saía 39px
+   pra fora num notebook de 1024. */
+.ed-corpo { display: grid; grid-template-columns: minmax(min(100%, 420px), 1fr) minmax(0, 300px); gap: 16px; align-items: start; }
+/* 1100px e não 900: o gargalo é a COLUNA, não a janela. Com a barra lateral
+   montada sobra `janela − 348px`, e os 420 + 16 + 300 do editor só cabem a
+   partir de ~1084px — entre 901 e 1084 o inspetor transbordava. */
+@media (max-width: 1100px) { .ed-corpo { grid-template-columns: minmax(0, 1fr); } }
+/* Dentro da tela de configuração o editor divide a largura com o inspetor de
+   TEMA. Aí os 420 + 300px do editor só cabem em tela bem larga: abaixo disso o
+   inspetor de widget desce pra baixo do canvas em vez de transbordar a coluna. */
+@media (max-width: 1500px) { .ed-corpo--compacto { grid-template-columns: 1fr; } }
+
+.ed-canvas-topo { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 10px; }
+.ed-espaco { flex: 1 1 auto; }
+.ed-nome {
+  min-height: var(--tap, 44px);
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
+  background: var(--surface-2, rgba(255, 255, 255, 0.04));
+  color: inherit;
+  font-weight: 700;
+  min-width: 0;
+  flex: 1 1 140px;
+}
+.ed-check { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; white-space: nowrap; }
+.ed-dur { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; white-space: nowrap; }
+.ed-dur input { width: 62px; min-height: var(--tap, 44px); border-radius: 10px; border: 1px solid var(--border, rgba(255,255,255,.12)); background: var(--surface-2, rgba(255,255,255,.04)); color: inherit; padding: 0 8px; }
+
+.ed-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--tap, 44px);
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
+  background: var(--surface-2, rgba(255, 255, 255, 0.04));
+  color: inherit;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+}
+.ed-btn:hover { border-color: var(--accent, var(--primary)); }
+.ed-icone { padding: 0 10px; }
+.ed-perigo { color: var(--perigo); }
+
+/* "+ Widget" é a ação da tela; os outros quatro são manutenção do slide. O
+   traço separa os dois assuntos — e afasta a lixeira do botão que mais se usa. */
+.ed-btn--principal {
+  border-color: color-mix(in srgb, var(--accent, var(--primary)) 55%, transparent);
+  background: color-mix(in srgb, var(--accent, var(--primary)) 16%, transparent);
+}
+.ed-sep {
+  flex: none;
+  width: 1px;
+  align-self: stretch;
+  min-height: 24px;
+  margin: 0 2px;
+  background: var(--border, rgba(255, 255, 255, 0.12));
+}
+
+/* ── a "TV" ────────────────────────────────────────────────────────────────── */
+.ed-tv {
+  position: relative;
+  /* O formato vem do PERFIL (16:9, 9:16 da doca, 21:9, 4:3) — o estilo em linha
+     sobrescreve este padrão. */
+  aspect-ratio: 16 / 9;
+  width: 100%;
+  /* Teto de altura: num perfil EM PÉ a moldura ficava mais alta que a janela e
+     só o topo aparecia — montava-se o painel às cegas, rolando a página a cada
+     bloco. Com o teto, a TV em pé encolhe e cabe inteira; a deitada não muda,
+     porque a largura continua sendo o limite dela. */
+  max-height: 68dvh;
+  max-width: 100%;
+  margin-inline: auto;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.14));
+  padding: 2.2%;
+  --p-texto: #f5f5f7;
+  --p-fraco: #b9b9c2;
+  --p-apagado: #77778a;
+  touch-action: none;              /* sem isto o dedo rola a página em vez de arrastar */
+}
+
+.ed-grade {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+  gap: 0.9%;
+  width: 100%;
+  height: 100%;
+}
+
+/* O desenho real ocupa a mesma área da grade, por baixo das alças. */
+.ed-render { position: absolute; inset: 0; pointer-events: none; }
+
+.ed-guias {
+  position: absolute;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(to right, rgba(255, 255, 255, 0.07) 0 1px, transparent 1px calc(100% / 12)),
+    repeating-linear-gradient(to bottom, rgba(255, 255, 255, 0.07) 0 1px, transparent 1px calc(100% / 8));
+  background-size: calc(100% / 12) 100%, 100% calc(100% / 8);
+  pointer-events: none;
+}
+
+/* ── alças de manipulação ──────────────────────────────────────────────────── */
+.ed-alca {
+  position: relative;
+  border: 1px dashed transparent;
+  border-radius: 8px;
+  cursor: grab;
+  touch-action: none;
+  transition: background 0.12s, border-color 0.12s;
+}
+.ed-alca:hover { border-color: rgba(255, 255, 255, 0.35); background: rgba(255, 255, 255, 0.04); }
+.ed-alca.sel {
+  border: 1.5px solid var(--accent, var(--primary));
+  background: color-mix(in srgb, var(--accent, var(--primary)) 12%, transparent);
+  cursor: grabbing;
+}
+.ed-alca:active { cursor: grabbing; }
+
+/* Etiqueta e botões só aparecem no widget ativo/sob o cursor: numa tela cheia
+   de blocos, mostrar tudo o tempo todo esconde o próprio painel. */
+.ed-tag,
+.ed-x { opacity: 0; transition: opacity 0.12s; }
+.ed-alca:hover .ed-tag,
+.ed-alca:hover .ed-x,
+.ed-alca.sel .ed-tag,
+.ed-alca.sel .ed-x { opacity: 1; }
+
+.ed-tag {
+  position: absolute;
+  top: 3px;
+  left: 5px;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 1px 6px;
+  border-radius: 6px;
+  pointer-events: none;
+}
+.ed-x {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  cursor: pointer;
+}
+.ed-medir {
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  background: var(--accent, var(--primary));
+  border: 2px solid #fff;
+  cursor: nwse-resize;
+  opacity: 0;
+  touch-action: none;
+}
+.ed-alca:hover .ed-medir,
+.ed-alca.sel .ed-medir { opacity: 1; }
+
+/* Sobreposição: avisa, não impede. Ver o comentário em EditorLayout.tsx. */
+.ed-alca.conflito { border: 1.5px solid var(--perigo); background: color-mix(in srgb, var(--perigo) 10%, transparent); }
+.ed-alerta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #ff6a60;
+}
+
+.ed-dica { margin-top: 8px; font-size: 12px; color: var(--muted, #9aa0a6); }
+.ed-dica kbd {
+  font: inherit;
+  padding: 1px 5px;
+  border-radius: 5px;
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.16));
+  margin: 0 2px;
+}
+
+/* ── inspetor ──────────────────────────────────────────────────────────────── */
+.ed-lado { position: sticky; top: 12px; }
+/* Mesmo limite do `.ed-corpo`: grudar no topo só faz sentido enquanto o
+   inspetor é uma COLUNA ao lado; empilhado ele é só mais um bloco da rolagem. */
+@media (max-width: 1100px) { .ed-lado { position: static; } }
+
+.ed-inspetor,
+.ed-vazio-lado {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
+  background: var(--surface-2, rgba(255, 255, 255, 0.03));
+}
+.ed-vazio-lado { align-items: flex-start; color: var(--muted, #9aa0a6); font-size: 13px; }
+.ed-inspetor header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.ed-inspetor label,
+.ed-pos label { display: flex; flex-direction: column; gap: 5px; font-size: 12px; font-weight: 700; color: var(--muted, #9aa0a6); }
+.ed-inspetor input,
+.ed-inspetor select {
+  min-height: var(--tap, 44px);
+  padding: 0 10px;
+  border-radius: 10px;
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
+  background: var(--surface, rgba(255, 255, 255, 0.05));
+  color: inherit;
+  font-size: 14px;
+  font-weight: 600;
+}
+.ed-inspetor .ed-check { flex-direction: row; align-items: center; }
+.ed-pos { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.ed-pos input { min-height: var(--tap, 44px); width: 100%; padding: 0 6px; border-radius: 10px; border: 1px solid var(--border, rgba(255,255,255,.12)); background: var(--surface, rgba(255,255,255,.05)); color: inherit; text-align: center; font-weight: 700; }
+
+/* ── paleta ────────────────────────────────────────────────────────────────── */
+.ed-paleta-host { position: fixed; inset: 0; z-index: 90; background: rgba(0, 0, 0, 0.55); display: grid; place-items: center; }
+.ed-paleta {
+  width: min(720px, 94vw);
+  max-height: min(80dvh, 640px);
+  overflow: auto;
+  border-radius: 18px;
+  padding: 18px;
+  background: var(--surface-1, #16161c);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.14));
+}
+.ed-paleta header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.ed-paleta header h3 { margin: 0; font-size: 18px; }
+.ed-paleta header button { background: none; border: 0; color: inherit; cursor: pointer; min-width: var(--tap, 44px); min-height: var(--tap, 44px); }
+.ed-paleta-grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr)); gap: 10px; }
+.ed-paleta-grade button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 14px;
+  min-height: var(--tap, 44px);
+  border-radius: 12px;
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
+  background: var(--surface-2, rgba(255, 255, 255, 0.04));
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.ed-paleta-grupo + .ed-paleta-grupo { margin-top: 14px; }
+.ed-paleta-grupo h4 {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted, #9aa0a6);
+}
+.ed-paleta-grade button:hover { border-color: var(--accent, var(--primary)); }
+
+/* Atalhos de tamanho do inspetor. */
+.ed-presets { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.ed-presets button {
+  padding: 0 10px;
+  min-height: var(--tap, 44px);
+  border-radius: 10px;
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
+  background: var(--surface-2, rgba(255, 255, 255, 0.04));
+  color: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.ed-presets button:hover { border-color: var(--accent, var(--primary)); }
+.ed-paleta-grade strong { font-size: 14px; }
+.ed-paleta-grade span { font-size: 12px; color: var(--muted, #9aa0a6); }
+
+/* ── Perfis ─────────────────────────────────────────────────────────────────
+   A barra dos MODELOS de tela. Fica acima do editor porque duplicar-e-ajustar
+   é o fluxo real: quem monta a TV da expedição começa da TV do comercial. */
+.pf-barra { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+.pf-abas { display: flex; gap: 6px; align-items: stretch; }
+.pf-aba,
+.pf-novo {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 8px 14px;
+  min-height: var(--tap, 44px);
+  border-radius: 12px;
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
+  background: var(--surface-2, rgba(255, 255, 255, 0.04));
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+  flex: none;
+}
+.pf-aba strong { font-size: 13.5px; font-weight: 800; }
+.pf-aba span { font-size: 11.5px; color: var(--muted, #9aa0a6); }
+/* O perfil em edição é o único aceso: com dois destaques, a pessoa perde de
+   vista qual desenho está mexendo — e salva no perfil errado. */
+.pf-aba-on { border-color: var(--accent, var(--primary)); box-shadow: inset 0 0 0 1px var(--accent, var(--primary)); }
+.pf-novo { flex-direction: row; align-items: center; gap: 6px; font-weight: 700; border-style: dashed; }
+
+.pf-props {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: var(--surface-2, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+}
+.pf-nome {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: 0;
+  color: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  min-height: var(--tap, 44px);
+}
+.pf-campo { font: inherit; font-weight: 800; padding: 6px 10px; border-radius: 8px; min-height: var(--tap, 44px); }
+.pf-prop { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted, #9aa0a6); }
+.pf-prop select,
+.pf-prop input { font: inherit; padding: 6px 8px; border-radius: 8px; min-height: var(--tap, 44px); }
+.pf-prop input[type="number"] { width: 72px; }
+.pf-prop em { font-style: normal; font-weight: 700; }
+.pf-check { gap: 8px; cursor: pointer; }
+.pf-check input { width: 18px; height: 18px; }
+.pf-acoes { display: inline-flex; gap: 6px; margin-left: auto; }
+.pf-acoes button {
+  min-width: var(--tap, 44px);
+  min-height: var(--tap, 44px);
+  border-radius: 10px;
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+.pf-acoes button:disabled { opacity: 0.4; cursor: not-allowed; }
+/* Sem hex de reserva: a cor de status precisa vir do token, que muda de tema —
+   um `#ff453a` fixo reprova em contraste sobre o card branco do tema claro. */
+.pf-perigo:not(:disabled):hover { color: var(--perigo); border-color: currentColor; }
+
+/* No celular a fileira de perfis rola de lado (.tab-strip já cuida) e as
+   propriedades quebram em duas linhas em vez de espremer os campos. */
+@media (max-width: 640px) {
+  .pf-props { gap: 8px; }
+  .pf-acoes { margin-left: 0; }
+}
+
+/* Botão de largura cheia no inspetor — a ação que muda o bloco inteiro não
+   pode parecer um dos campos ao lado. */
+.ed-inspetor .ed-largo {
+  width: 100%;
+  justify-content: center;
+  margin-top: 4px;
+}
+
+/*
+  O palco em tamanho de TV, reduzido por `transform`.
+
+  A prévia é desenhada em 1280×720 — o mesmo palco do `KioskShell` — e só então
+  encolhida. É o que faz cada `clamp()` de fonte resolver aqui exatamente como
+  resolve na parede: num quadro de 700px quase todos batiam no MÍNIMO, e o
+  editor mostrava uma hierarquia de tipos que a TV não tem.
+*/
+.ed-palco {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: top left;
+}

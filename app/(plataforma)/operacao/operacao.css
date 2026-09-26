@@ -1,0 +1,329 @@
+/*
+  Operação — a tela do galpão para dedo, luva e monitor em pé.
+  ─────────────────────────────────────────────────────────────────────────────
+  Duas coisas mandam neste arquivo, e as duas vêm do lugar onde a tela é usada:
+
+  • NÃO HÁ TECLADO NEM MOUSE. Todo alvo é para um dedo — 64px, não 44px. A
+    régua de 44px do resto do app é para o polegar num celular a 30cm; aqui a
+    pessoa está a um braço de distância, de pé, e às vezes de luva.
+
+  • A TELA É VERTICAL. O monitor da bancada fica em pé, como um totem. Em
+    retrato a largura é o recurso escasso: tudo vira uma coluna só, e o que
+    sobra é altura — que é onde o teclado mora.
+
+  O escopo `.op` existe para nada disto vazar: as telas de dentro (bipar,
+  conferir, receber) são as MESMAS do Estoque, e o que se ajusta aqui vale só
+  quando elas estão sendo usadas em pé no galpão.
+*/
+
+.op { --op-alvo: 64px; }
+
+/* ── Os cartões de tarefa ────────────────────────────────────────────────── */
+
+.op-grade {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+}
+
+.op-cartao {
+  display: grid;
+  gap: 6px;
+  align-content: start;
+  text-align: left;
+  cursor: pointer;
+  padding: 18px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--border);
+  color: var(--text);
+  min-height: 124px;
+}
+.op-cartao-titulo { font-size: 17px; font-weight: 800; letter-spacing: -0.01em; }
+.op-cartao-frase { font-size: 13px; color: var(--text-dim); line-height: 1.45; }
+
+/*
+  RETRATO: uma coluna, cartão em faixa.
+
+  Em pé, dois cartões lado a lado ficam com 150px cada e o texto quebra em
+  quatro linhas — cabe, e não se lê de longe. Em faixa o ícone vira âncora à
+  esquerda, o título cresce, e a lista inteira se varre com o olho de cima a
+  baixo, que é como alguém procura uma tarefa.
+*/
+@media (orientation: portrait) {
+  .op-grade { grid-template-columns: 1fr; gap: 10px; }
+  .op-cartao {
+    grid-template-columns: 56px 1fr;
+    grid-template-areas: "icone titulo" "icone frase";
+    align-items: center;
+    column-gap: 14px;
+    row-gap: 2px;
+    min-height: 92px;
+    padding: 16px 18px;
+  }
+  .op-cartao > :first-child { grid-area: icone; justify-self: center; }
+  .op-cartao-titulo { grid-area: titulo; font-size: 20px; align-self: end; }
+  .op-cartao-frase { grid-area: frase; font-size: 14px; align-self: start; }
+}
+
+/* ── A barra de cima: voltar e o interruptor do teclado ──────────────────── */
+
+.op-barra {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* "Todas as tarefas" é o caminho de volta e o botão mais tocado da tela: ele
+   tem o tamanho de um alvo de galpão, não o de um link. */
+.op .op-voltar { min-height: var(--op-alvo); font-size: 16px; padding: 0 20px; }
+
+.op-tec-botao {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--op-alvo);
+  padding: 0 18px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-dim);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  /* Tokens, não números: o afundar é resposta de toque (`--duration-micro`) e a
+     virada de estado é troca de cor (`--duration-quick`). Os 100ms/150ms que
+     estavam aqui acertavam por acaso — e acaso não sobrevive à próxima
+     recalibração da escala. */
+  transition:
+    transform var(--duration-micro) var(--ease-entra),
+    border-color var(--duration-quick) var(--ease-smooth-out),
+    color var(--duration-quick) var(--ease-smooth-out),
+    background var(--duration-quick) var(--ease-smooth-out);
+}
+/* Ligado é ESTADO, não decoração: quem chega na bancada precisa saber, antes de
+   tocar em qualquer campo, se vai aparecer teclado. */
+.op-tec-botao[aria-pressed="true"] {
+  border-color: var(--primary);
+  color: var(--primary-texto, var(--primary));
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+}
+
+/*
+  O espaço que o teclado ocupa.
+
+  Sem esta reserva o teclado cobre o campo que está sendo preenchido — o
+  problema pelo qual o teclado do sistema foi descartado. A conta é a altura
+  real, medida e escrita em `--op-teclado` pelo componente.
+*/
+/* Fallback ZERO: o teclado só existe no DOM quando um campo está focado, e um
+   palpite de 320px deixaria um vão permanente no rodapé da lista de tarefas. */
+.op[data-teclado="1"] { padding-bottom: calc(var(--op-teclado, 0px) + 16px); }
+
+/* ── Os campos das telas de dentro ───────────────────────────────────────── */
+
+/*
+  As telas do Estoque foram desenhadas para quem está sentado. Aqui os campos e
+  botões delas crescem para a régua do galpão — sem tocar nos arquivos delas,
+  que continuam servindo o Estoque como sempre.
+*/
+/*
+  `!important` aqui não é preguiça: os campos dessas telas trazem
+  `style="min-height: var(--tap)"` no próprio elemento, e estilo inline vence
+  qualquer seletor de folha externa. Medido antes de escrever isto: o campo de
+  bipar continuava com 44px enquanto a regra abaixo pedia 64.
+
+  A alternativa seria mexer nos arquivos do Estoque para aceitarem um tamanho
+  por fora — trocar dezenas de campos de duas telas que funcionam, para
+  atender uma terceira. O `!important` fica contido no escopo `.op` e some
+  junto com ele.
+*/
+.op input:not([type="checkbox"]):not([type="radio"]),
+.op select,
+.op textarea {
+  min-height: var(--op-alvo) !important;
+  font-size: 17px !important;
+}
+/* As teclas ficam de FORA: elas têm régua própria (58–74px conforme a linha e a
+   orientação), e o teclado é filho do `.op` — sem esta exclusão, um `!important`
+   de 64px achataria o bloco numérico inteiro. */
+.op button:not(.tec-t):not(.tec-x),
+.op .ui-btn,
+.op a.ui-card-alvo { min-height: var(--op-alvo) !important; }
+
+@media (orientation: portrait) {
+  /* Formulário de duas colunas em pé fica com campos de 120px: em uma coluna,
+     cada campo tem a largura da tela e o dedo não erra o vizinho. */
+  .op form { grid-template-columns: 1fr !important; }
+}
+
+/* ── O teclado ───────────────────────────────────────────────────────────── */
+
+.tec {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: var(--z-modal, 1300);
+  display: grid;
+  gap: 6px;
+  padding: 8px 8px calc(8px + var(--safe-b, 0px));
+  background: var(--surface-2);
+  border-top: 1px solid var(--border);
+  /* Sombra para cima: o teclado precisa parecer uma camada SOBRE a tela, senão
+     a última linha de conteúdo e a primeira de teclas se confundem. */
+  box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.16);
+  /* `--duration-slow` + `--ease-entra`: é o token de ABRIR PAINEL da fundação,
+     e o teclado é exatamente isso — uma superfície que entra pela borda. Os
+     valores fixos que estavam aqui eram os mesmos números por coincidência, e
+     coincidência não sobrevive à próxima calibração da escala. */
+  animation: tecSobe var(--duration-slow) var(--ease-entra) both;
+}
+
+/* Termina em `none`, nunca em `translateY(0)`: transform identidade residual
+   faz do teclado um bloco de contenção e qualquer `position: fixed` de dentro
+   passa a ancorar nele (a armadilha documentada no CLAUDE.md). */
+@keyframes tecSobe {
+  from { transform: translateY(18px); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+
+/* A saída é a MESMA viagem ao contrário — `reverse` sobre o mesmo keyframe, com
+   a curva inversa e a duração de fechar. Escrever um segundo keyframe "descendo"
+   seria a forma de os dois caminhos divergirem na primeira vez que alguém
+   ajustasse um deles. */
+.tec[data-saindo="1"] {
+  animation: tecSobe var(--duration-quick) var(--ease-sai) reverse both;
+}
+
+.tec-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 4px;
+}
+.tec-alvo {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tec-x {
+  display: grid;
+  place-items: center;
+  min-width: 48px;
+  min-height: 48px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-dim);
+  cursor: pointer;
+}
+
+.tec-teclas { display: grid; gap: 6px; }
+.tec-linha { display: flex; gap: 6px; justify-content: center; }
+
+.tec-t {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 58px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 20px;
+  font-weight: 700;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  /* Só cor e escala no toque: a tecla precisa responder no PRESSIONAR, porque
+     numa tela sensível a única confirmação de que o toque valeu é essa. */
+  /* Tracking NEGATIVO porque a tecla é texto grande: em 20px, o espaçamento
+     neutro faz a letra flutuar dentro do alvo em vez de ancorar nele. */
+  letter-spacing: -0.01em;
+  /* A resposta é no PRESSIONAR e tem a duração do micro-movimento da fundação:
+     numa tela sensível, esse afundar é a única confirmação de que o toque
+     valeu — o dedo cobre a própria tecla. */
+  transition: transform var(--duration-micro) var(--ease-entra), background var(--duration-quick) var(--ease-smooth-out);
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+.tec-t:active { background: var(--surface-2); }
+
+.tec-mod { flex: 0 0 auto; min-width: 74px; font-size: 15px; color: var(--text-dim); }
+.tec-mod[aria-pressed="true"] {
+  border-color: var(--primary);
+  color: var(--primary-texto, var(--primary));
+  background: color-mix(in srgb, var(--primary) 14%, transparent);
+}
+.tec-espaco { flex: 1 1 auto; min-width: 120px; }
+.tec-ok {
+  flex: 0 0 auto;
+  min-width: 168px;
+  grid-auto-flow: column;
+  gap: 8px;
+  font-size: 16px;
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+.tec-base { padding-top: 2px; }
+
+/* O bloco numérico não estica: doze teclas ocupando 1200px viram alvos de
+   130×58 com um "7" minúsculo no meio. Ele fica centrado, com teclas altas —
+   é o layout de uma calculadora, que é o gesto que a pessoa já sabe. */
+.tec-num { justify-items: center; }
+.tec-num .tec-linha { max-width: 420px; margin: 0 auto; width: 100%; }
+.tec-num .tec-t { min-height: 66px; font-size: 26px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+
+@media (orientation: portrait) {
+  /* Em pé sobra altura: teclas mais altas, que é o que reduz erro de toque. */
+  .tec-t { min-height: 64px; }
+  .tec-num .tec-t { min-height: 74px; }
+  .tec-ok { min-width: 130px; font-size: 15px; }
+  .tec-mod { min-width: 62px; }
+}
+
+/*
+  DEITADO E BAIXO: teclas menores, porque aqui o escasso é a altura.
+
+  Medido num monitor de 1024×700 deitado: com as teclas de 58px o teclado ficava
+  com 323px — quase metade da tela — e o botão de confirmar da tarefa nascia
+  atrás dele. Não adianta rolar: numa bancada, o que a pessoa precisa ver ao
+  digitar é o campo E o botão que fecha a tarefa.
+
+  A régua cai para 46px, que continua acima do mínimo de toque e devolve cem
+  pixels de tela. Em retrato nada disto vale — lá sobra altura, e tecla grande
+  é o que reduz erro.
+*/
+@media (orientation: landscape) and (max-height: 820px) {
+  .tec { gap: 4px; padding: 6px 6px calc(6px + var(--safe-b, 0px)); }
+  .tec-t { min-height: 46px; font-size: 18px; }
+  .tec-num .tec-t { min-height: 50px; font-size: 22px; }
+  .tec-x { min-height: 40px; min-width: 40px; }
+  .tec-topo { padding: 0 2px; }
+}
+
+/*
+  Mais contraste: a tecla passa a ter borda definida e fundo quase sólido.
+
+  Num teclado isto vale mais que na maioria das telas — as teclas são
+  distinguidas pelo CONTORNO, não pelo rótulo: o dedo mira pelo retângulo, e
+  quem enxerga pouco perde a mira antes de perder a letra.
+*/
+@media (prefers-contrast: more) {
+  .tec-t, .tec-x { border-color: var(--text); border-width: 2px; }
+  .tec { border-top-width: 2px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Movimento reduzido não é ausência de resposta: o teclado aparece sem
+     percurso, e a tecla continua respondendo por COR — que é o que segue
+     dizendo "o toque valeu". */
+  .tec { animation: none; }
+  .tec-t { transition: background var(--duration-quick) var(--ease-smooth-out); }
+  .tec-t:active { transform: none; }
+}

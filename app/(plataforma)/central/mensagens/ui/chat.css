@@ -1,0 +1,952 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Central · Mensagens — folha única do módulo.
+
+   Tudo aqui é CLASSE, não estilo inline: o estilo inline recria um objeto a
+   cada render e, numa lista de milhares de bolhas, isso sozinho já derruba o
+   quadro. Os componentes ficam com props e semântica; a aparência mora aqui.
+
+   Herda os tokens do app (--bg, --surface, --border, --text, --primary) e
+   define os seus por cima, para o chat ter cinza profundo no escuro sem mexer
+   no resto do sistema.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  --ch-sidebar: 300px;   /* a lista é o que mais se lê na tela */
+  --ch-painel: 296px;    /* o painel é consulta: cede largura para a conversa */
+  --ch-raio: 14px;
+  --ch-gap: 16px;
+
+  --ch-fundo: var(--bg);
+  --ch-lateral: var(--surface-2);
+  --ch-conversa: var(--surface);
+  --ch-linha: var(--border);
+  --ch-hover: color-mix(in srgb, var(--text) 6%, transparent);
+  --ch-ativo: color-mix(in srgb, var(--primary) 14%, transparent);
+  --ch-elevado: var(--surface-2);
+
+  /* realce de sintaxe */
+  --cod-comentario: #7c8497;
+  --cod-texto: #4fa46a;
+  --cod-numero: #c98a3f;
+  --cod-chave: #a878f0;
+  --cod-funcao: #4b93d8;
+
+  --ch-anim: 180ms cubic-bezier(.32, .72, 0, 1);
+}
+
+/* Menu, modal, spotlight e visor são renderizados por portal no <body> — fora
+   do `.ch`. Por isso os tokens moram no `:root`: definidos só no container,
+   um menu de contexto nasceria sem borda e sem fundo. */
+.ch {
+  display: grid;
+  grid-template-columns: var(--ch-sidebar) minmax(0, 1fr);
+  height: calc(100dvh - 150px);
+  min-height: 520px;
+  border: 1px solid var(--ch-linha);
+  border-radius: 22px;
+  overflow: hidden;
+  background: var(--ch-fundo);
+  color: var(--text);
+  font-feature-settings: "cv02", "cv03", "cv04";
+}
+
+.ch[data-painel="1"] { grid-template-columns: var(--ch-sidebar) minmax(0, 1fr) var(--ch-painel); }
+
+/* Rota /mensagens: a conversa ocupa tudo que sobra da sidebar do ERP. Sem
+   cantos nem borda externa, porque não é mais um cartão dentro de uma página —
+   é a página. O `100dvh` (e não `vh`) é o que impede o composer de nascer atrás
+   da barra do navegador no celular. */
+.ch--cheia {
+  height: 100dvh;
+  min-height: 0;
+  border: none;
+  border-left: 1px solid var(--ch-linha);
+  border-radius: 0;
+}
+
+/* O app alterna tema pela CLASSE `html.light` — escuro é o padrão do :root.
+   Usar `prefers-color-scheme` ou `data-theme` aqui deixaria o fundo do chat
+   claro com o texto do app ainda claro (branco no branco), que foi exatamente
+   o defeito pego na verificação. O sinal tem que ser o mesmo do resto. */
+:root {
+  --ch-fundo: #111214;
+  --ch-lateral: #0d0e10;
+  --ch-conversa: #17181b;
+  --ch-elevado: #22242a;
+  --ch-linha: rgba(255, 255, 255, .08);
+  --cod-comentario: #6b7280;
+  --cod-texto: #7ee2a8;
+  --cod-numero: #f0b464;
+  --cod-chave: #c4a2ff;
+  --cod-funcao: #7cc0ff;
+}
+html.light {
+  --ch-fundo: #ffffff;
+  --ch-lateral: #f7f7f9;
+  --ch-conversa: #ffffff;
+  --ch-elevado: #f1f1f5;
+  --ch-linha: rgba(16, 24, 40, .1);
+  --cod-comentario: #8b93a5;
+  --cod-texto: #1a7f43;
+  --cod-numero: #a35c12;
+  --cod-chave: #7c3aed;
+  --cod-funcao: #1d6fb8;
+}
+
+/* ── Sidebar ──────────────────────────────────────────────────────────────── */
+.ch-lateral {
+  position: relative;
+  --ch-sob: var(--ch-lateral);
+  background: var(--ch-lateral);
+  border-right: 1px solid var(--ch-linha);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+}
+/* Puxador para redimensionar a sidebar. Fica sobre a divisa, com área de
+   agarre de 7px (1px seria impossível de acertar) e só aparece ao aproximar. */
+.ch-puxador {
+  position: absolute; top: 0; bottom: 0; right: -3px; width: 7px;
+  z-index: 5; cursor: col-resize; background: transparent;
+  border: none; padding: 0; box-shadow: none;
+}
+.ch-puxador::after {
+  content: ""; position: absolute; inset: 0 3px;
+  background: var(--primary); opacity: 0; transition: opacity var(--ch-anim);
+}
+.ch-puxador:hover::after, .ch-puxador[data-arrastando="1"]::after { opacity: .7; }
+/* Enquanto arrasta, nada de selecionar texto nem de o iframe roubar o ponteiro. */
+.ch[data-redimensionando="1"] { user-select: none; cursor: col-resize; }
+/* `:not(.ch-puxador)`: o puxador é justamente quem está recebendo o gesto —
+   desligar o ponteiro nele travaria o arraste no primeiro movimento. */
+.ch[data-redimensionando="1"] *:not(.ch-puxador) { pointer-events: none; }
+
+.ch-lateral__topo { padding: 14px 12px 10px; display: grid; gap: 10px; }
+.ch-marca {
+  display: flex; align-items: center; gap: 9px;
+  font-size: 14.5px; font-weight: 600; letter-spacing: -.01em;
+  padding: 2px 4px; color: var(--text);
+}
+.ch-marca__sino { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+
+.ch-buscar {
+  display: flex; align-items: center; gap: 8px;
+  width: 100%; min-height: 40px; padding: 0 12px;
+  border: 1px solid var(--ch-linha); border-radius: 10px;
+  background: var(--ch-fundo); color: var(--text-dim);
+  font-size: 13.5px; cursor: pointer; text-align: left;
+  transition: border-color var(--ch-anim), background var(--ch-anim);
+}
+.ch-buscar:hover { border-color: color-mix(in srgb, var(--primary) 45%, var(--ch-linha)); }
+.ch-buscar kbd {
+  margin-left: auto; font: inherit; font-size: 11px;
+  padding: 1px 5px; border-radius: 5px;
+  background: var(--ch-elevado); color: var(--text-dim);
+  border: 1px solid var(--ch-linha);
+}
+
+.ch-novo {
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  width: 100%; min-height: 42px; border: none; border-radius: 10px;
+  background: var(--primary); color: #fff; cursor: pointer;
+  font-size: 14px; font-weight: 600; box-shadow: none;
+  transition: filter var(--ch-anim), transform var(--ch-anim);
+}
+.ch-novo:hover { filter: brightness(1.08); }
+
+.ch-lateral__rolagem { flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: 4px 8px 16px; }
+
+.ch-secao {
+  display: flex; align-items: center; gap: 6px;
+  width: 100%; padding: 12px 8px 4px;
+  border: none; background: none; box-shadow: none; cursor: pointer;
+  font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--text-dim); text-align: left;
+}
+.ch-secao__seta { transition: transform var(--ch-anim); }
+.ch-secao[aria-expanded="false"] .ch-secao__seta { transform: rotate(-90deg); }
+.ch-secao__acao { margin-left: auto; opacity: 0; transition: opacity var(--ch-anim); }
+.ch-secao:hover .ch-secao__acao { opacity: 1; }
+
+.ch-item {
+  position: relative;
+  display: flex; align-items: center; gap: 11px;
+  width: 100%; min-height: 40px; padding: 7px 11px;
+  border: none; border-radius: 11px; background: transparent; box-shadow: none;
+  cursor: pointer; text-align: left; color: var(--text-dim);
+  font-size: 14.5px; line-height: 1.3;
+  transition: background var(--ch-anim), color var(--ch-anim);
+}
+.ch-item:hover { background: var(--ch-hover); color: var(--text); }
+.ch-item[aria-current="true"] { background: var(--ch-ativo); color: var(--text); font-weight: 600; }
+.ch-item--naolido { color: var(--text); font-weight: 600; }
+.ch-item__nome { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Sugestão de contato: mesma linha da lista, sem peso de "não lida". */
+.ch-item--sugestao { font-weight: 400; }
+.ch-item--sugestao .ch-item__nome { line-height: 1.2; }
+.ch-item--acao { color: var(--text-dim); font-size: 13px; min-height: 36px; }
+.ch-item__sub { display: block; font-size: 11.5px; font-weight: 400; color: var(--text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ch-item__badge {
+  flex: none; min-width: 20px; height: 20px; padding: 0 6px;
+  display: grid; place-items: center; border-radius: 9px;
+  background: var(--primary); color: #fff; font-size: 11px; font-weight: 700;
+}
+.ch-item__badge--mencao { background: var(--perigo); }
+.ch-item__estrela { flex: none; opacity: 0; transition: opacity var(--ch-anim); }
+.ch-item:hover .ch-item__estrela, .ch-item__estrela[data-on="1"] { opacity: 1; }
+
+/* Linha de contexto: 3px na lateral do item, na cor do projeto/equipe. */
+.ch-item__contexto {
+  position: absolute; left: 0; top: 6px; bottom: 6px; width: 3px;
+  border-radius: 0 3px 3px 0;
+}
+
+/* ── Coluna da conversa ───────────────────────────────────────────────────── */
+.ch-conversa {
+  --ch-sob: var(--ch-conversa);
+  display: flex; flex-direction: column; min-width: 0; min-height: 0;
+  background: var(--ch-conversa);
+}
+
+.ch-cabecalho {
+  position: relative;
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 14px; min-height: 58px;
+  border-bottom: 1px solid var(--ch-linha);
+}
+/* A "linha de contexto" do cabeçalho — 4px que dizem onde você está. */
+.ch-cabecalho__contexto { position: absolute; left: 0; top: 10px; bottom: 10px; width: 4px; border-radius: 0 4px 4px 0; }
+.ch-cabecalho__titulo { display: flex; align-items: center; gap: 7px; font-size: 16px; font-weight: 600; letter-spacing: -.015em; min-width: 0; }
+.ch-cabecalho__titulo span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ch-cabecalho__sub { font-size: 12px; color: var(--text-dim); margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ch-cabecalho__acoes { margin-left: auto; display: flex; align-items: center; gap: 2px; flex: none; }
+/* O bloco do título é o único que pode encolher. Sem `min-width:0` + `overflow`
+   ele guarda a largura do conteúdo e empurra o cabeçalho para fora a 320px. */
+.ch-cabecalho__id {
+  flex: 1 1 auto; min-width: 0; overflow: hidden;
+  border: none; background: none; box-shadow: none; padding: 0;
+  cursor: pointer; text-align: left; color: inherit;
+}
+
+.ch-icone {
+  display: grid; place-items: center;
+  width: 34px; height: 34px; border-radius: 9px;
+  border: none; background: transparent; box-shadow: none; cursor: pointer;
+  color: var(--text-dim);
+  transition: background var(--ch-anim), color var(--ch-anim);
+}
+.ch-icone:hover { background: var(--ch-hover); color: var(--text); }
+.ch-icone[aria-pressed="true"] { background: var(--ch-ativo); color: var(--primary); }
+.ch-icone:disabled { opacity: .4; cursor: default; }
+
+/* ── Lista de mensagens ───────────────────────────────────────────────────── */
+.ch-lista {
+  flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden;
+  overscroll-behavior: contain;
+  padding: 8px 0 12px;
+  /* `content-visibility` deixa o navegador pular a pintura do que está fora da
+     janela — é o que segura a rolagem fluida junto da virtualização. */
+  contain: layout style;
+  scrollbar-gutter: stable;
+}
+.ch-lista__espaco { flex: none; }
+
+.ch-dia { display: flex; align-items: center; gap: 12px; padding: 16px 20px 8px; }
+.ch-dia::before, .ch-dia::after { content: ""; flex: 1; height: 1px; background: var(--ch-linha); }
+.ch-dia span {
+  font-size: 11.5px; font-weight: 600; color: var(--text-dim);
+  padding: 3px 11px; border-radius: 999px;
+  background: var(--ch-elevado); border: 1px solid var(--ch-linha);
+  white-space: nowrap;
+}
+
+/* Divisor de "Novas mensagens": a linha por onde a leitura parou. Vermelho de
+   propósito — é a única marca da conversa que não é informação, é um lugar. */
+.ch-novas {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 20px 4px;
+  color: var(--perigo); font-size: 11.5px; font-weight: 600;
+}
+.ch-novas::before, .ch-novas::after {
+  content: ""; flex: 1; height: 1px;
+  background: color-mix(in srgb, var(--perigo) 55%, transparent);
+}
+.ch-novas span { white-space: nowrap; }
+
+.ch-msg {
+  position: relative;
+  display: grid; grid-template-columns: 36px minmax(0, 1fr);
+  gap: 10px; padding: 2px 20px;
+  scroll-margin: 80px;
+}
+/* Metade da virtualização: o navegador pula layout e pintura do que está fora
+   da janela. A outra metade é a janela de índices em ListaMensagens — juntas,
+   dez mil mensagens custam o mesmo que trinta. */
+.ch-msg { content-visibility: auto; contain-intrinsic-size: auto 46px; }
+.ch-msg--bloco { margin-top: 14px; }
+.ch-msg:hover { background: var(--ch-hover); }
+.ch-msg[data-cita="1"] { background: color-mix(in srgb, var(--atencao) 12%, transparent); }
+.ch-msg[data-cita="1"]:hover { background: color-mix(in srgb, var(--atencao) 18%, transparent); }
+.ch-msg[data-selecionada="1"] { background: var(--ch-ativo); }
+.ch-msg[data-destacada="1"] { animation: ch-pisca 1.4s ease-out; }
+@keyframes ch-pisca {
+  0%, 40% { background: color-mix(in srgb, var(--primary) 22%, transparent); }
+  100% { background: transparent; }
+}
+.ch-msg--entrando { animation: ch-entra var(--ch-anim) both; }
+@keyframes ch-entra { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+.ch-msg__coluna { display: flex; justify-content: center; padding-top: 2px; }
+.ch-msg__hora-lado { font-size: 10.5px; color: var(--text-dim); opacity: 0; padding-top: 4px; font-variant-numeric: tabular-nums; }
+.ch-msg:hover .ch-msg__hora-lado { opacity: 1; }
+.ch-msg__cabecalho { display: flex; align-items: baseline; gap: 8px; margin-bottom: 2px; flex-wrap: wrap; }
+.ch-msg__autor { font-size: 13.5px; font-weight: 600; letter-spacing: -.01em; }
+.ch-msg__hora { font-size: 11px; color: var(--text-dim); font-variant-numeric: tabular-nums; }
+.ch-msg__marca { font-size: 11px; color: var(--text-dim); }
+.ch-msg__corpo { font-size: 14.5px; line-height: 1.5; word-break: break-word; }
+.ch-msg__corpo--apagada { font-style: italic; color: var(--text-dim); }
+.ch-msg__corpo--enviando { opacity: .55; }
+.ch-msg__corpo--emoji-1 { font-size: 46px; line-height: 1.15; }
+.ch-msg__corpo--emoji-2 { font-size: 36px; line-height: 1.15; }
+.ch-msg__corpo--emoji-3 { font-size: 30px; line-height: 1.15; }
+
+.ch-resposta {
+  display: flex; align-items: center; gap: 6px;
+  margin-bottom: 4px; padding-left: 9px;
+  border-left: 2px solid color-mix(in srgb, var(--primary) 55%, transparent);
+  font-size: 12.5px; color: var(--text-dim); cursor: pointer;
+  background: none; border-top: none; border-right: none; border-bottom: none;
+  box-shadow: none; text-align: left; width: 100%;
+}
+.ch-resposta:hover { color: var(--text); }
+.ch-resposta span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ── Ações da mensagem ────────────────────────────────────────────────────── */
+.ch-acoes {
+  position: absolute; top: -14px; right: 16px; z-index: 4;
+  display: none; align-items: center; gap: 1px;
+  padding: 3px; border-radius: 11px;
+  background: var(--ch-elevado); border: 1px solid var(--ch-linha);
+  box-shadow: 0 6px 22px rgba(0, 0, 0, .22);
+}
+.ch-msg:hover .ch-acoes, .ch-acoes[data-aberto="1"] { display: flex; }
+.ch-acoes button {
+  display: grid; place-items: center; width: 30px; height: 30px;
+  border: none; border-radius: 8px; background: transparent; box-shadow: none;
+  cursor: pointer; color: var(--text-dim); font-size: 15px; line-height: 1;
+  transition: background var(--ch-anim), color var(--ch-anim);
+}
+.ch-acoes button:hover { background: var(--ch-hover); color: var(--text); }
+
+/* ── Reações ──────────────────────────────────────────────────────────────── */
+.ch-reacoes { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+.ch-reacao {
+  display: inline-flex; align-items: center; gap: 4px;
+  min-height: 24px; padding: 1px 8px;
+  border: 1px solid var(--ch-linha); border-radius: 999px;
+  background: var(--ch-elevado); color: var(--text-dim);
+  font-size: 12px; font-weight: 600; cursor: pointer; box-shadow: none;
+  transition: background var(--ch-anim), border-color var(--ch-anim), transform var(--ch-anim);
+}
+.ch-reacao:hover { transform: translateY(-1px); }
+.ch-reacao[data-minha="1"] {
+  border-color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 16%, transparent);
+  color: var(--primary);
+}
+
+/* ── Thread (resumo na conversa) ──────────────────────────────────────────── */
+.ch-thread-resumo {
+  display: inline-flex; align-items: center; gap: 7px;
+  margin-top: 6px; padding: 4px 10px 4px 6px;
+  border: 1px solid transparent; border-radius: 9px;
+  background: transparent; box-shadow: none; cursor: pointer;
+  font-size: 12.5px; font-weight: 600; color: var(--primary);
+  transition: background var(--ch-anim), border-color var(--ch-anim);
+}
+.ch-thread-resumo:hover { background: var(--ch-elevado); border-color: var(--ch-linha); }
+
+/* ── Anexos ───────────────────────────────────────────────────────────────── */
+.ch-anexos { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.ch-anexo-img {
+  display: block; max-width: min(100%, 340px); max-height: 320px;
+  border-radius: 12px; border: 1px solid var(--ch-linha);
+  cursor: zoom-in; object-fit: cover; background: var(--ch-elevado);
+}
+.ch-anexo {
+  display: flex; align-items: center; gap: 10px;
+  max-width: min(100%, 340px); padding: 9px 12px;
+  border: 1px solid var(--ch-linha); border-radius: 12px;
+  background: var(--ch-elevado); color: var(--text);
+  text-decoration: none; font-size: 13px;
+  transition: border-color var(--ch-anim), transform var(--ch-anim);
+}
+.ch-anexo:hover { border-color: color-mix(in srgb, var(--primary) 50%, var(--ch-linha)); transform: translateY(-1px); }
+.ch-anexo__nome { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+.ch-anexo__meta { font-size: 11.5px; color: var(--text-dim); }
+.ch-anexo video, .ch-anexo audio { max-width: 100%; }
+
+/* ── Card de entidade do ERP ──────────────────────────────────────────────── */
+.ch-card {
+  position: relative; display: block; width: 100%; max-width: 400px;
+  margin-top: 6px; padding: 12px 14px 12px 16px;
+  border: 1px solid var(--ch-linha); border-radius: 14px;
+  background: var(--ch-elevado); color: var(--text);
+  text-align: left; text-decoration: none; cursor: pointer; box-shadow: none;
+  transition: transform var(--ch-anim), border-color var(--ch-anim);
+}
+.ch-card:hover { transform: translateY(-1px); border-color: color-mix(in srgb, var(--primary) 45%, var(--ch-linha)); }
+.ch-card__faixa { position: absolute; left: 0; top: 10px; bottom: 10px; width: 3px; border-radius: 0 3px 3px 0; }
+.ch-card__tipo { font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-dim); }
+.ch-card__titulo { font-size: 14px; font-weight: 600; margin-top: 3px; }
+.ch-card__sub { font-size: 12.5px; color: var(--text-dim); margin-top: 2px; }
+.ch-card__meta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; font-size: 11.5px; color: var(--text-dim); }
+
+/* ── Markdown ─────────────────────────────────────────────────────────────── */
+.ch-md p { margin: 0 0 4px; }
+.ch-md p:last-child { margin-bottom: 0; }
+.ch-md a { color: var(--primary); text-decoration: none; }
+.ch-md a:hover { text-decoration: underline; }
+.ch-md code {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  font-size: .88em; padding: 1px 5px; border-radius: 5px;
+  background: var(--ch-elevado); border: 1px solid var(--ch-linha);
+}
+.ch-md blockquote {
+  margin: 4px 0; padding: 2px 0 2px 11px;
+  border-left: 3px solid color-mix(in srgb, var(--primary) 55%, transparent);
+  color: var(--text-dim);
+}
+.ch-md ul, .ch-md ol { margin: 4px 0; padding-left: 22px; }
+.ch-md li { margin: 1px 0; }
+.ch-md hr { border: none; border-top: 1px solid var(--ch-linha); margin: 8px 0; }
+.ch-md .ch-mencao {
+  padding: 1px 5px; border-radius: 5px; font-weight: 600;
+  background: color-mix(in srgb, var(--primary) 18%, transparent); color: var(--primary);
+}
+.ch-md .ch-mencao--eu { background: color-mix(in srgb, var(--atencao) 26%, transparent); }
+.ch-md .ch-mencao--eu { color: #ffc978; }
+html.light .ch-md .ch-mencao--eu { color: #b26b00; }
+
+.ch-cod {
+  position: relative; margin: 6px 0; border-radius: 12px; overflow: hidden;
+  border: 1px solid var(--ch-linha); background: var(--ch-elevado);
+}
+.ch-cod__topo {
+  display: flex; align-items: center; gap: 8px;
+  padding: 5px 10px; border-bottom: 1px solid var(--ch-linha);
+  font-size: 11px; color: var(--text-dim); text-transform: lowercase;
+}
+.ch-cod__copiar { margin-left: auto; border: none; background: none; box-shadow: none; cursor: pointer; color: var(--text-dim); font-size: 11px; font-weight: 600; }
+.ch-cod__copiar:hover { color: var(--text); }
+.ch-cod pre {
+  margin: 0; padding: 11px 13px; overflow-x: auto;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  font-size: 12.5px; line-height: 1.55; tab-size: 2;
+}
+
+/* ── Composer ─────────────────────────────────────────────────────────────── */
+.ch-composer { padding: 10px 16px 14px; border-top: 1px solid var(--ch-linha); position: relative; }
+.ch-composer__caixa {
+  border: 1px solid var(--ch-linha); border-radius: 16px;
+  background: var(--ch-fundo);
+  transition: border-color var(--ch-anim), box-shadow var(--ch-anim);
+}
+.ch-composer__caixa:focus-within {
+  border-color: color-mix(in srgb, var(--primary) 60%, var(--ch-linha));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 14%, transparent);
+}
+.ch-composer textarea {
+  display: block; width: 100%; resize: none; border: none; outline: none; box-shadow: none;
+  background: transparent; color: var(--text);
+  padding: 11px 14px 4px; font: inherit; font-size: 14.5px; line-height: 1.5;
+  max-height: 40dvh; overflow-y: auto;
+}
+.ch-composer__barra { display: flex; align-items: center; gap: 2px; padding: 4px 8px 7px 8px; }
+.ch-composer__enviar {
+  margin-left: auto; display: grid; place-items: center;
+  width: 34px; height: 34px; border: none; border-radius: 10px;
+  background: var(--primary); color: #fff; cursor: pointer; box-shadow: none;
+  transition: opacity var(--ch-anim), transform var(--ch-anim);
+}
+.ch-composer__enviar:disabled { opacity: .35; cursor: default; }
+.ch-composer__dica { font-size: 11px; color: var(--text-dim); padding: 6px 6px 0; }
+
+.ch-resp-alvo {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 8px; padding: 7px 11px;
+  border-radius: 11px; background: var(--ch-elevado);
+  border-left: 3px solid var(--primary);
+  font-size: 12.5px; color: var(--text-dim);
+}
+.ch-resp-alvo span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.ch-fila { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 10px 2px; }
+.ch-fila__item {
+  position: relative; display: flex; align-items: center; gap: 8px;
+  padding: 7px 10px; border-radius: 10px;
+  background: var(--ch-elevado); border: 1px solid var(--ch-linha);
+  font-size: 12px; max-width: 200px;
+}
+.ch-fila__item img { width: 34px; height: 34px; border-radius: 7px; object-fit: cover; }
+.ch-fila__nome { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ch-fila__barra { position: absolute; left: 0; bottom: 0; height: 2px; background: var(--primary); border-radius: 0 2px 2px 0; transition: width 120ms linear; }
+
+.ch-digitando {
+  display: flex; align-items: center; gap: 7px;
+  padding: 0 20px 4px; min-height: 18px;
+  font-size: 12px; color: var(--text-dim);
+}
+.ch-digitando i { width: 4px; height: 4px; border-radius: 50%; background: currentColor; animation: ch-pulo 1.1s infinite; }
+.ch-digitando i:nth-child(2) { animation-delay: .15s; }
+.ch-digitando i:nth-child(3) { animation-delay: .3s; }
+@keyframes ch-pulo { 0%, 60%, 100% { opacity: .25; transform: none; } 30% { opacity: 1; transform: translateY(-2px); } }
+
+/* ── Sugestão de menção ───────────────────────────────────────────────────── */
+.ch-mencoes {
+  position: absolute; left: 16px; right: 16px; bottom: calc(100% - 4px);
+  z-index: 20; max-height: 240px; overflow-y: auto;
+  border: 1px solid var(--ch-linha); border-radius: 14px;
+  background: var(--ch-elevado); padding: 5px;
+  box-shadow: 0 14px 44px rgba(0, 0, 0, .28);
+  animation: ch-sobe var(--ch-anim) both;
+}
+@keyframes ch-sobe { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* ── Painel contextual ────────────────────────────────────────────────────── */
+.ch-painel {
+  --ch-sob: var(--ch-lateral);
+  border-left: 1px solid var(--ch-linha);
+  background: var(--ch-lateral);
+  display: flex; flex-direction: column; min-height: 0; min-width: 0;
+  animation: ch-abre var(--ch-anim) both;
+}
+@keyframes ch-abre { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: none; } }
+.ch-painel__topo {
+  display: flex; align-items: center; gap: 8px;
+  padding: 13px 12px 11px 16px; min-height: 58px;
+  border-bottom: 1px solid var(--ch-linha);
+  font-size: 14.5px; font-weight: 600;
+}
+.ch-painel__corpo { flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: 10px 12px 20px; }
+.ch-painel__secao { font-size: 11px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--text-dim); padding: 14px 6px 6px; }
+
+.ch-abas { display: flex; gap: 2px; padding: 8px 10px; border-bottom: 1px solid var(--ch-linha); overflow-x: auto; scrollbar-width: none; }
+.ch-abas::-webkit-scrollbar { display: none; }
+.ch-aba {
+  flex: none; display: inline-flex; align-items: center; gap: 6px; padding: 6px 11px; min-height: 32px;
+  border: none; border-radius: 9px; background: transparent; box-shadow: none;
+  cursor: pointer; font-size: 12.5px; font-weight: 600; color: var(--text-dim);
+  white-space: nowrap; transition: background var(--ch-anim), color var(--ch-anim);
+}
+.ch-aba:hover { background: var(--ch-hover); color: var(--text); }
+.ch-aba[aria-selected="true"] { background: var(--ch-ativo); color: var(--primary); }
+
+.ch-linha-lista {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; padding: 8px 8px; min-height: 44px;
+  border: none; border-radius: 10px; background: transparent; box-shadow: none;
+  cursor: pointer; text-align: left; color: var(--text); font-size: 13.5px;
+  text-decoration: none;
+  transition: background var(--ch-anim);
+}
+.ch-linha-lista:hover { background: var(--ch-hover); }
+.ch-linha-lista__sub { font-size: 11.5px; color: var(--text-dim); }
+.ch-linha-lista__corpo { min-width: 0; flex: 1; }
+.ch-linha-lista__corpo > * { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.ch-grade-midia { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 84px), 1fr)); gap: 6px; }
+.ch-grade-midia img, .ch-grade-midia video {
+  width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 9px;
+  border: 1px solid var(--ch-linha); cursor: zoom-in; background: var(--ch-elevado);
+}
+
+/* ── Avatar ───────────────────────────────────────────────────────────────── */
+/* O conteúdo é posicionado por `inset`, não por `height: 100%`.
+   Com `inline-grid` + track `auto`, uma altura percentual cria dependência
+   circular (a track depende do conteúdo, o conteúdo depende da track): o
+   navegador desiste e usa a altura INTRÍNSECA da imagem. Foto 120×220 num
+   avatar de 36px virava uma elipse de 36×66 vazando do círculo. Com o
+   container `position: relative` e tamanho fixo, `inset: 0` não é ambíguo. */
+.ch-avatar { position: relative; flex: none; display: inline-block; vertical-align: middle; }
+.ch-avatar > img, .ch-avatar > span {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  border-radius: 50%; overflow: hidden; object-fit: cover;
+  display: grid; place-items: center; color: #fff; font-weight: 600;
+}
+/* O anel (definido em globals.css, `.anel-avatar`) só vale para a FOTO. Nas
+   iniciais o fundo já é uma cor cheia derivada do nome — ali o anel viraria uma
+   borda dupla, e o `background` do .anel-avatar apagaria a cor da pessoa. */
+.ch-avatar > img {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--text) 12%, transparent);
+  background-color: var(--surface-2);
+}
+.ch-avatar--quadrado > img, .ch-avatar--quadrado > span { border-radius: 30%; }
+
+/* A borda do ponto imita o fundo de ONDE ELE ESTÁ. Fixa em --ch-conversa, ela
+   virava um anel claro sobre a sidebar, que é mais escura — era o que dava
+   aparência de foto quebrada. Cada coluna declara o seu `--ch-sob`. */
+.ch-avatar__status {
+  position: absolute; right: 0; bottom: 0; z-index: 1;
+  width: 30%; height: 30%; min-width: 7px; min-height: 7px;
+  border-radius: 50%; border: 2px solid var(--ch-sob, var(--ch-conversa));
+}
+.ch-avatar__status[data-s="online"] { background: var(--ok); }
+.ch-avatar__status[data-s="ausente"] { background: var(--amarelo); }
+.ch-avatar__status[data-s="ocupado"] { background: var(--perigo); }
+.ch-avatar__status[data-s="offline"] { background: var(--neutro); }
+
+/* ── Estados ──────────────────────────────────────────────────────────────── */
+.ch-vazio {
+  display: grid; place-items: center; align-content: center; gap: 12px;
+  padding: 40px 24px; text-align: center; color: var(--text-dim); min-height: 200px;
+}
+.ch-vazio h3 { margin: 0; font-size: 16px; font-weight: 600; color: var(--text); letter-spacing: -.015em; }
+.ch-vazio p { margin: 0; font-size: 13.5px; max-width: 320px; line-height: 1.5; }
+.ch-vazio__icone {
+  display: grid; place-items: center; width: 56px; height: 56px; border-radius: 18px;
+  background: var(--ch-elevado); border: 1px solid var(--ch-linha);
+}
+
+/* Atalhos do estado vazio: Geral, criar grupo e as sugestões de contato. */
+.ch-inicio {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+  gap: 8px; width: min(100%, 520px); margin-top: 8px; text-align: left;
+}
+.ch-inicio__cartao {
+  display: flex; align-items: center; gap: 10px; min-height: var(--tap, 44px); padding: 8px 10px;
+  border: 1px solid var(--ch-linha); border-radius: 12px; background: var(--ch-elevado);
+  box-shadow: none; cursor: pointer; color: var(--text); text-align: left;
+  transition: background var(--ch-anim), border-color var(--ch-anim);
+}
+.ch-inicio__cartao:hover { background: var(--ch-hover); border-color: color-mix(in srgb, var(--primary) 30%, var(--ch-linha)); }
+.ch-inicio__icone {
+  flex: none; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 10px;
+  background: color-mix(in srgb, var(--primary) 14%, transparent);
+}
+.ch-inicio__texto { display: grid; min-width: 0; line-height: 1.25; }
+.ch-inicio__texto b { font-size: 13.5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ch-inicio__texto small { font-size: 12px; color: var(--text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.ch-esqueleto { background: var(--ch-elevado); border-radius: 8px; animation: ch-brilha 1.4s ease-in-out infinite; }
+@keyframes ch-brilha { 0%, 100% { opacity: .5; } 50% { opacity: .85; } }
+
+.ch-aviso {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 6px 14px; font-size: 12px; font-weight: 500;
+  background: color-mix(in srgb, var(--atencao) 16%, transparent);
+  border-bottom: 1px solid var(--ch-linha);
+}
+.ch-aviso { color: #ffc978; }
+html.light .ch-aviso { color: #b26b00; }
+
+.ch-fixadas {
+  display: flex; align-items: center; gap: 9px;
+  padding: 8px 16px; border-bottom: 1px solid var(--ch-linha);
+  background: var(--ch-lateral); font-size: 12.5px; color: var(--text-dim);
+  cursor: pointer; width: 100%; border-left: none; border-right: none; border-top: none;
+  box-shadow: none; text-align: left;
+}
+.ch-fixadas span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.ch-descer {
+  position: absolute; right: 20px; bottom: 16px; z-index: 6;
+  display: flex; align-items: center; gap: 7px;
+  min-height: 36px; padding: 0 14px;
+  border: 1px solid var(--ch-linha); border-radius: 999px;
+  background: var(--ch-elevado); color: var(--text); cursor: pointer;
+  font-size: 12.5px; font-weight: 600;
+  box-shadow: 0 8px 26px rgba(0, 0, 0, .25);
+  animation: ch-sobe var(--ch-anim) both;
+}
+
+/* ── Barra de seleção múltipla ────────────────────────────────────────────── */
+.ch-selecao {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 16px; border-bottom: 1px solid var(--ch-linha);
+  background: var(--ch-ativo); font-size: 13px; font-weight: 600;
+}
+.ch-selecao__acoes { margin-left: auto; display: flex; gap: 4px; }
+
+/* ── Spotlight (⌘K) ───────────────────────────────────────────────────────── */
+.ch-spot-fundo {
+  position: fixed; inset: 0; z-index: 400;
+  display: grid; place-items: start center;
+  padding: clamp(16px, 12vh, 140px) 16px 16px;
+  background: rgba(0, 0, 0, .42);
+  backdrop-filter: blur(10px) saturate(140%);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
+  animation: ch-fade 140ms ease-out both;
+}
+@keyframes ch-fade { from { opacity: 0; } to { opacity: 1; } }
+.ch-spot {
+  --ch-sob: var(--ch-elevado);
+  width: 100%; max-width: 620px; max-height: min(70dvh, 560px);
+  display: flex; flex-direction: column;
+  border: 1px solid var(--ch-linha); border-radius: 18px;
+  background: var(--ch-elevado); color: var(--text);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, .45);
+  overflow: hidden;
+  animation: ch-spot-entra 200ms cubic-bezier(.32, .72, 0, 1) both;
+}
+@keyframes ch-spot-entra { from { opacity: 0; transform: translateY(-10px) scale(.98); } to { opacity: 1; transform: none; } }
+.ch-spot__campo { display: flex; align-items: center; gap: 11px; padding: 15px 18px; border-bottom: 1px solid var(--ch-linha); }
+.ch-spot__campo input {
+  flex: 1; min-width: 0; border: none; outline: none; box-shadow: none;
+  background: transparent; color: var(--text); font-size: 16px; letter-spacing: -.01em;
+}
+.ch-spot__lista { flex: 1; overflow-y: auto; padding: 6px; }
+.ch-spot__grupo { font-size: 10.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--text-dim); padding: 10px 10px 4px; }
+.ch-spot__item {
+  display: flex; align-items: center; gap: 11px;
+  width: 100%; min-height: 44px; padding: 7px 10px;
+  border: none; border-radius: 10px; background: transparent; box-shadow: none;
+  cursor: pointer; text-align: left; color: var(--text); font-size: 13.5px;
+}
+.ch-spot__item[data-ativo="1"] { background: var(--ch-ativo); }
+.ch-spot__item small { display: block; font-size: 11.5px; color: var(--text-dim); }
+.ch-spot__item div { min-width: 0; flex: 1; }
+.ch-spot__item div > * { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ch-spot__rodape {
+  display: flex; align-items: center; gap: 14px;
+  padding: 9px 16px; border-top: 1px solid var(--ch-linha);
+  font-size: 11.5px; color: var(--text-dim);
+}
+
+/* ── Menu de contexto (botão direito) ─────────────────────────────────────── */
+.ch-menu {
+  position: fixed; z-index: 420; min-width: 210px; max-width: 260px;
+  padding: 5px; border-radius: 13px;
+  border: 1px solid var(--ch-linha); background: var(--ch-elevado);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, .38);
+  animation: ch-menu-entra 130ms cubic-bezier(.32, .72, 0, 1) both;
+}
+@keyframes ch-menu-entra { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: none; } }
+.ch-menu__item {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; min-height: 34px; padding: 6px 10px;
+  border: none; border-radius: 8px; background: transparent; box-shadow: none;
+  cursor: pointer; text-align: left; color: var(--text); font-size: 13.5px;
+}
+.ch-menu__item:hover { background: var(--ch-hover); }
+.ch-menu__item--perigo { color: var(--perigo); }
+.ch-menu__item kbd { margin-left: auto; font: inherit; font-size: 11px; color: var(--text-dim); }
+.ch-menu__sep { height: 1px; margin: 4px 6px; background: var(--ch-linha); }
+
+/* ── Modal ────────────────────────────────────────────────────────────────── */
+.ch-modal-fundo {
+  position: fixed; inset: 0; z-index: 410;
+  display: grid; place-items: center; padding: 20px;
+  background: rgba(0, 0, 0, .42);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  animation: ch-fade 140ms ease-out both;
+}
+.ch-modal {
+  --ch-sob: var(--ch-elevado);
+  width: 100%; max-width: 460px; max-height: 84dvh;
+  display: flex; flex-direction: column;
+  border: 1px solid var(--ch-linha); border-radius: 20px;
+  background: var(--ch-elevado); color: var(--text);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, .45);
+  overflow: hidden;
+  animation: ch-spot-entra 200ms cubic-bezier(.32, .72, 0, 1) both;
+}
+.ch-modal__topo { padding: 18px 20px 12px; font-size: 17px; font-weight: 600; letter-spacing: -.015em; }
+.ch-modal__corpo { flex: 1; overflow-y: auto; padding: 0 20px; }
+.ch-modal__rodape { display: flex; gap: 9px; justify-content: flex-end; padding: 14px 20px 18px; }
+
+.ch-campo {
+  width: 100%; min-height: 42px; padding: 10px 13px;
+  border: 1px solid var(--ch-linha); border-radius: 11px;
+  background: var(--ch-fundo); color: var(--text);
+  font: inherit; font-size: 14px; box-shadow: none; outline: none;
+  transition: border-color var(--ch-anim);
+}
+.ch-campo:focus { border-color: color-mix(in srgb, var(--primary) 60%, var(--ch-linha)); }
+.ch-rotulo { display: block; font-size: 12px; font-weight: 600; color: var(--text-dim); margin: 14px 0 6px; }
+
+.ch-btn {
+  min-height: 40px; padding: 0 18px; border-radius: 11px;
+  border: 1px solid var(--ch-linha); background: var(--ch-fundo); color: var(--text);
+  font-size: 14px; font-weight: 600; cursor: pointer; box-shadow: none;
+  transition: filter var(--ch-anim), transform var(--ch-anim);
+}
+.ch-btn--primario { border-color: transparent; background: var(--primary); color: #fff; }
+.ch-btn:disabled { opacity: .45; cursor: default; }
+
+.ch-alternar { display: flex; align-items: center; gap: 11px; padding: 11px 2px; cursor: pointer; }
+.ch-alternar input { width: 18px; height: 18px; accent-color: var(--primary); flex: none; }
+.ch-alternar__texto { font-size: 13.5px; }
+.ch-alternar__sub { display: block; font-size: 11.5px; color: var(--text-dim); margin-top: 1px; }
+
+.ch-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.ch-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  min-height: 30px; padding: 3px 9px 3px 5px;
+  border: none; border-radius: 999px; box-shadow: none; cursor: pointer;
+  background: color-mix(in srgb, var(--primary) 15%, transparent);
+  color: var(--primary); font-size: 12.5px; font-weight: 600;
+}
+
+/* ── Visualizador de arquivo ──────────────────────────────────────────────── */
+.ch-visor {
+  position: fixed; inset: 0; z-index: 430;
+  display: grid; place-items: center; padding: 24px;
+  background: rgba(0, 0, 0, .88); cursor: zoom-out;
+  animation: ch-fade 140ms ease-out both;
+}
+.ch-visor img, .ch-visor video { max-width: 94vw; max-height: 86dvh; object-fit: contain; border-radius: 10px; cursor: default; }
+.ch-visor iframe { width: min(94vw, 900px); height: 86dvh; border: none; border-radius: 10px; background: #fff; }
+.ch-visor__barra {
+  position: fixed; top: calc(14px + var(--safe-t, 0px)); right: 14px; left: 14px;
+  display: flex; align-items: center; gap: 10px; color: #fff;
+}
+.ch-visor__nome { flex: 1; min-width: 0; font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ch-visor__botao {
+  display: grid; place-items: center; width: 40px; height: 40px;
+  border-radius: 11px; border: 1px solid rgba(255, 255, 255, .22);
+  background: rgba(255, 255, 255, .1); color: #fff; cursor: pointer; box-shadow: none;
+}
+
+/* ── Teclado de emoji ─────────────────────────────────────────────────────── */
+.ch-emojis__fechar {
+  margin-left: auto; flex: none;
+  min-width: 34px; min-height: 34px; border: none; border-radius: 8px;
+  background: transparent; cursor: pointer; box-shadow: none;
+  display: grid; place-items: center;
+}
+.ch-emojis__fechar:hover { background: var(--ch-hover); }
+
+.ch-emojis {
+  position: absolute; bottom: 54px; right: 8px;
+  z-index: 22; width: min(340px, calc(100vw - 32px));
+  border: 1px solid var(--ch-linha); border-radius: 16px; overflow: hidden;
+  background: var(--ch-elevado); box-shadow: 0 18px 50px rgba(0, 0, 0, .35);
+  animation: ch-sobe var(--ch-anim) both;
+}
+.ch-emojis__abas { display: flex; gap: 1px; padding: 6px; border-bottom: 1px solid var(--ch-linha); overflow-x: auto; scrollbar-width: none; }
+.ch-emojis__abas::-webkit-scrollbar { display: none; }
+.ch-emojis__abas button {
+  flex: none; min-width: 34px; min-height: 34px; border: none; border-radius: 8px;
+  background: transparent; cursor: pointer; font-size: 18px; line-height: 1; box-shadow: none;
+}
+.ch-emojis__abas button[aria-selected="true"] { background: var(--ch-ativo); }
+.ch-emojis__grade {
+  max-height: 210px; overflow-y: auto; padding: 6px;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 36px), 1fr)); gap: 1px;
+}
+.ch-emojis__grade button {
+  min-height: 36px; border: none; border-radius: 8px; background: transparent;
+  cursor: pointer; font-size: 21px; line-height: 1; box-shadow: none;
+}
+.ch-emojis__grade button:hover { background: var(--ch-hover); }
+
+/* ── Barra rápida de reação ───────────────────────────────────────────────── */
+.ch-reagir-rapido {
+  position: fixed; z-index: 425; display: flex; gap: 1px; padding: 5px;
+  border: 1px solid var(--ch-linha); border-radius: 14px;
+  background: var(--ch-elevado); box-shadow: 0 14px 40px rgba(0, 0, 0, .38);
+  animation: ch-menu-entra 130ms cubic-bezier(.32, .72, 0, 1) both;
+}
+.ch-reagir-rapido button {
+  min-width: 38px; min-height: 38px; border: none; border-radius: 10px;
+  background: transparent; cursor: pointer; font-size: 21px; line-height: 1; box-shadow: none;
+  transition: transform var(--ch-anim), background var(--ch-anim);
+}
+.ch-reagir-rapido button:hover { background: var(--ch-hover); transform: scale(1.15); }
+
+/* ═══ Celular ═══════════════════════════════════════════════════════════════
+   Uma coluna só. A sidebar, a conversa e o painel viram telas que se substituem
+   — sem isso a conversa nasceria fora da tela, que foi o defeito da versão
+   anterior. */
+@media (max-width: 900px) {
+  .ch, .ch[data-painel="1"] {
+    grid-template-columns: minmax(0, 1fr);
+    height: calc(100dvh - var(--tabbar-h, 0px) - 120px);
+    min-height: 340px;
+    border-radius: 18px;
+  }
+  .ch > * { grid-area: 1 / 1; }
+  .ch[data-vista="lateral"] .ch-conversa,
+  .ch[data-vista="lateral"] .ch-painel,
+  .ch[data-vista="conversa"] .ch-lateral,
+  .ch[data-vista="conversa"] .ch-painel,
+  .ch[data-vista="painel"] .ch-lateral,
+  .ch[data-vista="painel"] .ch-conversa { display: none; }
+
+  /* Em tela cheia no celular o que come altura é a barra de baixo mais a área
+     segura; o topo respeita o notch. Sem isto o composer fica atrás da tabbar. */
+  /* O `[data-painel]` precisa estar aqui: ele tem especificidade maior que a
+     classe, então sem esta segunda parte a altura voltava ao tamanho de cartão
+     assim que o painel abrisse. */
+  .ch--cheia, .ch--cheia[data-painel="1"] {
+    height: calc(100dvh - var(--tabbar-h, 0px) - var(--safe-b, 0px));
+    padding-top: var(--safe-t, 0px);
+    border-left: none;
+  }
+  /* A área segura de baixo já saiu da altura do container — repetir no composer
+     empurraria ele para cima de um vão vazio. */
+  .ch--cheia .ch-composer { padding-bottom: 10px; }
+
+  /* No celular o teclado de emoji ocupa a largura toda: 340px encostado à
+     direita deixava metade dele fora numa tela de 320. */
+  .ch-emojis { left: 8px; right: 8px; width: auto; }
+  .ch-puxador { display: none; }        /* redimensionar é gesto de mouse */
+
+  .ch-lateral, .ch-painel { border-right: none; border-left: none; }
+
+  /* A 320px não cabem quatro botões de 44px ao lado do título: "membros" e
+     "painel" migram para o menu do "⋮", que continua alcançável. */
+  .ch-cabecalho__acoes .ch-icone[data-so-desktop] { display: none; }
+  .ch-cabecalho { padding-left: 8px; padding-right: 6px; gap: 6px; }
+  .ch-msg { padding-left: 12px; padding-right: 12px; grid-template-columns: 36px minmax(0, 1fr); gap: 8px; }
+  .ch-dia { padding-left: 12px; padding-right: 12px; }
+  .ch-composer { padding: 8px 10px calc(10px + var(--safe-b, 0px)); }
+  .ch-digitando { padding-left: 12px; }
+  .ch-descer { right: 12px; }
+  .ch-anexo-img { max-width: 100%; }
+  .ch-card { max-width: 100%; }
+
+  /* Sem hover no toque: as ações vivem no "⋯", que é sempre visível. */
+  .ch-acoes { position: static; display: none; }
+  .ch-acoes[data-aberto="1"] {
+    display: flex; flex-wrap: wrap; justify-content: flex-end;
+    margin-top: 6px; grid-column: 2;
+  }
+  .ch-msg__hora-lado { display: none; }
+  .ch-item__estrela { opacity: 1; }
+  .ch-secao__acao { opacity: 1; }
+
+  .ch-spot-fundo { padding: 0; place-items: stretch; }
+  .ch-spot {
+    max-width: none; max-height: none; height: 100dvh; border-radius: 0; border: none;
+    padding-top: var(--safe-t, 0px); padding-bottom: var(--safe-b, 0px);
+  }
+
+  /* Modal vira folha presa embaixo, com o botão principal no alcance do polegar. */
+  .ch-modal-fundo { place-items: end stretch; padding: 0; }
+  .ch-modal {
+    max-width: none; max-height: 90dvh;
+    border-radius: 22px 22px 0 0; border-bottom: none;
+    padding-bottom: var(--safe-b, 0px);
+    animation: ch-folha 220ms cubic-bezier(.32, .72, 0, 1) both;
+  }
+  @keyframes ch-folha { from { transform: translateY(100%); } to { transform: none; } }
+
+  .ch-visor iframe { width: 100vw; height: 80dvh; border-radius: 0; }
+}
+
+/* Alvos de toque de 44px no celular — no desktop 34px basta e respira melhor. */
+@media (max-width: 900px) {
+  .ch-icone, .ch-acoes button, .ch-avatar { min-width: var(--tap, 44px); min-height: var(--tap, 44px); }
+  .ch-avatar { min-width: 0; min-height: 0; }   /* avatar não é alvo de toque */
+  .ch-item { min-height: var(--tap, 44px); }
+  .ch-menu__item, .ch-linha-lista, .ch-spot__item, .ch-aba { min-height: var(--tap, 44px); }
+  .ch-composer__enviar { width: var(--tap, 44px); height: var(--tap, 44px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ch *, .ch-spot, .ch-modal, .ch-menu, .ch-reagir-rapido { animation: none !important; transition: none !important; }
+}

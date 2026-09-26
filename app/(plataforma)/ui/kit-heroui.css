@@ -1,0 +1,69 @@
+/* Peças do kit sobre o HeroUI v3 — cores.tsx, formularios.tsx, exibicao.tsx,
+   navegacao.tsx. Só o que o CSS do HeroUI não faz: tokens da casa, alvo de 44px
+   no toque e o colapso a 320px. */
+
+/* ── Colors ── */
+.ui-cor { display: grid; gap: 12px; width: 100%; max-width: 320px; min-width: 0; }
+.ui-cor__area { width: 100%; aspect-ratio: 4 / 3; height: auto; border-radius: var(--r-sm, 12px); }
+.ui-cor__matiz { width: 100%; }
+.ui-cor__amostra {
+  display: inline-block; width: 18px; height: 18px; border-radius: 6px;
+  border: 1px solid var(--border);
+}
+.ui-amostras { flex-wrap: wrap; }
+.ui-cor-gatilho {
+  display: inline-flex; align-items: center; gap: 8px; padding: 3px; flex: none;
+  border: 1px solid var(--border); border-radius: 10px; background: var(--surface-2, transparent);
+  color: var(--text); cursor: pointer; font: inherit;
+}
+.ui-cor-gatilho:disabled { opacity: .5; cursor: not-allowed; }
+.ui-cor-gatilho .ui-cor__amostra { border-radius: 7px; }
+.ui-cor-gatilho__hex { font-size: 12.5px; font-variant-numeric: tabular-nums; padding-inline-end: 6px; }
+
+/* ── Forms ── */
+.ui-opcoes { display: grid; gap: 10px; min-width: 0; }
+.ui-opcoes[data-deitado] { display: flex; flex-wrap: wrap; gap: 8px 18px; }
+.ui-opcoes[data-cartao] { gap: 6px; }
+.ui-opcoes[data-cartao] .ui-opcoes__item {
+  align-items: flex-start; padding: 9px 12px; min-height: var(--tap, 44px);
+  border: 1px solid var(--border); border-radius: var(--r-sm, 12px);
+}
+.ui-opcoes[data-cartao] .ui-opcoes__item[data-selected] {
+  border-color: var(--opcao-cor, var(--primary));
+  background: color-mix(in srgb, var(--opcao-cor, var(--primary)) 10%, var(--surface));
+}
+.ui-busca { min-width: 0; }
+.ui-busca__lupa { display: inline-flex; color: var(--text-dim); padding-inline-start: 10px; }
+.ui-busca__limpar { display: inline-flex; align-items: center; justify-content: center; }
+.ui-adorno { min-width: 0; }
+
+/* ── Data Display ── */
+.ui-avatares { display: inline-flex; align-items: center; }
+.ui-avatares__um { display: inline-flex; border-radius: 50%; box-shadow: 0 0 0 2px var(--bg, #fff); }
+.ui-avatares__um + .ui-avatares__um,
+.ui-avatares__mais { margin-inline-start: calc(var(--av) * -0.3); }
+.ui-avatares__mais {
+  display: inline-grid; place-items: center; width: var(--av); height: var(--av);
+  border-radius: 50%; font-size: 12px; font-weight: 700; color: var(--text-dim);
+  background: var(--surface-2, rgba(127, 127, 127, 0.16)); box-shadow: 0 0 0 2px var(--bg, #fff);
+}
+.ui-medidor { width: 100%; min-width: 0; }
+
+/* ── Navigation ── */
+.ui-trilha { min-width: 0; flex-wrap: wrap; }
+.ui-trilha-voltar {
+  display: inline-flex; align-items: center; gap: 4px; min-height: var(--tap, 44px);
+  color: var(--text-dim); font-size: 14px; text-decoration: none;
+}
+.ui-paginacao__de { color: var(--text-dim); font-size: 13px; padding-inline: 6px; align-self: center; }
+
+@media (pointer: coarse) {
+  .ui-cor-gatilho { min-width: var(--tap, 44px); min-height: var(--tap, 44px); justify-content: center; }
+  .ui-opcoes__item { min-height: var(--tap, 44px); }
+  .ui-busca .search-field__group,
+  .ui-adorno { min-height: var(--tap, 44px); }
+  .ui-busca__limpar { min-width: var(--tap, 44px); min-height: var(--tap, 44px); }
+  .ui-paginacao .pagination__link,
+  .ui-paginacao .pagination__previous,
+  .ui-paginacao .pagination__next { min-width: var(--tap, 44px); min-height: var(--tap, 44px); }
+}

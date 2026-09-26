@@ -1,0 +1,262 @@
+/*
+  Configurações › Telas — a barra de perfis e a lista de telas.
+  ─────────────────────────────────────────────────────────────────────────────
+  Este arquivo existe porque o estilo destas peças morava no `editor.css`, que
+  só era importado pelo editor de arrastar. Quando o editor saiu, o CSS foi
+  junto e a tela apareceu crua — chips sem forma, `select` ocupando a largura
+  inteira, caixas de seleção do navegador. Não era desenho ruim: era desenho
+  ausente. Agora o estilo mora com quem o usa.
+
+  Duas regras que valem para tudo aqui:
+
+  • RESPOSTA NO TOQUE, não na soltura. Todo alvo afunda um pouco no `:active`,
+    em 100ms. Feedback que só chega no `click` é lido como travamento.
+  • CAMPO TEM A LARGURA DO QUE ELE GUARDA. Um seletor de formato com 900px de
+    largura para caber "16:9" faz a linha inteira parecer um formulário de
+    cadastro, e esconde que aquilo é um ajuste pequeno.
+*/
+
+/* ── Perfis: qual desenho está sendo mexido ─────────────────────────────── */
+
+.pf-barra { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
+.pf-abas { display: flex; gap: 8px; align-items: stretch; }
+
+.pf-aba,
+.pf-novo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 9px 15px;
+  min-height: var(--tap, 44px);
+  border-radius: 13px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+  flex: none;
+  transition: transform 100ms ease-out, border-color 150ms ease, background 150ms ease;
+}
+.pf-aba:active,
+.pf-aba:hover:not(.pf-aba-on),
+.pf-novo:hover { border-color: var(--text-dim); }
+.pf-aba:focus-visible,
+.pf-novo:focus-visible { outline: var(--foco-largura) solid var(--foco-cor); outline-offset: var(--foco-offset); }
+
+/* Peso e tamanho fazem a hierarquia dentro do chip: o nome é o que se procura,
+   a contagem é contexto. Tracking levemente negativo no nome — ele é o texto
+   maior da peça, e letra grande com tracking neutro lê espaçada demais. */
+.pf-aba strong { font-size: 13.5px; font-weight: 800; letter-spacing: -0.01em; }
+.pf-aba span { font-size: 11.5px; color: var(--text-dim); font-weight: 600; }
+
+/* O perfil em edição é o ÚNICO aceso: com dois destaques, a pessoa perde de
+   vista qual desenho está mexendo — e salva no perfil errado. */
+.pf-aba-on {
+  border-color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+  box-shadow: inset 0 0 0 1px var(--primary);
+}
+.pf-aba-on strong { color: var(--primary-texto, var(--primary)); }
+
+.pf-novo { flex-direction: row; align-items: center; gap: 7px; font-weight: 700; border-style: dashed; font-size: 13.5px; }
+
+/* ── A linha de propriedades do perfil ──────────────────────────────────── */
+
+.pf-props {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 10px 12px;
+  border-radius: 13px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+
+.pf-nome {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: none;
+  border: 0;
+  color: var(--text);
+  font-size: 14.5px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  min-height: var(--tap, 44px);
+  border-radius: 9px;
+  padding: 0 4px;
+  transition: transform 100ms ease-out, color 150ms ease;
+}
+.pf-nome:hover { color: var(--primary-texto, var(--primary)); }
+
+.pf-campo {
+  font: inherit;
+  font-weight: 800;
+  padding: 6px 11px;
+  border-radius: 9px;
+  min-height: var(--tap, 44px);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+/* O rótulo é legenda: cinza, pequeno, à esquerda do campo. O campo é que tem
+   presença. */
+.pf-prop {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  color: var(--text-dim);
+  font-weight: 600;
+}
+.pf-prop select,
+.pf-prop input {
+  font: inherit;
+  font-weight: 700;
+  color: var(--text);
+  padding: 6px 10px;
+  border-radius: 9px;
+  min-height: var(--tap, 44px);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  /* `auto` e não 100%: sem isto o seletor de formato estica pela linha toda e
+     um ajuste de dois caracteres parece um formulário. */
+  width: auto;
+  max-width: 100%;
+  transition: border-color 150ms ease;
+}
+.pf-prop select:focus-visible,
+.pf-prop input:focus-visible { outline: var(--foco-largura) solid var(--foco-cor); outline-offset: 1px; }
+.pf-prop input[type="number"] { width: 76px; text-align: right; }
+.pf-prop em { font-style: normal; font-weight: 700; color: var(--text); }
+
+.pf-check { gap: 9px; cursor: pointer; user-select: none; }
+.pf-check input { width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer; }
+
+.pf-acoes { display: inline-flex; gap: 6px; margin-left: auto; }
+.pf-acoes button {
+  display: grid;
+  place-items: center;
+  min-width: var(--tap, 44px);
+  min-height: var(--tap, 44px);
+  border-radius: 11px;
+  border: 1px solid var(--border);
+  background: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: transform 100ms ease-out, color 150ms ease, border-color 150ms ease;
+}
+.pf-acoes button:hover:not(:disabled) { color: var(--text); border-color: var(--text-dim); }
+.pf-acoes button:disabled { opacity: 0.4; cursor: not-allowed; }
+/* Sem hex de reserva: cor de status vem do token, que muda de tema — um
+   `#ff453a` fixo reprova em contraste sobre o cartão branco do tema claro. */
+.pf-perigo:not(:disabled):hover { color: var(--perigo); border-color: currentColor; }
+
+/* ── A lista de telas ───────────────────────────────────────────────────── */
+
+.lt-lista { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+
+.lt-resumo { font-size: 12.5px; color: var(--text-dim); font-weight: 600; }
+.lt-resumo strong { color: var(--atencao); font-weight: 800; }
+
+.lt-linha {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  min-width: 0;
+  transition: opacity 150ms ease, border-color 150ms ease, background 150ms ease;
+}
+.lt-linha:hover { border-color: var(--text-dim); }
+
+/* Desligada NÃO some: fica apagada e legível, porque é dela que a pessoa vai
+   lembrar quando quiser religar. Opacidade baixa demais viraria "sumiu". */
+.lt-linha[data-off="1"] { opacity: 0.55; background: var(--surface-2); }
+
+.lt-selo {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  flex: none;
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+  transition: background 150ms ease;
+}
+.lt-linha[data-off="1"] .lt-selo { background: var(--surface-2); }
+
+.lt-texto { min-width: 0; flex: 1; }
+.lt-nome { font-size: 14.5px; font-weight: 800; color: var(--text); letter-spacing: -0.01em; }
+.lt-desc { font-size: 12.5px; color: var(--text-dim); }
+
+.lt-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  min-height: var(--tap, 44px);
+  cursor: pointer;
+  flex: none;
+  user-select: none;
+}
+.lt-switch input { width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer; }
+
+.lt-tempo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--text-dim);
+  min-height: var(--tap, 44px);
+  flex: none;
+}
+.lt-tempo input {
+  font: inherit;
+  font-weight: 700;
+  color: var(--text);
+  width: 68px;
+  text-align: right;
+  padding: 6px 10px;
+  border-radius: 9px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  min-height: 36px;
+}
+.lt-tempo input:focus-visible { outline: var(--foco-largura) solid var(--foco-cor); outline-offset: 1px; }
+
+.lt-ordem { display: inline-flex; gap: 4px; flex: none; }
+
+.lt-vazio { font-size: 13px; color: var(--text-dim); padding: 10px 2px; }
+
+/*
+  No celular a linha vira duas: o nome e a descrição em cima, ocupando a
+  largura, e os controles embaixo numa fileira só.
+
+  O SELO SAI. Ele é o que dá forma à linha no desktop, mas aqui os 38px que
+  ocupa são o que faz as setas de ordem quebrarem para uma terceira linha — e
+  aí sobra um vão vazio dentro do cartão. O ícone é decoração: quem lê o nome
+  e vê a caixa "No ar" já sabe o estado sem ele.
+*/
+@media (max-width: 640px) {
+  .lt-linha { gap: 10px 12px; }
+  .lt-selo { display: none; }
+  .lt-texto { flex-basis: 100%; order: -1; }
+  .lt-ordem { margin-left: auto; }
+  .pf-acoes { margin-left: 0; }
+}
+
+/* Movimento reduzido: o afundar no toque sai, o resto (cor, opacidade) fica —
+   é o que continua dizendo que o toque foi registrado. */
+@media (prefers-reduced-motion: reduce) {
+  .pf-aba, .pf-novo, .pf-nome, .pf-acoes button { transition: color 150ms ease, border-color 150ms ease; }
+  .pf-aba:active, .pf-novo:active, .pf-nome:active, .pf-acoes button:active:not(:disabled) { transform: none; }
+}

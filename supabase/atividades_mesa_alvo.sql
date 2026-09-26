@@ -1,0 +1,13 @@
+-- Tablet-alvo da atividade: em QUAL tablet ela cai (independente da config fixa
+-- da pessoa). Qualquer pessoa de Produção/Logística pode receber em qualquer
+-- tablet de produção via este campo. Rodar no Supabase NOVO. Tolerante: sem a
+-- coluna, tudo se comporta como hoje (dirigida cai no tablet fixo / web).
+--
+-- Semântica:
+--   DIRIGIDA (para_id setado, pool=false):
+--     mesa_alvo = "Mesa X"  → cai no tablet "Mesa X" (pessoa aparece ad-hoc lá)
+--     mesa_alvo = NULL      → só no sistema (Minhas atividades), sem tablet
+--   POOL (para_id NULL, pool=true):
+--     mesa_alvo = "Mesa X"  → só no tablet "Mesa X"
+--     mesa_alvo = NULL      → qualquer tablet do setor (comportamento atual)
+alter table public.atividades add column if not exists mesa_alvo text;

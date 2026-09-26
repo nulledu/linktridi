@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Gaius Produção</string>
+    <!-- Base do servidor (sem barra no fim). O app chama /api/device/* aqui. -->
+    <string name="base_url">https://tridigaius.vercel.app</string>
+</resources>

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <!--
+      Os receivers moram no módulo de quiosque e chegam no APK pelo merge de
+      manifesto. O :app não declara nada disso — é o núcleo que sabe ligar a TV.
+    -->
+    <application>
+        <receiver
+            android:name="com.tridi.tv.core.kiosk.BootReceiver"
+            android:enabled="true"
+            android:exported="true"
+            android:directBootAware="true">
+            <intent-filter android:priority="1000">
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                <action android:name="com.htc.intent.action.QUICKBOOT_POWERON" />
+            </intent-filter>
+            <!--
+              "Acabei de ser atualizado": é o que traz a parede de volta ao
+              painel depois de uma atualização remota, em vez de deixá-la na
+              grade de apps até alguém subir a escada.
+
+              Vai num filtro separado porque MY_PACKAGE_REPLACED não carrega
+              dados e não convive com os de boot no mesmo bloco. Continua
+              valendo no Android 8+, onde quase todo broadcast implícito foi
+              barrado no manifesto: este é uma das exceções, justamente por
+              existir para o app que acabou de ser trocado.
+            -->
+            <intent-filter>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name="com.tridi.tv.core.kiosk.VigiaReceiver"
+            android:enabled="true"
+            android:exported="false" />
+
+        <!--
+          Device Owner (nível 3). Fica declarado sempre; só tem efeito na TV que
+          foi provisionada com `dpm set-device-owner`. Numa TV comum é inerte.
+        -->
+        <receiver
+            android:name="com.tridi.tv.core.kiosk.AdminReceiver"
+            android:exported="true"
+            android:permission="android.permission.BIND_DEVICE_ADMIN">
+            <meta-data
+                android:name="android.app.device_admin"
+                android:resource="@xml/device_admin" />
+            <intent-filter>
+                <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
+            </intent-filter>
+        </receiver>
+    </application>
+</manifest>

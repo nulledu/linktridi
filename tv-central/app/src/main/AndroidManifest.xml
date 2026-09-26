@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Update silencioso da frota: o device owner instala sem prompt; esta é a base do PackageInstaller. -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <!-- RECEIVE_BOOT_COMPLETED entra pelo merge do :core:kiosk. -->
+
+    <!-- Roda em TV (sem toque) e em tablet/totem (com toque). -->
+    <uses-feature android:name="android.software.leanback" android:required="false" />
+    <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
+
+    <application
+        android:name=".TridiTvApp"
+        android:allowBackup="false"
+        android:icon="@mipmap/ic_launcher"
+        android:banner="@drawable/tv_banner"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:networkSecurityConfig="@xml/network_security_config"
+        android:theme="@style/Theme.TridiTV">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:excludeFromRecents="true"
+            android:screenOrientation="unspecified"
+            android:resizeableActivity="true"
+            android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|keyboardHidden|uiMode|density|navigation">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+            </intent-filter>
+
+            <!--
+              Nível 2 do auto-start: o app pode ser definido como launcher da TV.
+              Aí não existe "abrir sozinho" — ele É a primeira tela, e volta
+              sozinho depois de qualquer crash ou update do sistema.
+              Fica desligado por padrão (o usuário escolhe na TV); a presença do
+              filtro é o que torna a escolha possível.
+            -->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.HOME" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <!-- Entrega o APK baixado ao instalador do Android (update assistido).
+             Sem isto, passar o arquivo entre apps lanca FileUriExposedException
+             do Android 7 em diante. -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
+        <!-- Resultado do commit de instalação da frota (registra falha; no
+             sucesso de auto-update o processo é reiniciado antes de logar). -->
+        <receiver
+            android:name=".fleet.FleetInstallReceiver"
+            android:exported="false" />
+
+        <!--
+          O "dedo": confirma a instalação numa TV que não pode ser device owner
+          (TV box sem porta USB e sem depuração por rede — nelas o ADB, e com
+          ele o device owner, simplesmente não existe).
+
+          Fica DESLIGADO até alguém ligar em Ajustes → Acessibilidade, com o
+          controle remoto. A permissão BIND_ACCESSIBILITY_SERVICE é exigida
+          pelo sistema: garante que só o próprio Android pode iniciá-lo.
+        -->
+        <service
+            android:name=".fleet.DedoDaFrota"
+            android:exported="true"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/dedo_da_frota" />
+        </service>
+    </application>
+</manifest>

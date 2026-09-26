@@ -1,0 +1,76 @@
+/* ── Tabela do sistema (`DataList` no computador) — o Table do HeroUI v3 ─────
+   A gramática é a variante `primary` dele: uma BANDEJA apagada que segura o
+   cabeçalho, e o corpo como um CARTÃO sólido dentro dela, com raio só nos
+   cantos de fora. O CSS do HeroUI mora em `@layer components`; este arquivo é
+   sem camada, então vence sem `!important`. O que muda em cima dele:
+
+   - Cartão SÓLIDO (`--pop-bg`), não o `bg-surface` dele: o nosso `--surface`
+     é vidro translúcido no escuro, e translúcido sobre a bandeja translúcida
+     vira cinza sujo (ver memória "translúcido empilhado").
+   - Bandeja e hover saem de `--text` misturado, pra acompanhar os dois temas
+     e qualquer escopo de tokens (.tf-scope etc.) sem tabela de cores própria.
+   - Foco na cor da marca (`--primary`), não no `--accent` do HeroUI.
+   - Número alinhado por `tabular-nums` — coluna de valor não dança. */
+
+.table-root.ui-tabela {
+  --tb-raio: var(--r-md, 16px);
+  --tb-bandeja: color-mix(in srgb, var(--text) 5%, transparent);
+  --tb-cartao: var(--pop-bg, var(--surface));
+  --tb-linha: color-mix(in srgb, var(--text) 8%, transparent);
+  --tb-hover: color-mix(in srgb, var(--text) 4%, var(--tb-cartao));
+  --focus: var(--primary);
+  background: var(--tb-bandeja);
+  border-radius: calc(var(--tb-raio) + 4px);
+  padding: 0 4px 4px;
+  color: var(--text);
+}
+
+.ui-tabela .table__content { font-size: 13.5px; font-variant-numeric: tabular-nums; }
+.ui-tabela .table__header { background: transparent; border: 0; }
+
+.ui-tabela .table__column {
+  padding: 10px 14px;
+  font-size: 12px; font-weight: 600; letter-spacing: .01em;
+  color: var(--text-dim);
+  white-space: nowrap;
+  vertical-align: middle;
+}
+.ui-tabela .table__column::after { background: var(--tb-linha); }
+@media (hover: hover) {
+  .ui-tabela .table__column[data-allows-sorting="true"]:hover { color: var(--text); }
+}
+.ui-tabela .table__sortable-column-header { gap: 6px; }
+.ui-tabela .table__sortable-column-indicator { display: inline-grid; width: 12px; height: 12px; }
+
+.ui-tabela .table__cell {
+  padding: 12px 14px;
+  background: var(--tb-cartao);
+  color: var(--text);
+  font-size: 13.5px;
+  border-bottom: 1px solid var(--tb-linha);
+  vertical-align: middle;
+}
+.ui-tabela .table__body tr:last-child .table__cell { border-bottom: 0; }
+.ui-tabela[data-densa] .table__cell { padding: 8px 12px; }
+.ui-tabela[data-densa] .table__column { padding: 8px 12px; }
+
+/* Cantos de fora do cartão no nosso raio (o dele segue `--radius`, que é 26). */
+.ui-tabela .table__body tr:first-child td:first-child { border-start-start-radius: var(--tb-raio); }
+.ui-tabela .table__body tr:first-child td:last-child { border-start-end-radius: var(--tb-raio); }
+.ui-tabela .table__body tr:last-child td:first-child { border-end-start-radius: var(--tb-raio); }
+.ui-tabela .table__body tr:last-child td:last-child { border-end-end-radius: var(--tb-raio); }
+
+@media (hover: hover) {
+  .ui-tabela .table__row:hover .table__cell { background: var(--tb-hover); }
+}
+.ui-tabela[data-abre] .table__row { cursor: pointer; }
+.ui-tabela .table__row[data-selected="true"] .table__cell {
+  background: color-mix(in srgb, var(--primary) 8%, var(--tb-cartao));
+}
+
+/* O invólucro de cada célula só existe pra separar clique de controle de
+   clique de linha — não pode mexer no layout de quem está dentro. */
+.ui-tabela__cel { display: contents; }
+
+/* Rolagem lateral mora DENTRO da bandeja (nunca na página). */
+.ui-tabela .table__scroll-container { overscroll-behavior-x: contain; }

@@ -1,0 +1,11 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <!-- Foguete (inspirado em Tabler 'rocket') -->
+    <group android:translateX="30" android:translateY="30" android:scaleX="2" android:scaleY="2">
+        <path android:fillColor="#FFFFFF"
+            android:pathData="M4,13a8,8 0,0 1,7 -7a6,6 0,0 1,6 -6a6,6 0,0 1,6 6a8,8 0,0 1,-7 7l-2.5,0l-3.5,3.5z" />
+        <path android:fillColor="#FFFFFF"
+            android:pathData="M7,14a6,6 0,0 0,-3 6a6,6 0,0 0,6 -3" />
+    </group>
+</vector>

@@ -1,0 +1,105 @@
+TRIDI PAINÉIS — Central de Painéis para Android TV
+APK: TridiPaineis-v1.2.apk        gerado em 08/08/2026
+==================================================================
+
+O QUE É
+  App de TV que mostra os PERFIS montados no sistema — Comercial,
+  Produção, Logística, ou quantos você criar. Cada TV escolhe o seu.
+  Substitui o app antigo (tv-app). Já vem apontando para
+  https://tridigaius.vercel.app.
+
+COMO INSTALAR NA TV
+  1. Na TV: Configurações > Segurança > permitir "fontes desconhecidas"
+     (ou "instalar apps desconhecidos" para o gerenciador de arquivos).
+  2. Espete o pen drive na TV.
+  3. Abra o gerenciador de arquivos da TV (em TV box costuma vir um;
+     se não tiver, instale "X-plore" ou "File Commander" pela Play Store).
+  4. Abra TridiPaineis/TridiPaineis-v1.2.apk e confirme a instalação.
+     Se já houver uma versão instalada, instale por cima: a escolha do
+     painel e o endereço do servidor são preservados.
+  5. Abra o app. Na primeira vez ele pergunta qual painel exibir.
+     A escolha fica gravada: da próxima vez que a TV ligar, ele entra
+     direto no painel escolhido.
+
+NO CONTROLE REMOTO
+  - Setas + OK: navegar e escolher.
+  - SEGURAR OK por 1 segundo (dentro do painel): volta para a escolha
+    de painel. É proposital que precise segurar — assim um esbarrão no
+    controle não tira a TV do painel.
+  - Botão "Configurar" (na tela de escolha): endereço do servidor,
+    nome da TV e quiosque.
+
+SE A TV MOSTRAR "sem conexão" OU "sem dados"
+  Entre em Configurar e confira o endereço do servidor. O botão
+  "Salvar e testar" diz na hora se o servidor respondeu (verde) ou não
+  (vermelho). O endereço certo é:  https://tridigaius.vercel.app
+
+O QUE MUDOU NA v1.2
+  - PERFIS. A TV não escolhe mais "qual painel do aplicativo": escolhe um
+    PERFIL — um modelo de tela montado no ERP, em Administração > Painéis.
+    Lá você cria quantos quiser (Comercial, Produção, Doca...), duplica,
+    arrasta os blocos e define o formato (16:9, 9:16 para TV em pé) e a
+    POLEGADA da tela. Tela nova não precisa mais de APK novo.
+  - A POLEGADA muda o tamanho do texto de verdade. Não é resolução: uma
+    TV de 55" e um monitor de 24" podem ter os mesmos 1920x1080 e pedem
+    tamanhos diferentes, porque muda a distância de leitura.
+  - PRODUÇÃO: peças do turno, fila, TMA e o cartão de cada pessoa (foto,
+    feitas, em aberto, produtividade, tempo em atividade, fora de
+    atividade e média por ordem).
+  - LOGÍSTICA: grade de indicadores da expedição + a faixa que mostra
+    onde os pedidos estão parados.
+  - HTTP volta a funcionar. Endereço de servidor começando com http://
+    (uma máquina da rede da empresa, por exemplo) simplesmente não
+    conectava e a TV dizia "sem conexão" sem explicar. Era o Android
+    bloqueando; agora está liberado.
+
+  PARA OS PERFIS APARECEREM NA TV: abra Administração > Painéis no
+  sistema e clique em Salvar uma vez. Os três modelos já vêm montados,
+  mas só existem para a TV depois de salvos.
+
+O QUE MUDOU NA v1.1
+  - Os números de eficiência do tráfego (ROAS, ROI, MER, CPA, lucro,
+    margem) agora vêm PRONTOS do Tridify, em vez de a TV refazer a
+    conta por conta própria. Antes a parede mostrava ROAS 0,36x e o
+    relatório 0,65x no mesmo mês: eram bases de receita diferentes
+    com o mesmo nome. Se o Tridify não responder, a TV mostra "—" —
+    nunca um número recalculado por ela.
+  - O FATURAMENTO (dia, semana, mês, pedidos, ticket, projeção) também
+    passa a sair do Tridify. O total do ERP deixava de fora a venda
+    lançada pela vendedora e ainda somava marketplace, que o Tridify
+    tira de propósito por não ser operação própria. O card do dia era o
+    mais afetado. Se o Tridify não responder, aqui a TV CAI para o
+    número do ERP em vez de mostrar "—": um total de base mais estreita
+    ainda é faturamento.
+  - Produtos mais vendidos: o faturamento aparecia R$ 0 em todos.
+  - Cores, logo e layout de Administração > Painéis passam a valer
+    também na TV.
+
+  IMPORTANTE: o efeito da v1.1 só aparece depois que o SISTEMA for
+  publicado — o bloco novo de números vem do servidor. Antes do deploy
+  a TV mostra "—" nessas métricas, o que é o comportamento correto e
+  não uma falha da instalação.
+
+O QUE AINDA NÃO ESTÁ NO AR
+  O painel de LOGÍSTICA depende de uma rota nova do sistema
+  (/api/logistica/painel) que ainda NÃO foi publicada. Enquanto o
+  deploy não sair, esse painel vai mostrar "sem dados". O painel de
+  Administração funciona normalmente desde já.
+
+MODO QUIOSQUE (opcional, só em TV que vai ficar fixa)
+  Trava o app na frente e o traz de volta depois de reiniciar.
+  Precisa ser feito com a TV RECÉM-RESETADA, por um computador:
+
+      adb shell dpm set-device-owner com.tridi.tv/com.tridi.tv.core.kiosk.AdminReceiver
+
+  ATENÇÃO: isso é IRREVERSÍVEL sem resetar a TV de fábrica. Depois
+  disso não dá para desinstalar nem limpar os dados do app pelo
+  Android. Só faça na TV definitiva.
+  Sem esse comando o app funciona igual, só sem a trava.
+
+OBSERVAÇÕES
+  - Assinado com chave interna (uso na empresa; não serve para a
+    Play Store). Trocar a chave depois obriga a desinstalar e
+    instalar de novo.
+  - As cores, o logo, as metas e o ritmo saem do próprio sistema, em
+    Administração > Painéis. Mudou lá, muda na TV.

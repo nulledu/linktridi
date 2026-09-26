@@ -1,0 +1,15 @@
+{
+  "name": "Gaius · Minhas Atividades",
+  "short_name": "Gaius",
+  "description": "Atividades, metas e métricas do colaborador",
+  "start_url": "/app",
+  "scope": "/app",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0c0c0f",
+  "theme_color": "#0c0c0f",
+  "icons": [
+    { "src": "/icon.svg", "type": "image/svg+xml", "sizes": "any", "purpose": "any" },
+    { "src": "/logo-gaius.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

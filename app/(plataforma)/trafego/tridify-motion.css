@@ -1,0 +1,147 @@
+/* ── Tridify · movimento do módulo ──────────────────────────────────────────
+   Micro-interações do Kinetics adaptadas à escala do transitions.dev (tokens
+   --duration-* / --ease-* / --distance-* do :root). Regras que este arquivo
+   respeita:
+   · keyframe de entrada NÃO tem `to` com transform: sem `to` a animação
+     termina no estilo computado (transform: none) e com fill `backwards` nada
+     fica preso depois — o cartão volta a poder levantar no hover e não vira
+     bloco de contenção de popover;
+   · nenhuma entrada lateral (o percurso horizontal vira largura do documento);
+   · hover só em `(hover: hover) and (pointer: fine)`; nada depende dele;
+   · fechar/sair é mais rápido que abrir; curva que passa do ponto só na ida;
+   · `prefers-reduced-motion` desliga tudo no fim do arquivo. */
+
+/* 054 · Stagger Entrance — a grade de cartões chega em cascata.
+   `--tf-i` é carimbado por quem monta a grade; o atraso satura em 300ms. */
+.tf-entra > * {
+  animation: tfEntra var(--duration-slow) var(--ease-smooth-out) backwards;
+  animation-delay: min(calc(var(--tf-i, 0) * var(--duration-stagger)), 300ms);
+}
+@keyframes tfEntra {
+  from { opacity: 0; transform: translateY(var(--distance-medium)); }
+}
+
+/* 127 · Hover Lift — só com mouse. No toque não há hover, e o cartão não é
+   alvo de clique (afundar o cartão inteiro ao tocar num botão dentro dele lia
+   como defeito). Cartão que abriga popover aberto não se move: transform em
+   ancestral de popover cria contexto de empilhamento. */
+.tf-card-vivo {
+  transition:
+    transform var(--duration-fast) var(--ease-smooth-out),
+    box-shadow var(--duration-fast) var(--ease-smooth-out),
+    border-color var(--duration-fast) var(--ease-smooth-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .tf-card-vivo:hover {
+    transform: translateY(calc(var(--distance-micro) * -0.5));
+    border-color: color-mix(in srgb, var(--primary) 26%, var(--tf-panel-line, var(--border)));
+    box-shadow: 0 2px 6px rgb(15 20 35 / 0.08), 0 22px 42px -24px rgb(15 20 35 / 0.55);
+  }
+}
+.tf-card-vivo:has(:is(.gp-pop, .pop-solid, .t-dropdown)),
+.tf-card-vivo:has(:is(.gp-pop, .pop-solid, .t-dropdown)):hover { transform: none; }
+
+/* 074 · Skeleton → Content — o conteúdo que substitui o esqueleto chega
+   por opacidade (sem percurso: ele já está no lugar do esqueleto). */
+.tf-surge { animation: tfSurge var(--duration-slow) var(--ease-smooth-out) backwards; }
+@keyframes tfSurge { from { opacity: 0; } }
+
+/* Delta "12% vs anterior": entra um pouco depois do número, que é a manchete. */
+.tf-delta { animation: tfSurge var(--duration-fast) var(--ease-out) backwards; animation-delay: var(--duration-fast); }
+
+/* 018/027 · Choice Chips — o chip de filtro ativo nasce com um pop (curva que
+   passa do ponto: é entrada). */
+.tf-chip { animation: tfChipPop var(--duration-fast) var(--ease-bounce) backwards; }
+@keyframes tfChipPop {
+  from { opacity: 0; transform: scale(var(--scale-large)); }
+}
+
+/* 057 · Elastic Progress — barra de meta cresce da esquerda com repique.
+   O pai tem overflow hidden, então o repique nunca vaza. */
+.tf-barra {
+  transform-origin: left center;
+  animation: tfBarra var(--duration-very-slow) var(--ease-bounce) backwards;
+  animation-delay: var(--duration-stagger);
+  transition: width var(--duration-slow) var(--ease-smooth-out);
+}
+@keyframes tfBarra { from { transform: scaleX(0); } }
+
+/* 063/072 · Status Pill — o botão "Atualizar" passa por ocioso → atualizando
+   → atualizado. A cor muda por token semântico, nos dois temas. */
+.tf-atualizar {
+  transition:
+    color var(--duration-fast) var(--ease-in-out),
+    border-color var(--duration-fast) var(--ease-in-out),
+    background-color var(--duration-fast) var(--ease-in-out),
+    opacity var(--duration-quick) var(--ease-out);
+}
+.tf-atualizar[data-estado="ok"] {
+  color: var(--ok);
+  border-color: color-mix(in srgb, var(--ok) 45%, var(--border));
+  background-color: color-mix(in srgb, var(--ok) 10%, var(--surface));
+}
+.tf-atualizar .tf-rotulo { animation: tfSurge var(--duration-quick) var(--ease-in-out) backwards; }
+
+/* 076 · Indeterminate Bar — faixa fina no pé do cabeçalho enquanto o dado da
+   tela revalida (stale-while-revalidate: o número velho continua lá e a
+   faixa diz que o novo vem vindo). Varre por background-position, sem
+   transform nenhum: nada de largura extra no documento. */
+.tf-revalida {
+  position: absolute; left: 0; right: 0; bottom: -1px; height: 2px;
+  pointer-events: none; opacity: 0;
+  background-image: linear-gradient(90deg, transparent, var(--primary), transparent);
+  background-size: 38% 100%;
+  background-repeat: no-repeat;
+  background-position: -40% 0;
+  transition: opacity var(--duration-quick) var(--ease-out);
+}
+.tf-revalida[data-on="1"] {
+  opacity: 0.85;
+  animation: tfVarre 1.4s var(--ease-linear) infinite;
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+@keyframes tfVarre {
+  from { background-position: -40% 0; }
+  to   { background-position: 140% 0; }
+}
+
+/* Aviso de erro ao lado do botão: chega, não pisca. */
+.tf-aviso { animation: tfAviso var(--duration-fast) var(--ease-smooth-out) backwards; }
+@keyframes tfAviso { from { opacity: 0; transform: translateY(calc(var(--distance-micro) * -1)); } }
+
+/* 005 · Tab Pill Glide — a pílula da barra lateral desliza até a aba
+   escolhida em vez de o fundo "pular" de um botão pro outro. */
+.tf-nav { position: relative; }
+.tf-nav-pilula {
+  position: absolute; left: 12px; right: 12px; top: 0;
+  border-radius: 10px; pointer-events: none;
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--primary) 30%, transparent);
+  transition:
+    transform var(--duration-fast) var(--ease-smooth-out),
+    height var(--duration-fast) var(--ease-smooth-out);
+}
+.tf-nav-item { position: relative; transition: background-color var(--duration-quick) var(--ease-out); }
+@media (hover: hover) and (pointer: fine) {
+  .tf-nav-item:not([aria-current="page"]):hover { background-color: color-mix(in srgb, var(--text) 7%, transparent); }
+}
+
+/* Estado vazio: o selo do ícone assenta com um pop curto. */
+.tf-vazio-selo { animation: tfChipPop var(--duration-slow) var(--ease-bounce) backwards; }
+
+/* Geometrias de ponto do gráfico (porte do LiveCharts2): os círculos chegam
+   DEPOIS da linha se desenhar, um a um da esquerda pra direita — é a ordem em
+   que a linha nasceu. `--tf-pi` é o índice do ponto. */
+.tf-ponto {
+  animation: tfPontoIn var(--duration-fast) var(--ease-out) both;
+  animation-delay: calc(420ms + var(--tf-pi, 0) * 14ms);
+}
+@keyframes tfPontoIn { from { opacity: 0; } to { opacity: 1; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .tf-entra > *, .tf-surge, .tf-delta, .tf-chip, .tf-barra, .tf-aviso,
+  .tf-vazio-selo, .tf-atualizar .tf-rotulo, .tf-ponto { animation: none !important; }
+  .tf-card-vivo, .tf-card-vivo:hover { transform: none !important; }
+  .tf-nav-pilula, .tf-barra { transition: none !important; }
+  .tf-revalida[data-on="1"] { animation: none; background-size: 100% 100%; opacity: 0.35; }
+}

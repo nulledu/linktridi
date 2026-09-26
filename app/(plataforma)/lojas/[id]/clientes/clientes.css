@@ -1,0 +1,45 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+ * Clientes — a lista que sai dos pedidos
+ * ─────────────────────────────────────────────────────────────────────────── */
+
+.cl-abas { background: var(--surface-2); margin-bottom: 12px; }
+.cl-conta {
+  margin-left: 5px; padding: 0 5px; border-radius: 999px;
+  background: color-mix(in srgb, currentColor 14%, transparent);
+  font-size: 10.5px; font-weight: 750; font-variant-numeric: tabular-nums;
+}
+
+.cl-busca {
+  display: flex; align-items: center; gap: 9px;
+  min-height: var(--tap); padding: 0 12px; margin-bottom: 14px;
+  border: 1px solid var(--border); border-radius: var(--r-sm);
+  background: var(--surface-2);
+}
+.cl-busca input {
+  flex: 1; min-width: 0; padding: 0;
+  background: none; border: 0; outline: none; box-shadow: none;
+  font-size: 13.5px; color: var(--text);
+}
+
+.cl-num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.cl-forte { font-weight: 750; }
+
+.cl-pessoa { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.cl-avatar {
+  width: 34px; height: 34px; flex: none; border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--surface-2); color: var(--text);
+  font-size: 12px; font-weight: 800; letter-spacing: 0.02em;
+}
+.cl-pessoa-txt { display: flex; flex-direction: column; line-height: 1.3; min-width: 0; }
+.cl-pessoa-txt strong { font-size: 13.5px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cl-pessoa-txt small { font-size: 11px; color: var(--text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* "Sumido" é informação, não alarme: a pessoa comprou e parou, e a loja pode
+   querer chamá-la de volta. Cor de atenção, não de erro. */
+.cl-selo {
+  flex: none; padding: 2px 8px; border-radius: 999px;
+  background: color-mix(in srgb, var(--atencao) 16%, transparent);
+  color: var(--atencao);
+  font-size: 10px; font-weight: 750; white-space: nowrap;
+}

@@ -1,0 +1,66 @@
+/* Carteira/teto (ContasAnuncioView) e Fontes de venda (FontesView).
+   Mesmo vocabulário do "Top vendas por estado": lista ranqueada, rótulo e
+   valor alinhados, barra fina de proporção, pouco texto. */
+
+.cf-card { border: 1px solid var(--border); border-radius: 14px; padding: 16px; display: grid; gap: 12px; min-width: 0; }
+.cf-rotulo { font-size: 12px; font-weight: 700; color: var(--text-dim); letter-spacing: .02em; display: flex; align-items: center; gap: 6px; }
+.cf-ajuda { display: inline-grid; place-items: center; min-width: var(--tap, 44px); min-height: var(--tap, 44px); margin: -14px -12px; cursor: help; }
+.cf-num { font-variant-numeric: tabular-nums; }
+
+/* Medidor do teto */
+.cf-medidor-topo { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.cf-grande { font-size: 30px; font-weight: 800; color: var(--text); letter-spacing: -.02em; line-height: 1.1; }
+.cf-de { font-size: 14px; font-weight: 600; color: var(--text-dim); margin-left: 6px; }
+.cf-pct { font-size: 15px; font-weight: 800; }
+.cf-trilho { height: 8px; border-radius: 999px; background: var(--surface-2); overflow: hidden; border: 1px solid var(--border); }
+.cf-trilho > span { display: block; height: 100%; border-radius: 999px; }
+.cf-rodape { display: flex; gap: 6px 16px; flex-wrap: wrap; font-size: 12.5px; color: var(--text-dim); }
+.cf-rodape b { color: var(--text); font-weight: 700; }
+.cf-teto-campo { display: flex; align-items: center; gap: 8px; }
+.cf-teto-campo label { font-size: 12.5px; font-weight: 700; color: var(--text-dim); }
+.cf-teto-campo input {
+  width: 140px; max-width: 100%; min-height: var(--tap, 44px); background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-sm, 8px); padding: 0 11px; color: var(--text); font-size: 14px;
+}
+
+/* Grupo e linha */
+.cf-grupo { border: 1px solid var(--border); border-radius: 14px; overflow: hidden; min-width: 0; }
+.cf-grupo-cab { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; padding: 11px 16px; background: var(--surface-2); }
+.cf-grupo-cab strong { font-size: 13px; font-weight: 800; color: var(--text); }
+.cf-grupo-cab span { font-size: 12px; color: var(--text-dim); }
+.cf-grupo-cab .cf-num { margin-left: auto; font-size: 13px; font-weight: 700; color: var(--text); }
+
+.cf-linha { display: grid; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--border); min-width: 0; }
+.cf-linha:first-of-type { border-top: none; }
+.cf-linha[data-mudou="1"] { background: color-mix(in srgb, var(--tf-accent, var(--primary)) 7%, transparent); }
+.cf-linha-topo { display: flex; align-items: baseline; gap: 4px 12px; flex-wrap: wrap; min-width: 0; }
+.cf-nome { flex: 1 1 160px; min-width: 0; font-size: 13.5px; font-weight: 700; color: var(--text); overflow-wrap: anywhere; }
+.cf-valor { margin-left: auto; font-size: 13.5px; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+.cf-apoio { font-size: 11.5px; color: var(--text-dim); font-variant-numeric: tabular-nums; }
+.cf-barra { height: 4px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+.cf-barra > span { display: block; height: 100%; border-radius: 999px; background: var(--graf-1); }
+.cf-linha-base { display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; }
+
+/* Seletor segmentado de grupo (seleção única) */
+.cf-seg { display: inline-flex; flex-wrap: wrap; gap: 4px; padding: 3px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--border); max-width: 100%; }
+.cf-seg button {
+  min-height: 38px; padding: 0 12px; border-radius: 9px; border: 1px solid transparent; background: transparent;
+  font-size: 12.5px; font-weight: 700; color: var(--text-dim); cursor: pointer;
+  transition: background-color var(--duration-fast, 150ms) var(--ease-out, ease), color var(--duration-fast, 150ms) var(--ease-out, ease);
+}
+.cf-seg button[aria-pressed="true"] { background: color-mix(in srgb, var(--cf-cor) 15%, var(--surface)); color: var(--cf-cor); border-color: color-mix(in srgb, var(--cf-cor) 45%, transparent); }
+.cf-seg button:disabled { cursor: default; opacity: .6; }
+@media (max-width: 767px) { .cf-seg button { min-height: var(--tap, 44px); } }
+@media (prefers-reduced-motion: reduce) { .cf-seg button { transition: none; } }
+
+.cf-selo { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 12px; border-radius: 999px; font-size: 12.5px; font-weight: 700; }
+
+/* Resumo das fontes: barra empilhada + legenda */
+.cf-pilha { display: flex; height: 10px; border-radius: 999px; overflow: hidden; background: var(--surface-2); gap: 2px; }
+.cf-pilha > span { display: block; height: 100%; min-width: 3px; }
+.cf-legenda { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); gap: 8px 16px; margin: 0; padding: 0; list-style: none; }
+.cf-legenda li { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--text-dim); min-width: 0; }
+.cf-legenda i { width: 8px; height: 8px; border-radius: 3px; flex: none; }
+.cf-legenda b { margin-left: auto; color: var(--text); font-weight: 700; font-variant-numeric: tabular-nums; }
+
+.cf-rodape-acoes { display: flex; align-items: center; justify-content: flex-end; gap: 12px; flex-wrap: wrap; }

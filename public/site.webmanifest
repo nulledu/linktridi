@@ -1,0 +1,22 @@
+{
+  "name": "Gaius · Tridi",
+  "short_name": "Gaius",
+  "description": "ERP da Tridi: vendas, produção, estoque, pessoas e financeiro em tempo real.",
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "start_url": "/inicio",
+  "scope": "/",
+  "id": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#7c3aed",
+  "icons": [
+    { "src": "/icon.svg", "type": "image/svg+xml", "sizes": "any", "purpose": "any" },
+    { "src": "/logo-gaius.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/logo-gaius.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Início", "url": "/inicio" },
+    { "name": "Minhas atividades", "url": "/app" }
+  ]
+}

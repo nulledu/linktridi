@@ -1,0 +1,92 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+ * Configurações — o índice do que dá pra ajustar
+ * ─────────────────────────────────────────────────────────────────────────── */
+
+.cfg-grade {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr));
+  gap: 10px;
+}
+
+.cfg-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 14px;
+  min-height: 106px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  color: inherit;
+  text-decoration: none;
+  /* `--duration-fast` + `--ease-smooth-out` da escala: é o mesmo par que o
+     resto do sistema usa pra mudança de posição e de superfície. */
+  transition:
+    border-color var(--duration-fast) var(--ease-smooth-out),
+    background   var(--duration-fast) var(--ease-smooth-out),
+    transform    var(--duration-fast) var(--ease-smooth-out);
+}
+.cfg-item:hover { background: var(--surface-2); border-color: color-mix(in srgb, var(--primary) 30%, var(--border)); }
+/* Feedback no PRESS, não na soltura: é o instante em que a pessoa precisa saber
+   que o toque chegou. */
+
+.cfg-ico {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  margin-bottom: 7px;
+  border-radius: 11px;
+  background: var(--surface-2);
+}
+.cfg-item strong { font-size: 13.5px; font-weight: 700; }
+.cfg-desc { font-size: 11.5px; color: var(--text-dim); line-height: 1.45; }
+
+/* O que ainda não abre nada fica VISIVELMENTE diferente. Um índice em que
+   metade dos cartões não faz nada é pior que um índice curto: a pessoa clica,
+   não acontece nada, e passa a desconfiar dos outros também. */
+.cfg-item--breve { opacity: 0.55; cursor: default; }
+.cfg-item--breve:hover { background: var(--surface); border-color: var(--border); }
+.cfg-item--breve:active { transform: none; }
+.cfg-breve {
+  align-self: flex-start;
+  margin-top: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--text-dim);
+  font-size: 10px;
+  font-weight: 750;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cfg-item { transition: none; }
+}
+
+/* ── Estado da loja ──────────────────────────────────────────────────────────
+ * O primeiro bloco da tela, e o que faltava: toda loja nasce em rascunho, e sem
+ * um lugar dizendo isso (e um botão pra mudar) o endereço próprio ficava ligado
+ * a uma vitrine que respondia 404 pra todo mundo.
+ */
+.cfg-estado-topo { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
+.cfg-estado-topo .lj-card-titulo { margin: 0; }
+.cfg-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 3px 10px; border-radius: 999px;
+  font-size: 11px; font-weight: 750; white-space: nowrap;
+}
+
+.cfg-estado-txt {
+  margin: 8px 0 0; font-size: 13px; line-height: 1.55; color: var(--text-dim);
+}
+.cfg-estado-txt a { color: var(--primary-texto); }
+.cfg-estado-txt strong { color: var(--text); font-weight: 700; }
+.cfg-estado-txt--alerta {
+  display: flex; align-items: flex-start; gap: 8px;
+  padding: 10px 12px; border-radius: 12px;
+  background: color-mix(in srgb, var(--atencao) 10%, transparent);
+  color: var(--text-dim);
+}
+.cfg-estado-txt--alerta > svg { flex: none; margin-top: 1px; }
+
+.cfg-estado-acoes { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }

@@ -1,0 +1,65 @@
+/* ── Central · Tarefas — micro-interações da lista ────────────────────────────
+   Tempo e curva da escala do `:root` (a do check é a da receita `t-check`:
+   --check-draw/--check-ease). Nenhum keyframe termina em translate/scale
+   identidade. A linha (.ct-linha) é filha de `.mt-fila` e JÁ tem animação de
+   entrada: trocar a `animation` dela devolveria o `opacity: 0` de partida e a
+   linha sumiria — por isso o aviso de recusa mora num `::after`. */
+
+/* Concluir DESENHA o traço (Kinetics 060 · Checkbox Draw). O check do Tabler
+   ("M5 12l5 5l10 -10") mede ≈21,2 no viewBox de 24. Só no estado marcado: o
+   desmarcado continua com a prévia de .5 no hover da fundação. */
+.ct-check[data-feita] > svg path {
+  stroke-dasharray: 22;
+  animation: ctTraco var(--check-draw) var(--check-ease) both;
+}
+@keyframes ctTraco {
+  from { stroke-dashoffset: 22; }
+  to { stroke-dashoffset: 0; }
+}
+
+/* A escrita voltou atrás (Kinetics 094 · Optimistic Rollback): o valor antigo
+   já foi reposto pelo `aplicar`; aqui a linha diz QUAL foi, com um fio e um
+   tom de erro que se apagam. Cor de estado, nunca a rampa do gráfico. */
+.ct-linha.ct-recusada { position: relative; }
+.ct-linha.ct-recusada::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  animation: ctRecusada var(--duration-very-slow) var(--ease-smooth-out) forwards;
+}
+@keyframes ctRecusada {
+  0%, 35% {
+    background: color-mix(in srgb, var(--perigo) 12%, transparent);
+    box-shadow: inset 3px 0 0 var(--perigo);
+  }
+  100% {
+    background: transparent;
+    box-shadow: inset 3px 0 0 transparent;
+  }
+}
+
+/* O "Desfazer" com o tempo visível (Kinetics 071 · Undo Snackbar): a barra
+   esvazia nos mesmos 6 s do `setTimeout` que tira o aviso. */
+.ct-desfazer { position: relative; overflow: hidden; }
+.ct-desfazer-relogio {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: color-mix(in srgb, var(--ok) 70%, transparent);
+  transform-origin: left center;
+  animation: ctRelogio 6000ms linear forwards;
+}
+@keyframes ctRelogio {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ct-check[data-feita] > svg path { animation: none !important; stroke-dashoffset: 0; }
+  .ct-linha.ct-recusada::after { animation: none !important; box-shadow: inset 3px 0 0 var(--perigo); }
+  .ct-desfazer-relogio { display: none; }
+}

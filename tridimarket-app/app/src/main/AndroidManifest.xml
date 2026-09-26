@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- Leitor de código de barras. VIBRATE dá o retorno tátil da leitura. -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <!-- Pareamento do leitor Bluetooth SEM sair do totem (kiosk/BluetoothPareador).
+         Dois conjuntos porque o Android 12 trocou as regras no meio: até o 11 a
+         BUSCA exigia localização; do 12 em diante são SCAN/CONNECT. Este tablet
+         é Android 10, mas o app roda nos dois. -->
+    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- required=false: um tablet sem câmera continua instalando o app; a tela
+         de leitura simplesmente não é oferecida. -->
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
+    <application
+        android:name=".MarketApplication"
+        android:allowBackup="false"
+        android:label="TridiMarket"
+        android:supportsRtl="true"
+        android:theme="@android:style/Theme.Material.Light.NoActionBar">
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false"
+            tools:node="merge">
+            <meta-data
+                android:name="androidx.work.WorkManagerInitializer"
+                tools:node="remove" />
+        </provider>
+        <!-- `portrait` trava na rotação 0. Num tablet montado de cabeça pra
+             baixo (suporte de parede/balcão invertido) o app nascia invertido e
+             não tinha como corrigir sem desmontar o suporte. `sensorPortrait`
+             continua proibindo paisagem — o kiosk é desenhado em pé — mas
+             aceita as DUAS posições de retrato e se orienta pela gravidade. -->
+        <activity android:name=".MainActivity" android:exported="true" android:screenOrientation="sensorPortrait" android:launchMode="singleTask">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.HOME" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+        <receiver android:name=".kiosk.MarketAdminReceiver" android:exported="true" android:permission="android.permission.BIND_DEVICE_ADMIN">
+            <meta-data android:name="android.app.device_admin" android:resource="@xml/device_admin" />
+            <intent-filter><action android:name="android.app.action.DEVICE_ADMIN_ENABLED" /></intent-filter>
+        </receiver>
+        <!-- Saída do modo totem, só por adb (ver DestravarReceiver). Exported
+             porque broadcast de adb não alcança receiver privado; o token no
+             extra é o que impede outro app de destravar. -->
+        <receiver android:name=".kiosk.DestravarReceiver" android:exported="true">
+            <intent-filter><action android:name="com.tridi.market.DESTRAVAR" /></intent-filter>
+        </receiver>
+        <receiver android:name=".kiosk.BootReceiver" android:enabled="true" android:exported="true">
+            <intent-filter><action android:name="android.intent.action.BOOT_COMPLETED" /></intent-filter>
+        </receiver>
+    </application>
+</manifest>

@@ -1,0 +1,240 @@
+/* ── Estilo da vitrine ───────────────────────────────────────────────────────
+   Arquivo PRÓPRIO, importado só pelo layout de /l. Não herda os tokens do ERP
+   de propósito: a vitrine é da loja, o painel é do lojista. Amarrar as duas
+   coisas faria a cor da loja de alguém mudar quando o sistema trocasse um
+   token — e um dia a pessoa vai escolher essa cor.
+
+   Mobile primeiro e sem media query onde dá: a maior parte de quem abre uma
+   vitrine chega de celular, por link de anúncio. */
+
+.vt {
+  --vt-tinta: #1d1d1f;
+  --vt-fraco: #6b6b73;
+  --vt-linha: #e6e6ea;
+  --vt-fundo: #ffffff;
+  --vt-cartao: #fafafc;
+  --vt-destaque: #7c3aed;
+  --vt-ok: #17803d;
+
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--vt-fundo);
+  color: var(--vt-tinta);
+  font-family: var(--font, system-ui, -apple-system, "Segoe UI", sans-serif);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* O visitante escolhe o tema no aparelho dele, não no nosso. */
+@media (prefers-color-scheme: dark) {
+  .vt {
+    --vt-tinta: #f2f2f5;
+    --vt-fraco: #9a9aa4;
+    --vt-linha: #26262c;
+    --vt-fundo: #0d0d10;
+    --vt-cartao: #17171c;
+    --vt-destaque: #a78bfa;
+    --vt-ok: #4ade80;
+  }
+}
+
+.vt a { color: inherit; text-decoration: none; }
+
+/* ── Topo ─────────────────────────────────────────────────────────────────── */
+.vt-topo {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 16px clamp(16px, 5vw, 40px);
+  border-bottom: 1px solid var(--vt-linha);
+}
+.vt-marca { font-size: 17px; font-weight: 750; letter-spacing: -0.02em; }
+.vt-voltar { font-size: 13.5px; color: var(--vt-fraco); }
+.vt-voltar:hover { color: var(--vt-tinta); }
+
+.vt-main {
+  flex: 1; width: 100%; max-width: 1120px; margin: 0 auto;
+  padding: clamp(20px, 5vw, 40px) clamp(16px, 5vw, 40px) 56px;
+}
+.vt-titulo {
+  font-size: clamp(24px, 6vw, 34px); font-weight: 800;
+  letter-spacing: -0.025em; margin-bottom: 22px;
+}
+.vt-vazio { color: var(--vt-fraco); font-size: 15px; }
+
+/* ── Grade do catálogo ───────────────────────────────────────────────────────
+   `minmax(min(100%, 210px), 1fr)`: o mínimo fixo não deixaria o card encolher
+   e a página inteira ganharia rolagem lateral num aparelho de 320px. */
+.vt-grade {
+  display: grid; gap: clamp(12px, 3vw, 20px);
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr));
+}
+.vt-card {
+  display: flex; flex-direction: column;
+  border: 1px solid var(--vt-linha); border-radius: 14px;
+  background: var(--vt-cartao); overflow: hidden;
+  transition: transform 0.14s ease, box-shadow 0.14s ease;
+}
+.vt-card:hover { transform: translateY(-2px); box-shadow: 0 10px 26px -18px rgba(0, 0, 0, 0.55); }
+/* No toque não existe hover — a resposta é o próprio toque. */
+.vt-card:active { transform: scale(0.985); }
+.vt-card-corpo { padding: 12px 13px 14px; display: flex; flex-direction: column; gap: 7px; }
+.vt-card-corpo h2 {
+  font-size: 14px; font-weight: 600; line-height: 1.35; letter-spacing: -0.005em;
+  /* Duas linhas e reticências: título comprido não pode empurrar o preço pra
+     fora do alinhamento entre os cards vizinhos. */
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+
+/* ── Foto ────────────────────────────────────────────────────────────────── */
+.vt-foto { background: var(--vt-linha); overflow: hidden; }
+.vt-foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.vt-foto-card { aspect-ratio: 1; }
+.vt-foto-grande { aspect-ratio: 1; border-radius: 16px; }
+.vt-foto-vazia { display: grid; place-items: center; color: var(--vt-fraco); }
+
+/* ── Preço ───────────────────────────────────────────────────────────────── */
+.vt-preco { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.vt-preco strong { font-size: 16px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.vt-preco s { font-size: 12.5px; color: var(--vt-fraco); }
+.vt-preco-g strong { font-size: clamp(24px, 6vw, 30px); letter-spacing: -0.02em; }
+.vt-preco-g s { font-size: 15px; }
+.vt-off {
+  font-size: 10.5px; font-weight: 800; letter-spacing: 0.02em;
+  padding: 2px 7px; border-radius: 999px;
+  background: color-mix(in srgb, var(--vt-ok) 16%, transparent); color: var(--vt-ok);
+}
+.vt-esgotado { font-size: 11.5px; font-weight: 700; color: var(--vt-fraco); }
+
+/* ── Produto ─────────────────────────────────────────────────────────────── */
+.vt-produto {
+  display: grid; gap: clamp(20px, 4vw, 36px);
+  grid-template-columns: minmax(min(100%, 300px), 1fr) minmax(min(100%, 300px), 1fr);
+  align-items: start;
+}
+@media (max-width: 760px) { .vt-produto { grid-template-columns: 1fr; } }
+
+.vt-produto-info { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.vt-produto-info h1 {
+  font-size: clamp(21px, 5vw, 28px); font-weight: 750;
+  letter-spacing: -0.02em; line-height: 1.2;
+}
+.vt-descricao { display: flex; flex-direction: column; gap: 10px; }
+.vt-descricao p { font-size: 14.5px; line-height: 1.6; color: var(--vt-fraco); overflow-wrap: anywhere; }
+
+.vt-aviso { font-size: 13px; color: var(--vt-fraco); }
+.vt-aviso-esgotado { font-weight: 700; color: var(--vt-tinta); }
+
+.vt-miniaturas {
+  display: grid; gap: 8px;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 76px), 1fr));
+}
+.vt-miniaturas img {
+  width: 100%; aspect-ratio: 1; object-fit: cover;
+  border-radius: 9px; border: 1px solid var(--vt-linha); display: block;
+}
+
+/* ── Comprar ─────────────────────────────────────────────────────────────────
+   Alvo de 46px: a vitrine é aberta no celular, e este é O botão da página. */
+.vt-acoes { display: flex; gap: 9px; flex-wrap: wrap; }
+.vt-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 46px; padding: 0 18px; border-radius: 12px;
+  border: 1px solid var(--vt-linha); background: transparent; color: var(--vt-tinta);
+  font: inherit; font-size: 14.5px; font-weight: 650; cursor: pointer;
+  flex: 1 1 auto; text-align: center;
+}
+.vt-btn:active { transform: scale(0.98); }
+.vt-btn:disabled { opacity: 0.5; cursor: default; }
+.vt-btn-primario {
+  background: var(--vt-destaque); border-color: transparent; color: #fff; font-weight: 750;
+}
+/* Verde do WhatsApp: identidade alheia, não é nossa pra ajustar ao tema. */
+.vt-btn-zap { background: #25d366; border-color: transparent; color: #06301a; font-weight: 750; }
+
+.vt-topo-dir { display: flex; align-items: center; gap: 12px; }
+.vt-carrinho-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  min-height: 40px; padding: 0 13px; border-radius: 999px;
+  border: 1px solid var(--vt-linha); background: transparent; color: var(--vt-tinta);
+  font: inherit; font-size: 13px; font-weight: 650; cursor: pointer; white-space: nowrap;
+}
+.vt-bolha {
+  min-width: 19px; height: 19px; padding: 0 5px; border-radius: 999px;
+  background: var(--vt-destaque); color: #fff;
+  font-size: 11px; font-weight: 800; display: grid; place-items: center;
+}
+
+/* ── Folha do carrinho ───────────────────────────────────────────────────────
+   No celular ela sobe de baixo e ocupa o que precisa; no computador vira uma
+   caixa centrada. `dvh` e não `vh`: com `vh` o rodapé nasce atrás da barra do
+   navegador do celular, e o botão de fechar pedido fica inalcançável. */
+.vt-veu {
+  position: fixed; inset: 0; z-index: 50;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex; align-items: flex-end; justify-content: center;
+}
+@media (min-width: 700px) { .vt-veu { align-items: center; } }
+
+.vt-folha {
+  width: min(520px, 100%); max-height: 92dvh;
+  display: flex; flex-direction: column;
+  background: var(--vt-fundo); color: var(--vt-tinta);
+  border-radius: 18px 18px 0 0;
+  border: 1px solid var(--vt-linha);
+}
+@media (min-width: 700px) { .vt-folha { border-radius: 18px; max-height: 86dvh; } }
+
+.vt-folha-topo {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 16px 18px; border-bottom: 1px solid var(--vt-linha); font-size: 16px;
+}
+.vt-x {
+  border: none; background: transparent; color: var(--vt-fraco); cursor: pointer;
+  font-size: 26px; line-height: 1; min-width: 44px; min-height: 44px;
+}
+.vt-folha-corpo { padding: 16px 18px; overflow-y: auto; flex: 1; }
+.vt-folha-pe {
+  padding: 14px 18px calc(14px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--vt-linha); display: flex; flex-direction: column; gap: 12px;
+}
+.vt-total { display: flex; justify-content: space-between; align-items: baseline; font-size: 14px; }
+.vt-total strong { font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; }
+
+.vt-lista { list-style: none; display: flex; flex-direction: column; gap: 14px; }
+.vt-lista li { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.vt-lista-nome { flex: 1 1 130px; min-width: 0; font-size: 14px; }
+.vt-lista-preco { font-size: 14px; font-variant-numeric: tabular-nums; }
+.vt-qtd { display: inline-flex; align-items: center; gap: 2px; }
+.vt-qtd button {
+  min-width: 34px; min-height: 34px; border-radius: 9px;
+  border: 1px solid var(--vt-linha); background: transparent; color: var(--vt-tinta);
+  font: inherit; font-size: 17px; cursor: pointer;
+}
+.vt-qtd b { min-width: 28px; text-align: center; font-variant-numeric: tabular-nums; }
+@media (pointer: coarse) { .vt-qtd button { min-width: 44px; min-height: 44px; } }
+
+.vt-obs { margin-top: 14px; font-size: 12px; color: var(--vt-fraco); line-height: 1.5; }
+
+.vt-form { display: flex; flex-direction: column; gap: 13px; }
+.vt-form label { display: flex; flex-direction: column; gap: 5px; font-size: 13px; font-weight: 650; }
+.vt-form label span { font-weight: 400; color: var(--vt-fraco); }
+.vt-form input, .vt-form textarea {
+  width: 100%; min-height: 46px; padding: 11px 13px;
+  border: 1px solid var(--vt-linha); border-radius: 11px;
+  background: var(--vt-cartao); color: var(--vt-tinta);
+  /* 16px: abaixo disso o iOS dá zoom sozinho ao focar o campo, e a folha
+     inteira sai do lugar no meio do preenchimento. */
+  font: inherit; font-size: 16px; font-weight: 400;
+}
+.vt-form textarea { min-height: 84px; resize: vertical; }
+.vt-erro { font-size: 13px; color: #d92c20; line-height: 1.45; }
+@media (prefers-color-scheme: dark) { .vt-erro { color: #ff6b60; } }
+
+.vt-pronto { display: flex; flex-direction: column; gap: 12px; font-size: 14.5px; line-height: 1.55; }
+.vt-pronto-num { font-size: 19px; font-weight: 800; }
+
+/* ── Rodapé ──────────────────────────────────────────────────────────────── */
+.vt-rodape {
+  padding: 22px clamp(16px, 5vw, 40px) calc(22px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--vt-linha);
+  font-size: 12.5px; color: var(--vt-fraco);
+}

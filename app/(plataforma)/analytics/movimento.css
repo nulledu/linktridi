@@ -1,0 +1,185 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   Movimento das telas de números — Analytics, Comercial e Vendas.
+
+   Peças do repertório Kinetics adaptadas à escala do transitions.dev (os
+   tokens `--duration-*`/`--ease-*` do globals.css). Nada aqui escreve
+   milissegundo nem curva na mão.
+
+   Regras que este arquivo respeita, porque cada uma já custou caro:
+     · nada termina em translate/scale identidade — o fim é sempre `none`;
+     · nenhuma entrada lateral (FLIP move DENTRO do pai, nunca entra de fora);
+     · vidro não recebe transform: `.km-suave` é a fila só de opacidade, para
+       filhos de vidro ou que carregam popover;
+     · nenhum `filter` em ancestral de conteúdo — filtro cria bloco de
+       contenção de `position: fixed` e derruba popover;
+     · fechar/sair é mais rápido que abrir e não tem atraso.
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* ── 057 Elastic Progress · 093 Confidence Settle ─────────────────────────────
+   A barra cresce do zero quando entra na tela e passa um fio do ponto antes
+   de assentar (`--ease-bounce`). Trocar o período reaproveita a mesma
+   transição: a barra ANDA do valor antigo pro novo em vez de piscar.
+   A largura final mora em `--km-w` (escrita com ponto decimal pelo JS). Sem
+   JS a barra nasce cheia no valor certo: só esconde quando o observador está
+   de pé (`html[data-mt-pronto]`). */
+.km-barra {
+  display: block;
+  overflow: hidden;
+  min-width: 0;
+}
+.km-barra > i {
+  display: block;
+  height: 100%;
+  width: var(--km-w, 0%);
+  transition: width var(--duration-very-slow) var(--ease-bounce);
+}
+html[data-mt-pronto] .km-barra:not([data-mt="on"]) > i { width: 0; }
+
+/* ── 068 Progress Ring ────────────────────────────────────────────────────────
+   Mesmo contrato da barra: o arco sai do zero ao entrar na tela e caminha até
+   o valor novo quando ele muda. Sem passar do ponto — um anel que "quica"
+   acima de 100% leria como estouro de teto, que é justamente o que ele mede. */
+.km-anel {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+}
+.km-anel svg { display: block; }
+.km-anel-arco {
+  stroke-dashoffset: var(--km-off);
+  transition: stroke-dashoffset var(--duration-very-slow) var(--ease-smooth-out);
+}
+html[data-mt-pronto] .km-anel:not([data-mt="on"]) .km-anel-arco { stroke-dashoffset: var(--km-c); }
+.km-anel-centro {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  font-weight: 800;
+  line-height: 1;
+}
+
+/* ── 100 Stale While Revalidate ───────────────────────────────────────────────
+   O dado antigo continua na tela, esmaecido, enquanto o novo não chega — sem
+   esqueleto e sem salto de altura. O esmaecer espera o atraso de intenção
+   (`--duration-micro`): resposta rápida não pisca. Voltar é imediato. Só
+   opacidade: `filter` aqui viraria bloco de contenção de todo popover de
+   dentro. */
+.km-swr {
+  transition: opacity var(--duration-quick) var(--ease-smooth-out);
+}
+.km-swr[data-rev="1"] {
+  opacity: 0.55;
+  transition: opacity var(--duration-fast) var(--ease-smooth-out) var(--duration-micro);
+}
+
+/* O selo "atualizando" — o sinal que o esmaecido sozinho não dá a quem lê
+   devagar. Entra só com opacidade; some no mesmo quadro (desmonta). */
+.km-atualizando {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-dim);
+  background: color-mix(in srgb, var(--text) 6%, transparent);
+  animation: kmChega var(--duration-fast) var(--ease-smooth-out) both;
+}
+.km-atualizando svg { animation: spin 0.9s var(--ease-linear) infinite; }
+
+/* ── 074 Skeleton to Content ──────────────────────────────────────────────────
+   O conteúdo que substitui o esqueleto chega por opacidade, no token que a
+   escala reserva exatamente pra isso (`--duration-slow`). */
+.km-chega { animation: kmChega var(--duration-slow) var(--ease-smooth-out) both; }
+@keyframes kmChega {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ── 054 Stagger Entrance, versão só-opacidade ────────────────────────────────
+   A `.mt-fila` da fundação sobe cada filho 9px — certo pra linha de lista,
+   errado pra filho de VIDRO (transform sobre backdrop-filter deixa rastro) e
+   pra cartão que carrega popover (transform no ancestral prende a folha).
+   `.km-suave` mantém a cascata e troca o percurso por opacidade pura. */
+html[data-mt-pronto] .mt-fila.km-suave > * {
+  transform: none;
+  animation-name: kmChega;
+}
+
+/* ── FLIP de ranking ──────────────────────────────────────────────────────────
+   Quando a ordem muda (trocou o período, o líder caiu pra segundo), cada linha
+   desliza da posição antiga pra nova. Quem calcula é o JS (`FilaViva`); o CSS
+   só dá o referencial: `offsetTop` das linhas é medido contra este bloco. */
+.km-flip { position: relative; }
+
+/* ── 018 Choice Chips · 027 Toggle Pills ──────────────────────────────────────
+   O chip que ACENDE dá um pop curto de mola; apagar não pula (sair da frente).
+   A cor troca no mesmo ritmo, então o pop e o preenchimento são um gesto só. */
+.km-chip {
+  transition:
+    background-color var(--duration-fast) var(--ease-smooth-out),
+    color var(--duration-fast) var(--ease-smooth-out),
+    border-color var(--duration-fast) var(--ease-smooth-out);
+}
+.km-chip[aria-pressed="true"] { animation: kmPop var(--duration-fast) var(--ease-bounce); }
+@keyframes kmPop {
+  50% { transform: scale(1.06); }
+  to { transform: none; }
+}
+
+/* ── Estado vazio ─────────────────────────────────────────────────────────────
+   Ícone Tabler num quadrado de tinta, uma frase do que falta e — quando
+   existe — o que fazer. O ícone chega com um pop de entrada; o bloco, só por
+   opacidade. */
+.km-vazio {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  gap: 6px;
+  padding: 28px 18px;
+  animation: kmChega var(--duration-slow) var(--ease-smooth-out) both;
+}
+.km-vazio[data-compacto="1"] { padding: 14px 8px; gap: 4px; }
+.km-vazio-ico {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--r-md);
+  display: grid;
+  place-items: center;
+  margin-bottom: 6px;
+  background: color-mix(in srgb, var(--km-tom, var(--text)) 9%, transparent);
+  color: var(--km-tom, var(--text-dim));
+  animation: kmIcone var(--duration-fast) var(--ease-bounce) both;
+}
+.km-vazio[data-compacto="1"] .km-vazio-ico { width: 36px; height: 36px; border-radius: var(--r-sm); margin-bottom: 2px; }
+@keyframes kmIcone {
+  from { opacity: 0; transform: scale(var(--scale-large)); }
+  to { opacity: 1; transform: none; }
+}
+.km-vazio-tit { font-size: 14.5px; font-weight: 800; color: var(--text); }
+.km-vazio[data-compacto="1"] .km-vazio-tit { font-size: 13px; font-weight: 700; }
+.km-vazio-txt { font-size: 13px; line-height: 1.5; color: var(--text-dim); max-width: 44ch; }
+.km-vazio[data-compacto="1"] .km-vazio-txt { font-size: 12px; }
+.km-vazio-acao { margin-top: 8px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .km-barra > i,
+  .km-anel-arco,
+  .km-swr,
+  .km-swr[data-rev="1"],
+  .km-chip { transition: none; }
+  .km-chip[aria-pressed="true"],
+  .km-chega,
+  .km-vazio,
+  .km-vazio-ico,
+  .km-atualizando,
+  .km-atualizando svg { animation: none; }
+  html[data-mt-pronto] .km-barra:not([data-mt="on"]) > i { width: var(--km-w, 0%); }
+  html[data-mt-pronto] .km-anel:not([data-mt="on"]) .km-anel-arco { stroke-dashoffset: var(--km-off); }
+}

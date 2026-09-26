@@ -1,0 +1,50 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+ * Início da loja
+ *
+ * O que é do MÓDULO (cabeçalho, números, bloco, vazio) mora em `../ui.css`.
+ * Aqui fica só o que é desta tela — e é pouco de propósito: quando cada tela
+ * tem o próprio estilo de cartão e de título, navegar entre elas parece
+ * navegar entre produtos diferentes.
+ * ─────────────────────────────────────────────────────────────────────────── */
+
+/* Par de blocos lado a lado que vira coluna quando não cabe. */
+.in-duo {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  gap: 12px;
+  align-items: start;
+}
+
+/* ── Categoria, dentro do bloco da curva ──────────────────────────────────── */
+/* Era um cartão próprio com um anel de 170px pra dizer quatro números. A lista
+   diz o mesmo em um terço da altura, e sem competir com a curva por atenção. */
+.in-cat { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); }
+.in-cat-rot {
+  margin: 0 0 9px;
+  font-size: 12px; font-weight: 600; color: var(--text-dim);
+}
+.in-cat ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
+.in-cat li {
+  display: grid; align-items: center; gap: 10px;
+  grid-template-columns: minmax(90px, 150px) minmax(0, 1fr) auto;
+  font-size: 12.5px;
+}
+.in-cat-nome {
+  display: flex; align-items: center; gap: 7px; min-width: 0;
+  color: var(--text); font-weight: 600;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.in-cat-nome i { width: 8px; height: 8px; border-radius: 3px; flex: none; }
+.in-cat-barra { height: 6px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+.in-cat-barra > span {
+  display: block; height: 100%; border-radius: 999px;
+  transition: width var(--duration-slow) var(--ease-smooth-out);
+}
+.in-cat-val { font-variant-numeric: tabular-nums; color: var(--text-dim); white-space: nowrap; }
+
+@media (max-width: 520px) {
+  .in-cat li { grid-template-columns: minmax(0, 1fr) auto; }
+  .in-cat-barra { grid-column: 1 / -1; }
+}
+@media (prefers-reduced-motion: reduce) { .in-cat-barra > span { transition: none; } }
+

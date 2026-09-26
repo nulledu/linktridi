@@ -1,0 +1,13 @@
+-- Página inicial por colaborador — onde a pessoa cai depois de logar.
+--
+-- Por padrão todo mundo entra na Central (`homeFor` do papel). Isso é certo pra
+-- quem trabalha no ERP inteiro e ERRADO pra quem só usa uma área: o TridiMarket,
+-- por exemplo, é módulo DISCRETO (não aparece na sidebar — ver MODULOS_DISCRETOS
+-- em lib/rbac.ts), então quem só tem essa área caía na Central sem nenhum
+-- caminho visível pro lugar onde ela de fato trabalha.
+--
+-- Guarda a CHAVE do módulo (ex.: 'tridimarket'), não a URL: a rota pode mudar,
+-- a chave é a mesma do gate de permissão. Nulo = comportamento de sempre.
+-- O acesso continua mandando: se a pessoa perder a área, a preferência é
+-- ignorada e ela volta pra home do papel (lib/pagina-inicial.ts).
+alter table public.employees add column if not exists pagina_inicial text;

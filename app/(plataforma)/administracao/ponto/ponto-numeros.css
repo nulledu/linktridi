@@ -1,0 +1,22 @@
+/* ── Os quatro números do detalhe do ponto ───────────────────────────────────
+   Duas colunas por padrão, quatro só onde elas CABEM.
+
+   O painel da equipe monta este bloco numa coluna estreita e o padrão dele é
+   2×2 — a decisão está comentada no `DetalheDoDia.tsx` e continua valendo. A
+   ficha do RH monta a mesma peça num pop-up de 1180px, onde 2×2 deixa metade
+   da fileira vazia.
+
+   Por MEDIA QUERY e não por `auto-fit`: entre 600 e 800px de faixa o auto-fit
+   dá TRÊS trilhas e o quarto número cai sozinho numa linha de um terço — é
+   exatamente a armadilha que o comentário do componente descreve. E não por
+   prop booleana crua: a primeira tentativa forçou quatro colunas sempre, e num
+   celular de 375px cada caixa ficou com 76px enquanto "08:03 – 16:40" precisa
+   de 94 — o valor era cortado no meio.
+
+   1000px é a janela, não a caixa: o pop-up da ficha é `min(1180px, 100vw−40)`,
+   então a partir daí a faixa tem ao menos 960px e cada número fica com 240. */
+.ponto-num-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+@media (min-width: 1000px) {
+  .ponto-num-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}

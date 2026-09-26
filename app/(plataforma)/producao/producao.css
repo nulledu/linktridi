@@ -1,0 +1,112 @@
+/* Produção (Visão geral + Status · Controle agora · Máquinas · Programações).
+   Reaproveita o desenho da Operação (`og-*` em operacao/geral/visao-geral.css)
+   — mesmos cartões, listas e números — e só acrescenta o que é da Produção.
+   Nenhuma faixa de grade rígida inline: inline não colapsa por media query. */
+
+.pv-pilha { display: grid; gap: 20px; min-width: 0; }
+/* A lista da Operação é grid de trilha `auto`: texto longo em nowrap (nome de
+   alerta, referência de pedido) esticava a trilha e a linha saía do cartão. */
+.pv .og-lista { grid-template-columns: minmax(0, 1fr); }
+.pv-secao { display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 800; margin: 0 0 12px; }
+.pv-operar { min-width: 0; scroll-margin-top: 80px; }
+
+/* Máquinas da Visão geral: ladrilhos que rolam DENTRO do cartão no celular. */
+.pv-maq-faixa {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 118px), 1fr)); gap: 10px; min-width: 0;
+}
+.pv-maq {
+  display: grid; justify-items: center; gap: 8px; padding: 12px 8px; min-width: 0; text-align: center;
+  border: 1px solid var(--border); border-radius: 14px; color: var(--text); text-decoration: none;
+}
+.pv-maq-nome { font-size: 13px; font-weight: 700; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Status › Por etapa. */
+.pv-etapa { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 6px 0; min-width: 0; }
+.pv-etapa-cab { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 6px; min-width: 0; }
+.pv-pct { width: 40px; flex: none; text-align: right; font-size: 13px; }
+.pv-inout { display: grid; gap: 12px; padding: 16px; border: 1px solid var(--border); border-radius: 14px; min-width: 0; }
+.pv-inout-pe { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--text-dim); padding-top: 10px; border-top: 1px solid var(--border); }
+.pv-inout-pe b { font-size: 22px; color: var(--text); }
+
+/* Controle agora. */
+.pv-filtros { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; min-width: 0; }
+.pv-filtros > :first-child { flex: 1 1 420px; min-width: 0; }
+.pv-busca { position: relative; display: flex; align-items: center; flex: 0 1 300px; min-width: 0; }
+.pv-busca svg { position: absolute; left: 12px; pointer-events: none; }
+.pv-busca .ui-input { width: 100%; min-height: var(--tap); padding-left: 36px; }
+.pv-conta {
+  display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px; margin-left: 6px;
+  border-radius: 999px; font-size: 11.5px; font-weight: 700; background: var(--surface-2); color: var(--text-dim);
+}
+.pv-kanban { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; align-items: start; min-width: 0; }
+.pv-kanban[data-uma] { grid-template-columns: minmax(0, 1fr); }
+.pv-coluna {
+  display: grid; gap: 10px; padding: 12px; min-width: 0; border-radius: 18px;
+  background: color-mix(in srgb, var(--surface-2) 60%, transparent); border: 1px solid var(--border);
+}
+.pv-coluna-cab { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.pv-coluna-cab b { flex: 1; min-width: 0; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pv-coluna-cab .pv-conta { margin-left: 0; }
+.pv-coluna-vazia { font-size: 12.5px; color: var(--text-dim); padding: 8px 2px; }
+.pv-coluna-lista { display: grid; gap: 10px; max-height: 70dvh; overflow-y: auto; min-width: 0; }
+.pv-card {
+  display: grid; gap: 8px; padding: 12px; min-width: 0; border-radius: 14px;
+  background: var(--card, var(--surface)); border: 1px solid var(--border); box-shadow: 0 1px 2px rgba(0, 0, 0, .04);
+}
+.pv-card-cab { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.pv-card-cab b { flex: 1; font-size: 13.5px; }
+.pv-card-meta { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; color: var(--text-dim); min-width: 0; }
+.pv-card-meta span { display: inline-flex; align-items: center; gap: 4px; min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pv-card-pe { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; }
+.pv-motivo { font-size: 11.5px; font-weight: 600; min-width: 0; }
+.pv-tipo { display: grid; gap: 2px; padding: 12px; border: 1px solid var(--border); border-radius: 14px; min-width: 0; }
+.pv-foto { width: 30px; height: 30px; border-radius: 8px; object-fit: cover; flex: none; background: var(--surface-2); }
+
+/* Máquinas. */
+.pv-linha-btn { width: 100%; border: 0; background: none; font: inherit; cursor: pointer; text-align: left; }
+.pv-oee { display: flex; align-items: center; gap: 18px; min-width: 0; }
+
+/* Programações › linha do tempo. */
+.pv-tempo { list-style: none; margin: 0; padding: 0; display: grid; }
+.pv-tempo-item { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 12px; min-height: 60px; padding: 6px 0; min-width: 0; }
+.pv-turno { flex: 1 0 100%; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: var(--text-dim); padding-top: 8px; }
+.pv-tempo-hora { width: 44px; flex: none; font-size: 12.5px; font-weight: 700; color: var(--text-dim); }
+.pv-tempo-ponto { width: 10px; height: 10px; flex: none; border-radius: 50%; background: var(--primary); box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 16%, transparent); }
+.pv-tempo-item[data-estado="andamento"] .pv-tempo-ponto { background: var(--ok); box-shadow: 0 0 0 4px color-mix(in srgb, var(--ok) 16%, transparent); }
+.pv-tempo-item[data-estado="pausado"] .pv-tempo-ponto { background: var(--atencao); box-shadow: 0 0 0 4px color-mix(in srgb, var(--atencao) 16%, transparent); }
+.pv-tempo-item > div { flex: 1 1 160px; }
+.pv-resumo-anel { display: grid; place-items: center; padding: 4px 0 8px; }
+
+@media (max-width: 1199px) {
+  /* Cinco colunas não cabem: a fileira rola dentro do bloco, com encaixe. */
+  .pv-kanban { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(min(84%, 300px), 1fr); overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 6px; }
+  .pv-kanban > * { scroll-snap-align: start; }
+  .pv-kanban[data-uma] { grid-auto-flow: row; grid-template-columns: minmax(0, 1fr); overflow-x: visible; }
+}
+@media (max-width: 560px) {
+  .pv-busca { flex: 1 1 100%; }
+  .pv-oee { flex-direction: column; align-items: stretch; }
+  .pv-oee > :first-child { align-self: center; }
+}
+
+/* Os quatro números do topo cabem numa fileira na coluna principal (que é
+   mais estreita que a da Operação por causa da coluna de alertas). */
+.pv .og-kpis { grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); }
+
+/* Pedidos por etapa (RoscaEtapas): anel do kit + legenda com a MESMA cor de
+   cada fatia. Sem o fundo cinza atrás do anel — o cartão já é a moldura. */
+.pv-rosca { display: flex; flex-wrap: wrap; align-items: center; gap: 18px; min-width: 0; }
+.pv-rosca-anel { flex: 0 1 172px; min-width: 150px; }
+.pv-rosca-legenda { flex: 1 1 200px; min-width: 0; list-style: none; margin: 0; padding: 0; display: grid; gap: 11px; }
+.pv-rosca-legenda li { display: flex; align-items: center; gap: 8px; font-size: 13px; min-width: 0; }
+.pv-rosca-ponto { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+.pv-rosca-rot { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pv-rosca-pct { width: 36px; text-align: right; color: var(--text-dim); font-size: 12px; }
+@media (max-width: 560px) { .pv-rosca-anel { flex-basis: 100%; display: grid; justify-items: center; } }
+
+/* Status › Fluxo no período: uma linha por etapa, comparável de cima a baixo. */
+.pv-fluxo { display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 6px 0; min-width: 0; }
+.pv-fluxo-rot { flex: 1 1 150px; min-width: 0; }
+.pv-fluxo-faisca { flex: 0 1 160px; min-width: 60px; }
+.pv-fluxo-total { width: 56px; flex: none; text-align: right; font-size: 18px; }
+@media (max-width: 560px) { .pv-fluxo-faisca { display: none; } }

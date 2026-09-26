@@ -1,0 +1,129 @@
+/* Campo de mídia do tutorial (CampoMidia). Prefixo `cte-midia` — `ct-` é da
+   Central de Trabalho no globals.css e colide.
+   Quatro caras no mesmo lugar: escolher, colar link, enviando e cheio. Só
+   tokens do tema, então vale nos dois temas sem bloco próprio. */
+/* `position:relative`: o input escondido é absoluto e, sem um ancestral
+   posicionado perto, iria se ancorar lá em cima e esticar a coluna que rola. */
+.cte-midia { position:relative; display:flex; flex-direction:column; gap:8px; min-width:0; }
+.cte-midia-rotulo { color:var(--text-dim); font-size:11.5px; font-weight:700; }
+
+/* Cartão SÓBRIO, de borda contínua. O tracejado só aparece com arquivo sendo
+   arrastado por cima — sempre à vista, lia-se como tela quebrada. */
+.cte-midia-vazio, .cte-midia-cheio, .cte-midia-link, .cte-midia-envio {
+  padding:12px; border:1px solid var(--border); border-radius:var(--r-md); background:var(--surface);
+  transition:border-color var(--duration-quick, 150ms) var(--ease-smooth-out, cubic-bezier(0.22, 1, 0.36, 1)),
+             background-color var(--duration-quick, 150ms) var(--ease-smooth-out, cubic-bezier(0.22, 1, 0.36, 1));
+}
+.cte-midia[data-sobre] :is(.cte-midia-vazio, .cte-midia-cheio) {
+  border-style:dashed; border-color:var(--primary); background:color-mix(in srgb, var(--primary) 6%, var(--surface));
+}
+
+/* ── Escolher ── */
+.cte-midia-vazio { display:flex; align-items:center; gap:10px 12px; flex-wrap:wrap; }
+.cte-midia-icone { display:grid; place-items:center; flex:none; width:40px; height:40px; border-radius:12px; background:var(--surface-2); color:var(--text-dim); }
+.cte-midia-icone svg { stroke:currentColor; }
+.cte-midia-botoes { display:flex; align-items:center; gap:8px; flex-wrap:wrap; min-width:0; }
+.cte-midia-dica { flex-basis:100%; color:var(--text-dim); font-size:11px; font-weight:600; }
+/* Arrastar e colar são gestos de computador: no toque a dica só ocupa lugar.
+   Por PONTEIRO e não só por largura — tablet tem 1024px e dedo. */
+@media (pointer: coarse) { .cte-midia-dica { display:none; } }
+
+/* O input nativo fica FORA DA VISTA mas continua no Tab (nada de
+   display:none, que o tiraria do teclado). Quem aparece é o botão. */
+.cte-midia-arquivo { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0, 0, 0, 0); white-space:nowrap; border:0; }
+.cte-midia-arquivo:focus-visible + label { outline: var(--foco-largura) solid var(--foco-cor); outline-offset: var(--foco-offset); }
+
+/* ── Colar link ── */
+.cte-midia-link { display:flex; flex-direction:column; gap:6px; }
+.cte-midia-sub { color:var(--text-dim); font-size:11.5px; font-weight:650; }
+.cte-midia-link-linha { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.cte-midia-link-linha input, .cte-midia-alt input {
+  width:100%; min-width:0; min-height:var(--ctl-md, 38px); padding:8px 11px; border:1px solid var(--border);
+  border-radius:var(--r-sm); background:var(--surface); color:var(--text); font:inherit; font-size:13px;
+}
+.cte-midia-link-linha input { flex:1 1 200px; }
+.cte-midia-link-linha input:focus-visible, .cte-midia-alt input:focus-visible { outline: var(--foco-largura) solid var(--foco-cor); outline-offset: 1px; }
+.cte-midia-link-linha input[aria-invalid="true"] { border-color:var(--perigo); }
+
+/* ── Enviando ── */
+.cte-midia-envio { display:flex; flex-direction:column; gap:10px; }
+.cte-midia-envio-topo { display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; }
+.cte-midia-envio-texto { color:var(--text); font-size:12.5px; font-weight:650; font-variant-numeric:tabular-nums; }
+.cte-midia-barra { height:6px; overflow:hidden; border-radius:999px; background:var(--surface-2); }
+.cte-midia-barra > span {
+  display:block; width:0; height:100%; border-radius:inherit; background:var(--primary);
+  transition:width var(--duration-fast, 250ms) var(--ease-smooth-out, cubic-bezier(0.22, 1, 0.36, 1));
+}
+/* Sem porcentagem (preparando a foto, gerando a capa): a barra inteira pulsa
+   em vez de uma faixa correndo de lado — nada entra pela lateral. Tempo e
+   curva são os do PULSO da escala, no ritmo do esqueleto (`t-skel`, um fôlego
+   por `--pulse-dur`): com `--ease-smooth-out` em `alternate` a volta chegava
+   rápida na ponta apagada e a barra piscava em vez de respirar. */
+.cte-midia-barra[data-indeterminado] > span {
+  width:100%;
+  animation:cte-midia-pulso var(--pulse-dur, 1000ms) var(--ease-linear, linear) infinite;
+}
+@keyframes cte-midia-pulso { 0%, 100% { opacity:.2; } 50% { opacity:.55; } }
+
+/* ── Cheio ── miniatura + etiqueta + ações. A coluna da miniatura tem TETO e
+   não piso: espreme antes de estourar o painel. */
+.cte-midia-cheio { display:grid; grid-template-columns:minmax(0, 136px) minmax(0, 1fr); align-items:center; gap:12px; padding:10px; }
+.cte-midia[data-quadrado] .cte-midia-cheio { grid-template-columns:minmax(0, 88px) minmax(0, 1fr); }
+.cte-midia-mini { position:relative; display:grid; place-items:center; width:100%; aspect-ratio:16 / 9; overflow:hidden; border-radius:var(--r-sm); background:var(--surface-2); color:var(--text-dim); }
+.cte-midia[data-quadrado] .cte-midia-mini { aspect-ratio:1; }
+.cte-midia-mini > svg { stroke:currentColor; }
+.cte-midia-mini img { width:100%; height:100%; object-fit:cover; }
+/* Selo de "é vídeo" sobre a miniatura: fica escuro nos dois temas porque mora
+   em cima da FOTO, não do fundo da tela. */
+.cte-midia-play { position:absolute; left:6px; bottom:6px; display:grid; place-items:center; width:24px; height:24px; border-radius:999px; background:rgba(0, 0, 0, .58); }
+.cte-midia-play svg { stroke:#fff; }
+.cte-midia-info { display:flex; flex-direction:column; align-items:flex-start; gap:6px; min-width:0; }
+.cte-midia-etiqueta {
+  display:inline-flex; align-items:center; gap:5px; padding:3px 9px; border-radius:999px;
+  background:color-mix(in srgb, var(--primary) 13%, transparent); color:var(--primary-texto, var(--primary));
+  font-size:11px; font-weight:800;
+}
+.cte-midia-etiqueta svg { stroke:currentColor; }
+.cte-midia-host { max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-dim); font-size:11.5px; }
+/* Remover afastado do Trocar: ação que apaga não fica colada na vizinha. */
+.cte-midia-acoes { display:flex; flex-wrap:wrap; gap:8px 12px; }
+
+/* ── Descrição da imagem ── */
+.cte-midia-alt { display:flex; flex-direction:column; gap:5px; }
+.cte-midia-alt label { color:var(--text-dim); font-size:11.5px; font-weight:650; }
+.cte-midia-alt small { color:var(--text-dim); font-size:11px; line-height:1.45; }
+
+/* ── Erro ── no próprio campo. Texto na cor do texto (o vermelho fica no
+   ícone e na borda): lido sobre o tom claro, o vermelho puro perde contraste
+   num dos temas. */
+.cte-midia-erro {
+  display:flex; align-items:flex-start; gap:7px; margin:0; padding:8px 10px;
+  border:1px solid color-mix(in srgb, var(--perigo) 38%, transparent); border-radius:var(--r-sm);
+  background:color-mix(in srgb, var(--perigo) 9%, var(--surface)); color:var(--text);
+  font-size:12px; font-weight:600; line-height:1.45; overflow-wrap:anywhere;
+}
+.cte-midia-erro svg { flex:none; margin-top:1px; stroke:var(--perigo); }
+
+/* Celular: miniatura em cima, na largura toda — 136px ao lado de dois botões
+   não cabe em 320px sem espremer o rótulo. Botões dividem a linha, e o ícone
+   decorativo sai: ao lado de botões na largura toda ele sobrava sozinho numa
+   linha (~50px a mais por campo vazio), e o "Enviar …" já leva ícone. */
+@media (max-width: 480px) {
+  .cte-midia-cheio, .cte-midia[data-quadrado] .cte-midia-cheio { grid-template-columns:minmax(0, 1fr); }
+  .cte-midia[data-quadrado] .cte-midia-mini { max-width:160px; }
+  .cte-midia-icone { display:none; }
+  .cte-midia-botoes, .cte-midia-link-linha { width:100%; }
+  .cte-midia-botoes > .ui-btn, .cte-midia-link-linha > .ui-btn { flex:1 1 auto; }
+}
+
+/* Dedo: 44px. O `<label>` vestido de botão não é `button`, então a regra de
+   toque da fundação não o alcança — e o `data-t="sm"` ficaria nos 32px. */
+@media (pointer: coarse) {
+  .cte-midia .ui-btn { min-height:var(--tap, 44px); }
+  .cte-midia-link-linha input, .cte-midia-alt input { min-height:var(--tap, 44px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cte-midia-vazio, .cte-midia-cheio, .cte-midia-link, .cte-midia-envio, .cte-midia-barra > span { transition:none; }
+  .cte-midia-barra[data-indeterminado] > span { animation:none; opacity:.4; }
+}

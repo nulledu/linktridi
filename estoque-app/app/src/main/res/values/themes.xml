@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- O tema do manifesto era `Theme.Material.Light.NoActionBar`, do totem do
+     mercadinho. Com a paleta escura do galpão isso dava um FLASH BRANCO na
+     abertura: o Android pinta `windowBackground` enquanto o processo sobe, bem
+     antes do primeiro quadro do Compose. Num galpão escuro, esse meio segundo
+     de tela branca é o que mais incomoda quem liga o aparelho. -->
+<resources>
+    <style name="Theme.EstoqueTridi" parent="@android:style/Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/galpao_fundo</item>
+        <item name="android:statusBarColor">@color/galpao_fundo</item>
+        <item name="android:navigationBarColor">@color/galpao_fundo</item>
+        <item name="android:colorBackground">@color/galpao_fundo</item>
+    </style>
+</resources>

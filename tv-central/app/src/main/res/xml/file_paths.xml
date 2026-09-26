@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Caminhos que o FileProvider pode entregar a outro app.
+
+    Só o cache: é onde o agente baixa o APK da atualização, e é o único arquivo
+    que precisa sair daqui. O instalador do Android roda em OUTRO processo, e
+    desde o Android 7 passar um `file://` entre apps lança FileUriExposedException
+    — o Provider é o que transforma isso num `content://` que o instalador
+    consegue abrir, com permissão temporária e só para este arquivo.
+-->
+<paths>
+    <cache-path name="fleet" path="." />
+</paths>

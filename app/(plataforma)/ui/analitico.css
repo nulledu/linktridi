@@ -1,0 +1,173 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   Kit · bloco analítico e célula de métrica.
+
+   Duas peças que nasceram no Analytics e valem em qualquer tela que mostre
+   número com comparação: o CARTÃO de uma faixa (ícone, título, "como
+   interpretar" e ações) e a CÉLULA de um indicador dentro dele.
+
+   Só layout e hairline. Cor de série, tinta de destaque e tempo de movimento
+   continuam saindo dos tokens da fundação (`--graf-*`, `--primary`, `--mc-*`,
+   `--duration-*`/`--ease-*`): uma peça que escreve o próprio roxo é uma peça
+   que para de acompanhar o destaque da pessoa.
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* ── Bloco: o cartão de uma faixa ───────────────────────────────────────── */
+
+.an-bloco {
+  background: var(--mc-card, var(--surface-2));
+  border-radius: 20px;
+  box-shadow: inset 0 0 0 1px var(--mc-anel, var(--border));
+  padding: clamp(14px, 3vw, 20px);
+  min-width: 0;
+  /* `grid` e não `block`: o filho que rola precisa de um pai que o CONTENHA em
+     largura, senão a fileira de etapas estica o bloco e a página rola de lado. */
+  display: grid;
+  /* `minmax(0, 1fr)` e não o `auto` implícito: a coluna automática de um grid
+     é dimensionada pelo MAX-CONTENT do filho, então a faixa do resumo (uma
+     linha flex de 520px + o arco do SLA) fazia a coluna nascer com 740px
+     dentro de um cartão de 288 a 320px. A página não rolava — o
+     `overflow-x: clip` da fundação escondia a sobra —, e o excedente ficava
+     inalcançável, que é o defeito CORTA do `npm run rolagem`. */
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: 14px;
+}
+
+/* `flex-wrap` + o título com `flex: 1`: num bloco estreito (um terço da
+   grade), o grupo de abas da direita comia a linha inteira e o título
+   encolhia até sumir — sobrava um ícone e um "?" sem assunto. Agora as ações
+   descem pra segunda linha e o título nunca desaparece. */
+.an-bloco-cab {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex-wrap: wrap;
+  row-gap: 8px;
+}
+.an-bloco-icone {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+}
+.an-bloco-titulo {
+  font-size: 15.5px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  /* Base de 60px, não `auto`: com a base no CONTEÚDO, o título de um bloco
+     estreito (um terço da grade, com a faixa das ferramentas reservada) não
+     cabia na primeira linha e descia inteiro — sobrava o ícone sozinho em
+     cima. Com base pequena ele encolhe e corta, que é o comportamento certo
+     num cabeçalho de uma linha. */
+  flex: 1 1 60px;
+  min-width: 0;
+  /* QUEBRA, não corta. Num bloco de um terço, com a faixa das ferramentas
+     reservada à direita, "Desempenho por conta" virava "Desempenho …" — e
+     reticências no título de um bloco tiram o assunto da tela. Duas linhas
+     custam 18px; o assunto vale mais que isso. */
+  white-space: normal;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+.an-bloco-dir { margin-left: auto; display: flex; align-items: center; gap: 8px; flex: none; min-width: 0; max-width: 100%; }
+
+
+/* ── Faixa 2 · resumo da operação ───────────────────────────────────────── */
+
+/* Densidade equilibrada: cada indicador é uma CÉLULA numa faixa só, separada
+   por fio — não seis cartões grandes. Cartão grande pra tudo faz com que nada
+   seja manchete, que é exatamente o defeito que esta faixa veio desfazer. */
+.an-resumo {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
+  gap: 0;
+}
+.an-metrica {
+  display: grid;
+  align-content: start;
+  gap: 2px;
+  padding: 2px 16px;
+  min-width: 0;
+  border-left: 1px solid var(--mc-anel, var(--border));
+}
+.an-metrica:first-child { border-left: 0; padding-left: 2px; }
+
+.an-metrica-topo {
+  display: flex;
+  /* `flex-start` e não `center`: com o rótulo em duas linhas o ladrilho
+     descia pro meio e as células da faixa deixavam de alinhar entre si. */
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+  /* Duas linhas de rótulo reservadas SEMPRE: sem o piso, a célula de rótulo
+     curto subia o número e a faixa virava uma escadinha — e o que ela existe
+     pra permitir é justamente comparar os números de relance. */
+  min-height: 32px;
+}
+.an-metrica-ladrilho {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--primary) 11%, transparent);
+}
+/* O rótulo QUEBRA em até duas linhas em vez de cortar — "Pedidos
+   processados" virando "Pedidos process…" tira justamente a palavra que
+   diferencia a célula da vizinha. Duas linhas custam 15px; o `-webkit-box`
+   segura o teto pra que uma célula não empurre a altura da faixa inteira. */
+.an-metrica-rot {
+  font-size: 12.5px;
+  line-height: 1.22;
+  color: var(--text-dim);
+  min-width: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+.an-metrica-num {
+  font-size: clamp(22px, 4.5cqi, 28px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.an-metrica-delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.an-metrica-base {
+  font-size: 11px;
+  color: var(--text-dim);
+  font-weight: 500;
+}
+
+/* No celular a faixa vira carrossel com encaixe: seis células empilhadas
+   custavam três rolagens pra responder "o dia está bem?", e a resposta é a
+   COMPARAÇÃO entre elas — que só existe se estiverem lado a lado. */
+@media (max-width: 720px) {
+  .an-resumo {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(148px, 62%);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px;
+  }
+  .an-metrica { scroll-snap-align: start; }
+  .an-metrica:first-child { padding-left: 0; }
+}

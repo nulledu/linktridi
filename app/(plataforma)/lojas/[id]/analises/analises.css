@@ -1,0 +1,129 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+ * Análises da loja
+ *
+ * Tudo em `minmax(min(100%, …))`: idêntico no computador e colapsando sozinho
+ * no celular, em vez de empurrar a página pra fora a 320px.
+ * ─────────────────────────────────────────────────────────────────────────── */
+
+
+.an-periodo-item {
+  min-height: 34px; padding: 0 14px; border: 0; border-radius: calc(var(--r-sm) - 3px);
+  background: none; color: var(--text-dim); cursor: pointer;
+  font: inherit; font-size: 13px; font-weight: 650;
+}
+.an-periodo-item[data-on="1"] { background: var(--surface); color: var(--text); font-weight: 750; }
+@media (pointer: coarse) { .an-periodo-item { min-height: var(--tap); } }
+
+
+.an-duo {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  gap: 14px;
+  align-items: start;
+}
+
+/* ── Barras horizontais (estados, dispositivo) ───────────────────────────── */
+.an-barras { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
+.an-barras li {
+  display: grid; align-items: center; gap: 10px;
+  grid-template-columns: minmax(72px, 128px) minmax(0, 1fr) 44px 80px;
+  min-height: 30px; font-size: 12.5px;
+}
+.an-barras-curtas li { grid-template-columns: minmax(72px, 110px) minmax(0, 1fr) 44px; }
+.an-barra-nome { display: flex; flex-direction: column; line-height: 1.2; min-width: 0; }
+.an-barra-nome strong { font-size: 12.5px; font-weight: 750; text-transform: capitalize; }
+.an-barra-nome small { font-size: 10.5px; color: var(--text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.an-barra-trilho { height: 8px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+.an-barra-cheia {
+  display: block; height: 100%; border-radius: 999px;
+  background: var(--graf-1, var(--primary));
+  /* `width` e não `transform`: barra que cresce por escala distorce o que tem
+     dentro, e barra em vidro com transform deixa rastro branco no Chrome. */
+  transition: width var(--duration-normal, 250ms) var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1));
+}
+.an-barra-num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; }
+.an-barra-din { text-align: right; font-variant-numeric: tabular-nums; color: var(--text-dim); font-size: 12px; }
+
+@media (max-width: 520px) {
+  /* A 320px a coluna de dinheiro não cabe junto do resto; ela some e o valor
+     continua na tabela de origem, que é onde ele é comparável mesmo. */
+  .an-barras li { grid-template-columns: minmax(64px, 100px) minmax(0, 1fr) 40px; }
+  .an-barra-din { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) { .an-barra-cheia { transition: none; } }
+
+/* ── Tabela de origem ────────────────────────────────────────────────────── */
+.an-nota {
+  margin: 0 0 12px; padding: 10px 12px; border-radius: 12px;
+  background: var(--surface-2); color: var(--text-dim);
+  font-size: 12.5px; line-height: 1.55;
+}
+.an-nota strong { color: var(--text); font-weight: 700; }
+
+/* Rola DENTRO do bloco no celular, nunca na página. */
+.an-tabela { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.an-linha {
+  display: grid; align-items: center; gap: 10px;
+  grid-template-columns: minmax(140px, 1.6fr) 80px 80px minmax(110px, 1fr) minmax(96px, 1fr);
+  min-height: 40px; padding: 4px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 12.5px; font-variant-numeric: tabular-nums;
+}
+.an-linha > span:not(:first-child) { text-align: right; }
+.an-linha:last-child { border-bottom: 0; }
+.an-cab {
+  font-size: 10.5px; font-weight: 750; letter-spacing: 0.05em;
+  text-transform: uppercase; color: var(--text-dim);
+}
+.an-sub > span:first-child { padding-left: 14px; color: var(--text-dim); }
+
+/* ── Público ─────────────────────────────────────────────────────────────── */
+.an-rot {
+  margin: 14px 0 7px; font-size: 10.5px; font-weight: 750;
+  letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-dim);
+}
+.an-rot:first-of-type { margin-top: 0; }
+.an-par { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.an-par > div {
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 10px 12px; border-radius: 12px; background: var(--surface-2);
+}
+.an-par strong { font-size: 19px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.an-par small { font-size: 11px; color: var(--text-dim); }
+
+.an-parte p { margin: 0 0 12px; font-size: 13.5px; line-height: 1.6; color: var(--text-dim); }
+.an-parte strong { color: var(--text); font-weight: 750; }
+
+/* Linha de "sem dado" dentro de uma lista da tela. */
+.an-sem { font-size: 12.5px; color: var(--text-dim); }
+
+/* ── Rosca + legenda ─────────────────────────────────────────────────────────
+ * Morava em `inicio.css` e veio junto quando o Início parou de usar rosca. Uma
+ * tela lendo o CSS de outra é exatamente como isto quebra em silêncio: o Início
+ * mudou, e a legenda daqui virou uma lista de marcadores com os números
+ * grudados no nome.
+ */
+.an-rosca {
+  display: grid;
+  grid-template-columns: minmax(min(100%, 150px), 190px) minmax(0, 1fr);
+  gap: 18px; align-items: center;
+}
+@media (max-width: 620px) { .an-rosca { grid-template-columns: 1fr; } }
+
+.an-fatias { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.an-fatias li {
+  display: grid; align-items: center; gap: 9px;
+  grid-template-columns: 9px minmax(0, 1fr) auto auto;
+  font-size: 12.5px;
+}
+.an-fatias i { width: 9px; height: 9px; border-radius: 3px; }
+.an-fatia-nome {
+  color: var(--text); font-weight: 600;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.an-fatia-val { color: var(--text-dim); font-variant-numeric: tabular-nums; }
+.an-fatia-pct {
+  color: var(--text); font-weight: 700; font-variant-numeric: tabular-nums;
+  min-width: 36px; text-align: right;
+}

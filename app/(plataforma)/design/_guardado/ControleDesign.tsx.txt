@@ -1,0 +1,89 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import { Icon } from "../../Icon";
+import { Abas } from "../../ui/Abas";
+import { VazioPainel } from "../../ui/CartaoPainel";
+import { Fila } from "../../ui/micro";
+import { COLUNAS_DESIGN, type ColunaDesign } from "@/lib/design-fluxo";
+import type { ProjetoLinha } from "@/lib/design-projetos";
+import { useListaProjetos } from "../dados";
+import { CartaoProjeto, DetalheProjeto } from "../parts";
+
+const TOM_COR: Record<string, string> = { neutro: "var(--text-dim)", destaque: "var(--primary)", info: "var(--info)", atencao: "var(--atencao)", perigo: "var(--perigo)", ok: "var(--ok)" };
+
+/**
+ * Controle agora: a gestão do dia. A pergunta não é "em que etapa está?"
+ * (isso é Projetos) e sim "o que precisa de mim?". Urgente e atrasado vêm
+ * primeiro; depois o que o Design está fazendo (criação, revisão interna) e o
+ * que depende de fora (retorno do comercial/cliente, aprovação do cliente).
+ * Dentro de cada coluna, o mais urgente e o mais velho na etapa sobem.
+ */
+export function ControleDesign({ coluna: inicial }: { coluna?: string }) {
+  const [filtro, setFiltro] = useState<"todas" | ColunaDesign>((COLUNAS_DESIGN.some((c) => c.chave === inicial) ? inicial : "todas") as "todas" | ColunaDesign);
+  const [busca, setBusca] = useState("");
+  const [q, setQ] = useState("");
+  const [aberto, setAberto] = useState<ProjetoLinha | null>(null);
+  useEffect(() => { const t = setTimeout(() => setQ(busca), 300); return () => clearTimeout(t); }, [busca]);
+
+  const qs = useMemo(() => {
+    const p = new URLSearchParams({ agrupar: "coluna", limite: filtro === "todas" ? "25" : "150" });
+    if (filtro !== "todas") p.set("coluna", filtro);
+    if (q.trim()) p.set("q", q.trim());
+    return p.toString();
+  }, [filtro, q]);
+  const l = useListaProjetos(qs);
+  const d = l.estado === "ok" ? l.dado : null;
+  const mostrar = COLUNAS_DESIGN.filter((c) => filtro === "todas" || c.chave === filtro);
+
+  return (
+    <div className="pv-pilha">
+      <div className="pv-filtros">
+        <Abas valor={filtro} onMuda={setFiltro} ariaLabel="Filtrar por situação"
+          itens={[
+            { valor: "todas" as const, rotulo: "Todas" },
+            ...COLUNAS_DESIGN.map((c) => ({ valor: c.chave, rotulo: c.nome, badge: d ? <span className="pv-conta mt-num">{d.porColuna[c.chave] ?? 0}</span> : undefined })),
+          ]} />
+        <label className="pv-busca">
+          <Icon name="search" size={16} color="var(--text-dim)" />
+          <input className="ui-input" type="search" placeholder="Buscar pedido, produto, pessoa…" value={busca}
+            onChange={(e) => setBusca(e.target.value)} aria-label="Buscar no controle" />
+        </label>
+      </div>
+
+      {l.estado === "carregando" && <VazioPainel texto="Carregando…" />}
+      {(l.estado === "erro" || l.estado === "indisponivel") && <VazioPainel texto="Não deu pra ler o ERP agora." />}
+
+      {d && (
+        <div className="pv-kanban dv-kanban dv-kanban-6" data-uma={mostrar.length === 1 ? "1" : undefined}>
+          {mostrar.map((c) => {
+            const itens = d.projetos.filter((p) => p.coluna === c.chave);
+            const total = d.porColuna[c.chave] ?? 0;
+            const cor = TOM_COR[c.tom];
+            return (
+              <section key={c.chave} className="pv-coluna" aria-label={c.nome}>
+                <header className="pv-coluna-cab">
+                  <span className="og-cartao-icone" style={{ background: `color-mix(in srgb, ${cor} 14%, transparent)` }} aria-hidden>
+                    <Icon name={c.icone} size={16} color={cor} />
+                  </span>
+                  <b>{c.nome}</b>
+                  <span className="pv-conta mt-num">{total}</span>
+                </header>
+                {itens.length === 0 ? <p className="pv-coluna-vazia">Nada aqui.</p> : (
+                  <Fila className="pv-coluna-lista">
+                    {itens.map((p) => <CartaoProjeto key={p.id} p={p} onAbrir={setAberto} />)}
+                    {total > itens.length && (
+                      <button type="button" className="dv-mais" onClick={() => setFiltro(c.chave)}>Ver os {total.toLocaleString("pt-BR")}</button>
+                    )}
+                  </Fila>
+                )}
+              </section>
+            );
+          })}
+        </div>
+      )}
+
+      {aberto && <DetalheProjeto p={aberto} onFechar={() => setAberto(null)} />}
+    </div>
+  );
+}

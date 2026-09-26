@@ -1,0 +1,382 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   Analytics · central de inteligência — o esqueleto das faixas.
+
+   Só LAYOUT e hairline. Cor de série, tinta de destaque, sombra de cartão e
+   tempo de movimento continuam saindo dos tokens da fundação (`--graf-*`,
+   `--primary`, `--mc-*`, `--duration-*`/`--ease-*`): uma tela que escreve o
+   próprio roxo é uma tela que para de acompanhar o destaque da pessoa.
+
+   Regras que este arquivo respeita (cada uma já custou caro):
+     · nada termina em `translateY(0)`/`scale(1)` — o fim é `transform: none`,
+       senão o transform residual vira bloco de contenção e o popover de dentro
+       nasce atrás dos cards;
+     · nenhuma faixa usa `mask-image` (faz da fileira o bloco de contenção do
+       `position: fixed` e a folha do celular nasce recortada dentro dela);
+     · toda fileira que não cabe rola DENTRO do bloco, nunca na página;
+     · `minmax(min(100%, Npx), 1fr)` em toda grade — colapsa sozinha a 320px.
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* ── Cabeçalho da tela ──────────────────────────────────────────────────── */
+
+.an-topo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+/* O seletor de período cresce e empurra as ações pra direita; a 320px tudo
+   quebra pra linha de baixo sozinho. */
+.an-topo-periodo { flex: 1 1 260px; min-width: 0; }
+.an-topo-acoes { display: flex; align-items: center; gap: 8px; flex: none; }
+
+/* "Última atualização · Atualizar agora" — apoio, nunca competindo com o h1. */
+.an-atualizacao {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+.an-atualizacao-ponto {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--ok);
+  flex: none;
+}
+
+/* ── Faixa 3 · insights ─────────────────────────────────────────────────── */
+
+.an-insights {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 12px;
+}
+
+/* Cartão clicável de verdade: é `<button>`, então teclado e leitor de tela
+   sabem que ele leva a algum lugar. Um `<div onClick>` aqui deixaria o insight
+   inalcançável por Tab — e a faixa inteira é a primeira coisa da tela. */
+.an-insight {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  text-align: left;
+  padding: 14px 15px;
+  border-radius: 16px;
+  border: 1px solid var(--mc-anel, var(--border));
+  background: var(--mc-palco, var(--surface));
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  min-width: 0;
+  min-height: var(--tap);
+  transition: background var(--duration-fast) var(--ease-out),
+              box-shadow var(--duration-fast) var(--ease-out);
+}
+.an-insight:hover { background: var(--mc-card-hover, var(--surface-2)); }
+.an-insight:active { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--an-tom) 40%, transparent); }
+
+.an-insight-topo { display: flex; align-items: center; gap: 9px; min-width: 0; }
+.an-insight-ladrilho {
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--an-tom) 14%, transparent);
+}
+.an-insight-titulo {
+  font-size: 13.5px;
+  font-weight: 700;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.an-insight-texto { font-size: 12.5px; color: var(--text-dim); line-height: 1.45; }
+.an-insight-ver {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--primary-texto, var(--primary));
+  margin-top: 2px;
+}
+/* A seta anda um fio no hover — convite, não decoração. */
+.an-insight-ver svg { transition: transform var(--duration-fast) var(--ease-out); }
+.an-insight:hover .an-insight-ver svg { transform: translateX(2px); }
+
+/* ── Faixa 4 · fluxo da operação ────────────────────────────────────────── */
+
+/* A fileira rola DENTRO do bloco. Sem `mask-image`: o esmaecido de "tem mais
+   pra ver" faria desta fileira o bloco de contenção do `position: fixed`, e a
+   folha do celular nasceria recortada dentro de 44px de altura. */
+/* Flex e não grid: com `grid-auto-flow: column` as SETAS também viram trilhas
+   automáticas e herdam o mesmo `minmax` das caixas — quinze trilhas de 104px
+   em vez de oito, e a fileira nascia rolando mesmo numa tela de 1440. No flex
+   a seta é `flex: none` e só as caixas dividem a sobra. */
+.an-fluxo {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 4px;
+}
+@media (max-width: 720px) {
+  .an-fluxo { scroll-snap-type: x mandatory; }
+  .an-etapa { scroll-snap-align: start; flex: 0 0 46%; }
+}
+
+.an-etapa {
+  /* 104px é a largura em que as OITO caixas cabem lado a lado num bloco de
+     largura cheia a 1440 — e o fluxo só vale como fluxo quando dá pra ver as
+     oito de uma vez. Abaixo disso a fileira rola dentro do bloco. */
+  flex: 1 1 104px;
+  display: grid;
+  align-content: start;
+  justify-items: center;
+  gap: 3px;
+  padding: 10px 6px;
+  border-radius: 14px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: center;
+  cursor: pointer;
+  min-width: 0;
+  /* Idem: a caixa não pode ser empurrada pelo texto mais longo de dentro. */
+  overflow: hidden;
+  transition: background var(--duration-fast) var(--ease-out),
+              border-color var(--duration-fast) var(--ease-out);
+}
+.an-etapa:hover { background: var(--mc-palco, var(--surface)); }
+/* O gargalo é a ÚNICA etapa marcada. Marcar três é não marcar nenhuma. */
+.an-etapa[data-gargalo="1"] {
+  border-color: color-mix(in srgb, var(--atencao) 38%, transparent);
+  background: color-mix(in srgb, var(--atencao) 7%, transparent);
+}
+
+.an-etapa-ladrilho {
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  background: var(--mc-palco, var(--surface));
+  box-shadow: inset 0 0 0 1px var(--mc-anel, var(--border));
+  margin-bottom: 3px;
+}
+.an-etapa[data-gargalo="1"] .an-etapa-ladrilho {
+  background: color-mix(in srgb, var(--atencao) 14%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--atencao) 30%, transparent);
+}
+.an-etapa-nome {
+  font-size: 11.5px;
+  color: var(--text-dim);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.an-etapa-num {
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+/* `min-width: 0` + corte: sem isto o "184 parados" vira a largura MÍNIMA da
+   caixa, o `1fr` da fileira passa a resolver por conteúdo e as oito etapas
+   deixam de caber lado a lado mesmo numa tela larga. */
+.an-etapa-parados {
+  font-size: 11px;
+  color: var(--text-dim);
+  display: block;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* A seta é decoração de leitura: some do fluxo de acessibilidade e não recebe
+   foco. Ela mora numa coluna própria pra não empurrar o nome da etapa. */
+.an-fluxo-seta {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  color: var(--text-dim);
+  opacity: 0.55;
+  padding-top: 18px;
+  flex: none;
+}
+
+/* ── Faixa 5 · onde o trabalho está parado ──────────────────────────────── */
+
+.an-barra-fila {
+  position: relative;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--mc-trilho-bg, var(--surface));
+  overflow: hidden;
+  min-width: 54px;
+}
+.an-barra-fila > i {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--graf-1);
+  /* Cresce do zero ao entrar; a largura vem por variável CSS (fração com
+     PONTO decimal — "36,5%" é declaração inválida e o navegador devolve a
+     barra pra 100%, que foi como a fatia de 0,3% já apareceu cheia). */
+  width: calc(var(--an-frac, 0) * 100%);
+  transition: width var(--duration-slow) var(--ease-out);
+}
+
+/* ── Widgets ────────────────────────────────────────────────────────────── */
+
+.an-grade {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 14px;
+  align-items: start;
+}
+/* Larguras em colunas de 12. No celular tudo vira largura cheia — uma coluna
+   de 4/12 a 320px daria 78px de cartão. */
+.an-item[data-larg="cheia"] { grid-column: span 12; }
+.an-item[data-larg="meia"] { grid-column: span 6; }
+.an-item[data-larg="terco"] { grid-column: span 4; }
+.an-item[data-larg="dois-tercos"] { grid-column: span 8; }
+.an-item { min-width: 0; position: relative; }
+@media (max-width: 1000px) {
+  .an-item[data-larg="terco"], .an-item[data-larg="meia"], .an-item[data-larg="dois-tercos"] { grid-column: span 12; }
+}
+/* A linha em arrasto sobe uma camada e perde a transição de posição, senão ela
+   "persegue" o cursor com meio segundo de atraso. */
+.an-item[data-arrastando="1"] { z-index: 2; }
+
+/* As ferramentas flutuam sobre o canto do bloco, então o cabeçalho RESERVA a
+   faixa delas. Sem isto, no celular (onde elas ficam sempre visíveis, porque
+   hover não existe) a alça de arrasto caía em cima do título — e no
+   computador o mesmo acontecia no instante do hover. */
+.an-item > .an-bloco > .an-bloco-cab { padding-inline-end: 84px; }
+.an-item[data-arrastando="1"] .an-bloco { box-shadow: inset 0 0 0 1px var(--primary), 0 12px 30px rgba(0, 0, 0, 0.16); }
+
+/* Alça e menu do widget: aparecem no hover NO COMPUTADOR e ficam SEMPRE
+   visíveis no celular — informação que só existe no hover não existe no
+   celular. */
+.an-item-ferramentas {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity var(--duration-fast) var(--ease-out);
+  z-index: 1;
+}
+.an-item:hover .an-item-ferramentas,
+.an-item:focus-within .an-item-ferramentas { opacity: 1; }
+@media (hover: none) {
+  .an-item-ferramentas { opacity: 1; }
+}
+.an-puxador {
+  width: var(--tap);
+  height: var(--tap);
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  border: 1px solid var(--mc-anel, var(--border));
+  background: var(--mc-card, var(--surface-2));
+  color: var(--text-dim);
+  cursor: grab;
+  touch-action: none;
+}
+.an-puxador:active { cursor: grabbing; }
+
+/* Corpo: a grade da pessoa + o trilho lateral das análises salvas. A lateral
+   tem largura FIXA e não uma fração de 12 — a grade de dentro já divide em
+   doze, e fração dentro de fração faria "metade" virar metade de dois terços. */
+.an-corpo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 14px;
+  align-items: start;
+}
+@media (max-width: 1100px) {
+  .an-corpo { grid-template-columns: minmax(0, 1fr); }
+  /* No celular o trilho vai pro FIM: "análises salvas" é navegação, e
+     navegação antes do conteúdo empurra o dado pra baixo da dobra. */
+  .an-corpo-lado { order: 2; }
+}
+
+/* ── Análises salvas ────────────────────────────────────────────────────── */
+
+.an-salva {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 10px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  min-height: var(--tap);
+  transition: background var(--duration-fast) var(--ease-out);
+}
+.an-salva:hover { background: var(--mc-palco, var(--surface)); }
+.an-salva[aria-current="true"] {
+  background: color-mix(in srgb, var(--primary) 10%, transparent);
+  border-color: color-mix(in srgb, var(--primary) 26%, transparent);
+}
+.an-salva-nome { font-size: 13px; font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.an-salva-sub { font-size: 11.5px; color: var(--text-dim); }
+
+/* ── Catálogo do "Adicionar análise" ────────────────────────────────────── */
+
+.an-catalogo {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr));
+  gap: 10px;
+}
+.an-catalogo-item {
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  text-align: left;
+  padding: 12px 13px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  min-height: var(--tap);
+  transition: background var(--duration-fast) var(--ease-out),
+              border-color var(--duration-fast) var(--ease-out);
+}
+.an-catalogo-item:hover { border-color: color-mix(in srgb, var(--primary) 38%, transparent); }
+.an-catalogo-item[disabled] { opacity: 0.5; cursor: default; }
+.an-catalogo-nome { display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 700; }
+.an-catalogo-sub { font-size: 12px; color: var(--text-dim); line-height: 1.4; }
+
+/* ── Movimento reduzido: tudo acima continua funcionando, só para de andar. */
+@media (prefers-reduced-motion: reduce) {
+  .an-insight,
+  .an-insight-ver svg,
+  .an-etapa,
+  .an-barra-fila > i,
+  .an-salva,
+  .an-catalogo-item,
+  .an-item-ferramentas { transition: none; }
+}

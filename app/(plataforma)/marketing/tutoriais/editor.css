@@ -1,0 +1,214 @@
+/* Editor da Central de Tutoriais — a tela é só listas; formulários moram em
+   PainelLateral (kit ui/controles), então aqui fica o que é próprio da tela:
+   cabeçalho, linhas das listas, chips, arrasto e o acordeão de blocos. */
+.cte-admin { display:flex; flex-direction:column; gap:16px; margin-top:6px; max-width:1240px; }
+
+/* ── Cabeçalho ── */
+.cte-topo { display:flex; align-items:center; gap:12px; flex-wrap:wrap; padding-bottom:14px; border-bottom:1px solid var(--border); }
+.cte-topo-id { flex:1; min-width:min(100%,240px); }
+.cte-topo-id h1 { font-size:clamp(19px,4.5vw,24px); font-weight:800; letter-spacing:-.02em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.cte-topo-meta { display:flex; align-items:center; gap:8px; margin-top:4px; flex-wrap:wrap; min-width:0; }
+.cte-topo-link { display:inline-flex; align-items:center; gap:5px; min-width:0; max-width:100%; color:var(--text-dim); font-size:12px; text-decoration:none; overflow:hidden; }
+.cte-topo-link:not([data-morto]):hover { color:var(--text); text-decoration:underline; }
+.cte-topo-link[data-morto] { cursor:default; opacity:.7; }
+.cte-selo-status { display:inline-flex; align-items:center; gap:5px; padding:3px 9px; border-radius:999px; font-size:11px; font-weight:800; background:var(--surface-2); color:var(--text-dim); }
+.cte-selo-status[data-ok] { background:color-mix(in srgb,var(--ok) 14%,transparent); color:var(--ok); }
+.cte-selo-ponto { width:6px; height:6px; border-radius:999px; background:currentColor; }
+.cte-editor-actions { display:flex; gap:8px; flex-wrap:wrap; }
+/* `min-width:fit-content` deixa o rótulo mandar: botão que não cabe QUEBRA de
+   linha em vez de espremer o texto ("Configuraçõe…"). */
+@media (max-width:600px) { .cte-editor-actions { width:100%; } .cte-editor-actions>* { flex:1 1 auto; min-width:fit-content; justify-content:center; } }
+
+/* ── Abas + botão de criar ── */
+.cte-barra { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+/* Controle segmentado do TAMANHO do conteúdo — esticado a tela inteira ele
+   virava uma barra cinza vazia com duas pílulas perdidas na ponta. */
+.cte-abas { width:max-content; max-width:100%; padding:4px; border-radius:12px; background:var(--surface-2); }
+.cte-abas button span { font-size:10px; opacity:.72; }
+@media (max-width:600px) { .cte-barra>.ui-btn { width:100%; justify-content:center; } }
+
+/* ── Listas ── */
+.cte-carregando { color:var(--text-dim); font-size:13px; padding:16px 4px; }
+.cte-lista { display:flex; flex-direction:column; gap:7px; }
+.cte-linha { display:grid; grid-template-columns:auto 44px minmax(0,1fr) auto; align-items:center; gap:10px; min-height:64px; padding:8px; border:1px solid var(--border); border-radius:var(--r-md); background:var(--surface); }
+/* Em arrasto a linha sobe do plano: sombra e borda de destaque, sem transição
+   (quem manda no transform é o ponteiro). O deslizar de volta é inline. */
+.cte-linha[data-arrastando] { border-color:var(--primary); box-shadow:0 10px 24px -8px rgb(0 0 0/.35); }
+.cte-linha>span:nth-child(3) { display:flex; flex-direction:column; gap:3px; min-width:0; }
+.cte-linha strong { display:inline-flex; align-items:center; gap:6px; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.cte-linha small { color:var(--text-dim); font-size:11px; }
+.cte-puxador { display:grid; place-items:center; width:26px; height:var(--tap); color:var(--text-dim); cursor:grab; touch-action:none; user-select:none; -webkit-user-select:none; }
+.cte-puxador:active { cursor:grabbing; }
+.cte-etiquetas { display:flex; align-items:center; gap:5px; flex-wrap:wrap; }
+.cte-chip { display:inline-flex; align-items:center; padding:2px 8px; border-radius:999px; background:var(--surface-2); color:var(--text-dim); font-size:10.5px; font-weight:700; white-space:nowrap; }
+.cte-chip[data-ok] { background:color-mix(in srgb,var(--ok) 13%,transparent); color:var(--ok); }
+.cte-miniatura,.cte-capa-mini { display:grid; place-items:center; width:44px; height:44px; overflow:hidden; border-radius:50%; background:var(--surface-2); color:var(--text-dim); }
+.cte-capa-mini { border-radius:10px; }
+.cte-miniatura img,.cte-capa-mini img { width:100%; height:100%; object-fit:cover; }
+.cte-acoes,.cte-ordem { display:flex; align-items:center; }
+.cte-acoes>a { display:grid; place-items:center; width:var(--tap); height:var(--tap); padding:0; border:0; border-radius:var(--r-sm); background:transparent; color:var(--text-dim); cursor:pointer; }
+.cte-acoes>a:hover { background:var(--surface-2); color:var(--text); }
+
+/* Vazio com caminho: ícone, explicação, os passos e o botão ali mesmo.
+   Cartão SÓLIDO — o tracejado num mar branco lia-se como tela quebrada. */
+.cte-vazio-cartao { display:grid; justify-items:center; gap:10px; padding:clamp(28px,5vw,52px) 20px; border:1px solid var(--border); border-radius:20px; background:var(--surface); text-align:center; }
+.cte-vazio-icone { display:grid; place-items:center; width:56px; height:56px; border-radius:18px; background:color-mix(in srgb,var(--primary) 13%,transparent); }
+.cte-vazio-cartao>strong { font-size:clamp(16px,2.4vw,19px); letter-spacing:-.01em; }
+.cte-vazio-cartao>p { max-width:440px; color:var(--text-dim); font-size:13px; line-height:1.55; }
+.cte-passos { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr)); gap:10px; width:100%; max-width:620px; margin:8px 0 2px; }
+.cte-passo { display:grid; justify-items:start; gap:5px; padding:14px; border:1px solid var(--border); border-radius:14px; text-align:left; background:var(--bg); }
+.cte-passo-n { display:grid; place-items:center; width:20px; height:20px; border-radius:999px; background:var(--surface-2); color:var(--text-dim); font-size:10.5px; font-weight:800; }
+.cte-passo strong { font-size:12.5px; }
+.cte-passo small { color:var(--text-dim); font-size:11px; line-height:1.45; }
+.cte-vazio-acoes { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-top:4px; }
+
+/* ── Formulários (dentro do PainelLateral) ── */
+.cte-check { display:flex; gap:8px; flex-direction:row!important; align-items:center; min-height:var(--tap); color:var(--text); font-size:13px; }
+.cte-check-rodape { min-height:auto; flex:none; white-space:nowrap; font-size:12.5px; color:var(--text-dim); }
+.cte-previa-cat { width:72px; height:72px; object-fit:cover; border-radius:50%; margin-top:10px; }
+.cte-previa-capa { width:100%; aspect-ratio:16/9; object-fit:cover; border-radius:var(--r-md); margin-top:10px; }
+.cte-rotulo { display:block; margin:14px 0 7px; color:var(--text-dim); font-size:11.5px; font-weight:700; }
+
+/* "Mais opções" — revelação progressiva do que é opcional. */
+.cte-mais { margin-top:14px; overflow:hidden; border:1px solid var(--border); border-radius:var(--r-md); background:var(--surface); }
+.cte-mais-abre { display:flex; align-items:center; gap:8px; width:100%; min-height:var(--tap); padding:8px 12px; border:0; background:transparent; cursor:pointer; font:inherit; font-size:13px; font-weight:700; color:var(--text); text-align:left; }
+.cte-mais-abre .t-acc-chevron { display:grid; place-items:center; margin-left:auto; color:var(--text-dim); }
+.cte-mais-abre:hover { background:var(--surface-2); }
+
+.cte-mais-abre small { color:var(--text-dim); font-weight:600; font-size:11px; }
+.cte-mais-corpo { display:flex; flex-direction:column; gap:12px; padding:12px; border-top:1px solid var(--border); }
+
+/* ── Blocos de conteúdo (acordeão) ── */
+.cte-blocos { display:flex; flex-direction:column; gap:7px; }
+.cte-bloco { border:1px solid var(--border); border-radius:var(--r-md); background:var(--surface); overflow:hidden; }
+.cte-bloco[data-arrastando] { border-color:var(--primary); box-shadow:0 10px 24px -8px rgb(0 0 0/.35); }
+/* Cabeçalho da sanfona: o BOTÃO ocupa a faixa toda (alvo grande pra abrir) e
+   as ações ficam ao lado — botão dentro de botão não existe. */
+.cte-bloco-cab { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:4px; padding:4px 5px 4px 8px; }
+.cte-bloco-abre { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:9px; min-height:var(--tap); min-width:0; padding:4px 6px; border:0; border-radius:var(--r-sm); background:transparent; color:var(--text); font:inherit; text-align:left; cursor:pointer; }
+.cte-bloco-abre:hover { background:var(--surface-2); }
+.cte-bloco-abre>span:nth-child(2) { display:flex; flex-direction:column; min-width:0; }
+.cte-bloco-abre small { color:var(--text-dim); font-size:9.5px; font-weight:750; text-transform:uppercase; letter-spacing:.05em; }
+.cte-bloco-abre strong { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12.5px; }
+.cte-bloco-abre .t-acc-chevron { display:grid; place-items:center; color:var(--text-dim); }
+.cte-campo { display:flex; flex-direction:column; gap:6px; color:var(--text-dim); font-size:11.5px; font-weight:650; }
+.cte-bloco-form { display:flex; flex-direction:column; gap:10px; padding:12px; border-top:1px solid var(--border); }
+.cte-bloco-form label { display:flex; flex-direction:column; gap:6px; color:var(--text-dim); font-size:11.5px; font-weight:650; }
+.cte-bloco-form input,.cte-bloco-form select,.cte-bloco-form textarea { width:100%; min-height:var(--tap); border:1px solid var(--border); border-radius:var(--r-sm); background:var(--surface); color:var(--text); padding:9px 11px; font:inherit; }
+.cte-bloco-form textarea { resize:vertical; }
+.cte-duas { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+.cte-adicionar { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; }
+/* Abaixo de 700px as ações caem pra linha de baixo, mas a COLUNA DO PUXADOR
+   fica: o arrasto agora é por ponteiro e funciona no dedo — a alça não é mais
+   `desk-only`. Tirar a coluna aqui escorregaria a miniatura pra célula errada. */
+@media(max-width:700px){
+  .cte-linha{grid-template-columns:auto 44px minmax(0,1fr)}
+  .cte-acoes,.cte-ordem{grid-column:1/-1;justify-content:flex-end}
+  .cte-bloco-cab{grid-template-columns:auto minmax(0,1fr)}
+}
+@media(max-width:560px){
+  .cte-duas{grid-template-columns:1fr}
+  .cte-adicionar{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
+/* ── Barra de atalhos (dentro das Configurações) ──
+   Cada atalho é uma LINHA que vira bloco no celular: no telefone o painel tem
+   ~340px úteis e cinco controles lado a lado espremeriam o rótulo a três
+   letras. */
+.cte-atalhos { display:flex; flex-direction:column; gap:10px; margin-top:22px; padding-top:18px; border-top:1px solid var(--border); }
+.cte-atalhos-topo { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+.cte-atalhos-topo strong { display:block; font-size:13.5px; }
+.cte-atalhos-topo small { display:block; margin-top:3px; max-width:44ch; color:var(--text-dim); font-size:11.5px; line-height:1.45; }
+.cte-atalhos-vazio { margin:0; color:var(--text-dim); font-size:12px; }
+/* Prévia da barra do rodapé: os três botões fixos; o que não tem destino
+   aparece apagado e riscado — é assim que se vê por que a barra some. */
+.cte-barra-previa { display:flex; justify-content:space-around; align-items:flex-end; gap:4px; padding:8px 6px 6px; border:1px solid var(--border); border-radius:14px; background:var(--surface-2); }
+.cte-barra-previa > span { display:flex; flex-direction:column; align-items:center; gap:3px; font-size:11px; font-weight:700; color:var(--text-dim); }
+.cte-barra-previa > span[data-destaque] { color:var(--primary-texto); }
+.cte-barra-previa > span[data-falta] { opacity:.4; text-decoration:line-through; }
+.cte-barra-previa[data-some] { opacity:.6; }
+.cte-atalho { display:grid; grid-template-columns:minmax(min(100%,120px),1fr) auto minmax(min(100%,120px),140px) minmax(min(100%,130px),150px) auto auto; align-items:center; gap:8px; padding:10px; border:1px solid var(--border); border-radius:var(--r-md); background:var(--surface); }
+.cte-atalho .cte-atalho-url { grid-column:1 / -1; }
+.cte-atalho input[type="text"], .cte-atalho input:not([type]) { min-height:var(--ctl-sm); }
+.cte-atalho-icone { display:grid; place-items:center; width:30px; height:30px; border-radius:8px; background:var(--surface-2); color:var(--text-dim); }
+.cte-atalho-destaque { display:inline-flex; align-items:center; gap:6px; min-height:var(--tap); color:var(--text-dim); font-size:11.5px; white-space:nowrap; cursor:pointer; }
+@media (max-width:640px) { .cte-atalho { grid-template-columns:1fr auto; } .cte-atalho > *:not(.cte-atalho-destaque):not(button) { grid-column:1 / -1; } }
+
+/* ── Envio de arquivo ──
+   O input nativo fica FORA DA VISTA mas continua no fluxo do teclado (nada de
+   display:none, que o tiraria da navegação por Tab). Quem aparece é o botão. */
+.cte-arquivo { display:flex; align-items:center; gap:9px; flex-wrap:wrap; }
+.cte-arquivo > input[type="file"] { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+.cte-arquivo > label { flex:0 0 auto; }
+.cte-arquivo > input[type="file"]:focus-visible + label { outline: var(--foco-largura) solid var(--foco-cor); outline-offset: var(--foco-offset); }
+.cte-arquivo > label[data-enviando] { pointer-events:none; opacity:.7; }
+.cte-arquivo > label[data-enviando] svg { animation:spin 900ms var(--ease-linear) infinite; }
+.cte-arquivo small { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-dim); font-size:11.5px; font-weight:600; }
+@media(prefers-reduced-motion:reduce){ .cte-arquivo > label[data-enviando] svg { animation:none; } }
+.cte-todos-previa { display:flex; align-items:center; gap:12px; margin-top:10px; }
+.cte-todos-previa img { width:64px; height:64px; object-fit:cover; border-radius:50%; border:2px solid var(--border); }
+
+/* ── Rodapé do modal de tutorial ──
+   No computador é uma linha: Cancelar … [opção] [Salvar]. No celular vira
+   coluna com a ORDEM ESCRITA À MÃO — a opção primeiro, a ação principal no
+   meio (no caminho do polegar) e o escape por último. O `.ui-acoes` da
+   fundação não serve aqui: ele inverte a coluna, e com três itens a opção
+   caía entre os dois botões. */
+.cte-rodape { display:flex; align-items:center; gap:9px; flex-wrap:wrap; }
+.cte-rodape-esp { margin-left:auto; }
+@media (max-width:640px) {
+  .cte-rodape { flex-direction:column; align-items:stretch; gap:8px; }
+  .cte-rodape > .ui-btn { width:100%; }
+  .cte-rodape-esp { display:none; }
+  .cte-rodape > .cte-check-rodape { order:1; justify-content:center; min-height:var(--tap); }
+  .cte-rodape-salvar { order:2; }
+  .cte-rodape-cancelar { order:3; }
+}
+/* "Salvo" e "no ar" são coisas diferentes — o selo diz qual está atrasada. */
+.cte-selo-pendente { background:color-mix(in srgb,var(--aviso,#f59e0b) 16%,transparent); color:var(--aviso,#f59e0b); }
+
+/* Filtro da lista do editor — some no celular? Não: com 40 tutoriais ele é
+   mais necessário ali do que no computador. Ocupa a linha inteira quando a
+   barra quebra. */
+.cte-filtro { display:flex; align-items:center; gap:8px; flex:1 1 220px; min-width:min(100%,200px); max-width:340px; min-height:var(--ctl-md); padding:0 12px; border:1px solid var(--border); border-radius:999px; background:var(--surface); color:var(--text-dim); }
+.cte-filtro input { flex:1; min-width:0; border:0; outline:0; background:transparent; color:var(--text); font:inherit; font-size:13px; }
+.cte-filtro input::-webkit-search-cancel-button { display:none; }
+/* Puxador some com o filtro ativo, mas o espaço fica: sem isso a fileira toda
+   dá um salto de 26px ao digitar a primeira letra. */
+.cte-puxador[data-inerte] { cursor:default; }
+@media (max-width:640px) { .cte-filtro { max-width:none; } }
+/* Arrastar e colar entram pelo MESMO campo do botão — a área de soltar é o
+   bloco todo, e ela só se anuncia quando há algo sendo arrastado. */
+.cte-arquivo { position:relative; border-radius:var(--r-sm); }
+.cte-arquivo[data-sobre] { outline:2px dashed var(--primary); outline-offset:4px; }
+.cte-arquivo-dica { color:var(--text-dim); font-size:11px; font-weight:600; }
+
+/* O título é o alvo grande de "editar" — texto, não botão pintado. */
+.cte-linha-titulo { display:block; max-width:100%; min-width:0; padding:0; border:0; background:none; color:inherit; font:inherit; text-align:left; cursor:pointer; }
+.cte-linha-titulo:hover strong { text-decoration:underline; text-underline-offset:2px; }
+.cte-linha-titulo { border-radius:6px; }
+.cte-linha-titulo:focus-visible { outline: var(--foco-largura) solid var(--foco-cor); outline-offset: var(--foco-offset); }
+.cte-endereco { display:flex; align-items:center; gap:6px; }
+.cte-endereco input { flex:1; min-width:0; }
+/* Chip de métrica: o vermelho só entra abaixo de 50% — acima disso o guia
+   está trabalhando, e pintar tudo de alerta faz ninguém olhar para nenhum. */
+.cte-chip[data-alerta] { background:color-mix(in srgb,var(--perigo) 15%,transparent); color:var(--perigo); }
+.cte-chip svg { margin-right:3px; vertical-align:-2px; }
+
+/* Aba Feedback (FeedbackTutoriais.tsx) */
+.cte-feedback{display:grid;gap:16px}
+.cte-fb-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,140px),1fr));gap:10px}
+.cte-fb-num{display:grid;gap:4px;padding:14px;border-radius:14px;background:var(--surface);border:1px solid var(--border)}
+.cte-fb-num small{display:flex;align-items:center;gap:5px;color:var(--text-muted);font-size:12px}
+.cte-fb-num strong{font-size:24px;font-variant-numeric:tabular-nums}
+.cte-fb-bloco{display:grid;gap:10px;padding:16px;border-radius:14px;background:var(--surface);border:1px solid var(--border)}
+.cte-fb-bloco h3{margin:0;font-size:14px}
+.cte-fb-bloco h3 small{color:var(--text-muted);font-weight:400;margin-left:6px}
+.cte-fb-barra{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(60px,1fr) auto;align-items:center;gap:10px;font-size:13px;min-height:28px}
+.cte-fb-barra>span:first-child{display:flex;align-items:center;gap:6px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cte-fb-barra b{font-variant-numeric:tabular-nums;white-space:nowrap}
+.cte-fb-barra b small{color:var(--text-muted);font-weight:400}
+.cte-fb-trilho{height:8px;border-radius:99px;background:var(--border);overflow:hidden}
+.cte-fb-trilho i{display:block;height:100%;border-radius:inherit;background:var(--graf-1,var(--primary))}
+.cte-fb-trilho[data-alerta] i{background:var(--perigo,#d33)}
+@media (max-width:480px){.cte-fb-barra{grid-template-columns:minmax(0,1fr) auto}.cte-fb-trilho{grid-column:1/-1;grid-row:2}}

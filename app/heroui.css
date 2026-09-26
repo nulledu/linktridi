@@ -1,0 +1,65 @@
+/* ─── HeroUI v3 + Tailwind v4, SEM o Preflight ─────────────────────────────
+   O `@import "@heroui/styles"` da documentação puxa `@import "tailwindcss"`
+   inteiro, e com ele o Preflight: reset global que zera margem de h1/p, tira
+   marcador de lista, faz img virar block e tira o visual do <button> em TODA
+   tela do app — que foi escrito em cima do padrão do navegador. Por isso aqui
+   é a mesma lista do `@heroui/styles/dist/index.css`, peça por peça, menos:
+
+   - `tailwindcss/preflight.css` (o reset);
+   - `@heroui/styles/base/base.css`, que pinta `border-color: var(--border)`
+     em TODO elemento — borda sem cor declarada do app mudaria de tom.
+     Dele só vêm as duas variáveis de camada, logo abaixo.
+
+   Utilitários do Tailwind nascem com `source(none)`: nenhum arquivo do app é
+   varrido, então classe nossa que por acaso tem nome de utilitário (`hidden`,
+   `flex`, `grid`, `border`…) não ganha estilo do nada. Tela que adotar classes
+   do Tailwind entra com um `@source` apontando pra pasta dela, aqui embaixo.
+   Os componentes do HeroUI não precisam disso: as classes deles são BEM
+   (`button button--primary`) definidas no próprio CSS do pacote.
+
+   Tudo aqui mora em camada (`@layer`), e o globals.css é sem camada — então
+   onde os dois declaram a mesma coisa, o app ganha. Isso inclui três tokens
+   com o mesmo nome: `--radius`, `--surface` e `--border` do HeroUI saem com
+   o valor NOSSO (26px, vidro translúcido, borda do tema). É o ponto de partida
+   da adaptação: o HeroUI já nasce com a cara do app, e o que não couber a
+   gente ajusta no componente.
+
+   Tema: o HeroUI escurece por `.dark`; o app escurece pela ausência de
+   `.light`. O `tema()` do lib/preload.ts e o `aplicarTema()` do
+   lib/aparencia.ts põem os dois juntos. */
+
+@layer theme, base, components, utilities;
+
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities) source(none);
+@import "tw-animate-css";
+
+@import "@heroui/styles/components/index.css" layer(components);
+@import "@heroui/styles/themes/default" layer(theme);
+@import "@heroui/styles/utilities";
+@import "@heroui/styles/variants";
+
+/* Pastas que usam classes do Tailwind (uma linha por pasta que adotar):
+   @source "./(plataforma)/exemplo"; */
+
+@layer base {
+  :root {
+    /* O React Aria põe popover em z-index 100000 na mão; modal do HeroUI
+       precisa empatar pra ordem de montagem decidir quem fica por cima. */
+    --z-index-overlay: 100000;
+    --z-index-toast: calc(var(--z-index-overlay) + 1);
+  }
+
+  /* O pedaço do Preflight que os botões do HeroUI pressupõem: sem ele o
+     <button> sai com a borda `2px outset` do navegador (o "Cancelar" do
+     confirmar() nascia com um aro branco). Só em botão do React Aria
+     (`data-rac`), e em camada — o componente pinta por cima, e botão do app
+     nem é tocado. */
+  button[data-rac] {
+    border: 0 solid;
+    font: inherit;
+    letter-spacing: inherit;
+    color: inherit;
+    background-color: transparent;
+  }
+}

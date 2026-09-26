@@ -1,0 +1,58 @@
+/* Oficina (/oficina-7k3q) — leitura do DEVKIT.md. Tudo escopado em .kit. */
+.kit { min-width: 0; }
+.kit-corpo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+  margin-top: 16px;
+}
+@media (min-width: 1100px) {
+  .kit-corpo { grid-template-columns: 220px minmax(0, 1fr); }
+  .kit-indice { position: sticky; top: 16px; align-self: start; max-height: calc(100dvh - 32px); overflow-y: auto; }
+}
+.kit-indice { display: flex; flex-direction: column; gap: 2px; }
+@media (max-width: 1099px) {
+  .kit-indice { flex-direction: row; overflow-x: auto; gap: 8px; padding-bottom: 4px; }
+  .kit-indice a { white-space: nowrap; }
+}
+.kit-indice a {
+  display: flex; align-items: center; min-height: var(--tap, 44px);
+  padding: 0 12px; border-radius: 10px; font-size: 13px;
+  color: var(--text-dim, inherit); text-decoration: none;
+}
+.kit-indice a:focus-visible { outline: var(--foco-largura) solid var(--foco-cor); outline-offset: var(--foco-offset); }
+@media (hover: hover) { .kit-indice a:hover { background: var(--surface-2, rgba(127,127,127,.1)); color: var(--text, inherit); } }
+
+.kit-md { min-width: 0; max-width: 960px; line-height: 1.6; font-size: 14.5px; overflow-wrap: anywhere; }
+.kit-md h1 { font-size: 26px; margin: 0 0 12px; }
+.kit-md h2 { font-size: 20px; margin: 36px 0 10px; scroll-margin-top: 80px; }
+.kit-md h3 { font-size: 16px; margin: 24px 0 8px; scroll-margin-top: 80px; }
+.kit-md p, .kit-md ul, .kit-md ol { margin: 0 0 12px; }
+.kit-md ul, .kit-md ol { padding-left: 20px; }
+.kit-md li { margin: 4px 0; }
+.kit-md hr { border: 0; border-top: 1px solid var(--border); margin: 28px 0; }
+.kit-md a { color: var(--primary); }
+.kit-md code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .88em;
+  padding: 1px 5px; border-radius: 6px; background: var(--surface-2, rgba(127,127,127,.14));
+}
+.kit-md pre {
+  overflow-x: auto; padding: 14px 16px; border-radius: 14px;
+  background: var(--surface-2, rgba(127,127,127,.12)); margin: 0 0 14px;
+}
+.kit-md pre code { padding: 0; background: none; }
+
+.kit-tabela { overflow-x: auto; margin: 0 0 16px; border: 1px solid var(--border); border-radius: 14px; }
+.kit-tabela table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.kit-tabela th, .kit-tabela td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--border); }
+.kit-tabela tr:last-child td { border-bottom: 0; }
+.kit-tabela th { font-weight: 700; white-space: nowrap; }
+
+/* Celular: a tabela vira card com rótulo, em vez de rolar de lado. */
+@media (max-width: 640px) {
+  .kit-tabela { border: 0; }
+  .kit-tabela thead { display: none; }
+  .kit-tabela tr { display: block; border: 1px solid var(--border); border-radius: 14px; padding: 8px 12px; margin-bottom: 10px; }
+  .kit-tabela td { display: block; border: 0; padding: 4px 0; }
+  .kit-tabela td::before { content: attr(data-l); display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; opacity: .6; }
+}

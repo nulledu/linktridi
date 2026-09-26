@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">Tridi Painéis</string>
+    <!-- Aparece na lista de Ajustes → Acessibilidade, e é o que a pessoa lê
+         antes de decidir ligar. Diz o que o serviço faz e o que ele NÃO faz. -->
+    <string name="dedo_descricao">Confirma sozinho a atualização do Tridi Painéis, para a TV não ficar parada numa pergunta que ninguém vai responder. Só age na tela de instalação deste app, e só quando a atualização foi pedida pelo sistema.</string>
+</resources>

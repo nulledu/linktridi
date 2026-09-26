@@ -1,0 +1,255 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+ * As peças do painel de lojas
+ *
+ * Uma escala, e todo mundo lê dela. Antes cada tela escolhia o próprio tamanho
+ * de título, o próprio espaçamento e a própria borda — e navegar entre Início,
+ * Análises e Clientes parecia navegar entre três produtos.
+ *
+ * ── A escala ────────────────────────────────────────────────────────────────
+ * Título de tela   28px / 700 / -0.03em   (tracking NEGATIVO: texto grande lê
+ *                                          espaçado demais quando cresce)
+ * Título de bloco  15px / 700 / -0.01em
+ * Número           26px / 750 / -0.02em / tabular
+ * Corpo            13.5px / 1.55
+ * Apoio            12px
+ *
+ * O espaço vertical é múltiplo de 6: 6, 12, 18, 24. Nada é escolhido no olho.
+ * ─────────────────────────────────────────────────────────────────────────── */
+
+.lj-tela { display: flex; flex-direction: column; gap: 18px; }
+
+/* ── Cabeçalho de tela ────────────────────────────────────────────────────── */
+.lj-topo {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.lj-topo-txt { min-width: 0; }
+.lj-topo h1 {
+  display: flex; align-items: center; gap: 9px;
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: var(--text);
+}
+.lj-topo p {
+  margin: 5px 0 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--text-dim);
+}
+.lj-topo-dir { display: flex; align-items: center; gap: 8px; flex: none; flex-wrap: wrap; }
+
+@media (max-width: 640px) {
+  /* Título grande encolhe ANTES de quebrar em três linhas. */
+  .lj-topo h1 { font-size: 23px; }
+}
+
+/* ── Números ──────────────────────────────────────────────────────────────── */
+/* Sem moldura por número, de propósito: quatro cartões com borda e ícone
+   competem entre si e com o gráfico logo abaixo. O que separa os números aqui
+   é ESPAÇO e alinhamento — e é o suficiente. */
+.lj-nums {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
+  gap: 1px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  /* O `gap: 1px` sobre o fundo da borda desenha as divisórias sem uma regra de
+     `border-right` que sobra no último item de cada linha. */
+  background: var(--border);
+}
+.lj-num {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  background: var(--surface);
+  min-width: 0;
+}
+.lj-num-rot {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-dim);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.lj-num-val {
+  font-size: 26px;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+/* A variação leva o SINAL escrito, não só a cor: cor sozinha não chega em quem
+   não distingue vermelho de verde. */
+.lj-num-var {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums;
+  color: var(--perigo);
+}
+.lj-num-var[data-bom="1"] { color: var(--ok); }
+.lj-num-nota { font-size: 11.5px; color: var(--text-dim); line-height: 1.4; }
+
+@media (max-width: 520px) {
+  .lj-num { padding: 12px 14px; }
+  .lj-num-val { font-size: 22px; }
+}
+
+/* ── Bloco ────────────────────────────────────────────────────────────────── */
+.lj-bloco {
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  min-width: 0;
+}
+.lj-bloco-cab {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; flex-wrap: wrap; margin-bottom: 14px;
+}
+.lj-bloco-cab h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+.lj-bloco-acao { display: flex; align-items: center; gap: 6px; flex: none; }
+
+@media (max-width: 520px) { .lj-bloco { padding: 14px; } }
+
+/* ── Vazio ────────────────────────────────────────────────────────────────── */
+.lj-vazio {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 3px; padding: 30px 20px; text-align: center;
+}
+.lj-vazio-ico {
+  display: grid; place-items: center;
+  width: 44px; height: 44px; margin-bottom: 10px;
+  border-radius: 50%; background: var(--surface-2);
+  opacity: 0;
+  animation: ljVazioIco var(--duration-very-slow) var(--ease-smooth-out) forwards;
+}
+@keyframes ljVazioIco {
+  from { opacity: 0; transform: scale(var(--scale-large)); }
+  /* Termina em `none` e não em `scale(1)`: transform identidade residual vira
+     bloco de contenção e qualquer popover de dentro nasce atrás dos cards. */
+  to   { opacity: 1; transform: none; }
+}
+.lj-vazio strong { font-size: 14px; font-weight: 700; color: var(--text); }
+.lj-vazio span.t-stagger-line {
+  max-width: 40ch; font-size: 12.5px; line-height: 1.55; color: var(--text-dim);
+}
+.lj-vazio-acao { margin-top: 14px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .lj-vazio-ico { animation: none; opacity: 1; }
+}
+
+/* ── Lista de linhas ──────────────────────────────────────────────────────────
+ * Nome à esquerda, valor à direita. Usada no Início (pedidos, mais vendidos) e
+ * em Análises (páginas mais vistas).
+ *
+ * Mora AQUI e não no CSS de uma das telas porque já quebrou desse jeito: a
+ * legenda da rosca de Análises lia `inicio.css`, o Início parou de usar rosca, e
+ * a legenda virou uma lista de marcadores com os números grudados no nome —
+ * sem erro nenhum, em outra tela. Estilo compartilhado mora no lugar comum.
+ */
+.lj-lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.lj-lista li {
+  display: flex; align-items: center; gap: 10px;
+  min-height: 44px; padding: 5px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.lj-lista li:last-child { border-bottom: 0; }
+.lj-lista-num { flex: none; font-size: 12px; font-weight: 700; color: var(--text-dim); font-variant-numeric: tabular-nums; }
+.lj-lista-nome {
+  flex: 1; min-width: 0; font-weight: 600; color: var(--text);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.lj-lista-apoio { flex: none; font-size: 12px; color: var(--text-dim); font-variant-numeric: tabular-nums; }
+.lj-lista-val { flex: none; font-variant-numeric: tabular-nums; font-weight: 700; }
+.lj-lista-pill {
+  flex: none; padding: 2px 8px; border-radius: 999px;
+  font-size: 10.5px; font-weight: 750; white-space: nowrap;
+}
+.lj-lista-foto {
+  width: 30px; height: 30px; flex: none; border-radius: 8px;
+  display: grid; place-items: center; overflow: hidden; background: var(--surface-2);
+}
+.lj-lista-foto img { width: 100%; height: 100%; object-fit: cover; }
+
+/* ── Minhas lojas: grade de cartões ──────────────────────────────────────────
+ * Kinetics 054 (entrada escalonada, `Fila`) + 127 (lift no ponteiro fino).
+ * A CÉLULA é quem entra — a entrada termina em `transform: none` preso por
+ * `forwards` — e o cartão dentro dela fica livre pra subir. No toque, o afundar
+ * vem do `.ui-card-alvo:active` da fundação. */
+.lj-lojas { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); }
+.lj-cel { position: relative; display: flex; min-width: 0; }
+.lj-cel > .lj-loja, .lj-cel > .lj-solta { width: 100%; }
+.lj-loja, .lj-cel > .lj-copiar {
+  transition:
+    transform var(--duration-fast) var(--ease-smooth-out),
+    box-shadow var(--duration-fast) var(--ease-smooth-out),
+    border-color var(--duration-quick) var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .lj-cel:hover > .lj-loja {
+    transform: translateY(calc(var(--distance-micro) * -1));
+    border-color: color-mix(in srgb, var(--primary) 28%, var(--border));
+    box-shadow: 0 2px 6px rgb(0 0 0 / 0.08), 0 22px 44px -26px rgb(0 0 0 / 0.55);
+  }
+  /* O botão mora fora do link (botão dentro de <a> é HTML inválido): sobe junto. */
+  .lj-cel:hover > .lj-copiar { transform: translateY(calc(var(--distance-micro) * -1)); }
+}
+.lj-cel > .lj-copiar { position: absolute; top: 8px; right: 8px; }
+.lj-loja-cab { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; padding-right: 44px; }
+
+/* Participação no faturamento: a barra enche ao chegar (Kinetics 057, sem
+   passar do trilho — o repique só vale onde não há teto visível). */
+.lj-lojas .ml-fatia > span {
+  transform-origin: left center;
+  animation: ljFatia var(--duration-very-slow) var(--ease-smooth-out) var(--duration-fast) backwards;
+}
+@keyframes ljFatia { from { transform: scaleX(0); } }
+
+/* ── Copiar link · Kinetics 016 ───────────────────────────────────────────── */
+.lj-copiar {
+  display: inline-grid; place-items: center; width: var(--tap); height: var(--tap); padding: 0;
+  border: 1px solid transparent; border-radius: 12px; background: transparent; color: var(--text-dim); cursor: pointer;
+}
+@media (hover: hover) and (pointer: fine) {
+  .lj-copiar:hover { color: var(--text); background: color-mix(in srgb, var(--text) 6%, transparent); }
+}
+.lj-copiar:active { background: color-mix(in srgb, var(--text) 10%, transparent); }
+.lj-copiar:focus-visible { outline: var(--foco-largura) solid var(--foco-cor); outline-offset: var(--foco-offset); }
+.lj-copiar[data-ok="1"] { color: var(--ok); background: color-mix(in srgb, var(--ok) 10%, transparent); }
+
+@media (prefers-reduced-motion: reduce) {
+  .lj-loja, .lj-cel > .lj-copiar, .lj-lojas .ml-fatia > span { animation: none !important; transition: none !important; }
+  .lj-cel:hover > .lj-loja, .lj-cel:hover > .lj-copiar { transform: none !important; }
+}
+
+/* ── Lista de pendências ─────────────────────────────────────────────────── */
+.lj-tarefas { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.lj-tarefas li {
+  display: flex; align-items: center; gap: 11px;
+  min-height: 42px; font-size: 13px; color: var(--text);
+}
+.lj-tarefas li[data-feito="1"] { color: var(--text-dim); }
+.lj-tarefas a { color: inherit; text-decoration: none; }
+.lj-tarefas a:hover { text-decoration: underline; }
+.lj-check {
+  width: 17px; height: 17px; flex: none; border-radius: 5px;
+  display: grid; place-items: center;
+  border: 1.5px solid var(--border);
+}
+.lj-tarefas li[data-feito="1"] .lj-check { background: var(--primary); border-color: var(--primary); }

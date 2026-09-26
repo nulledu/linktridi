@@ -1,0 +1,104 @@
+/* MenuDaConta — ver o comentário em MenuDaConta.tsx.
+   Um nó só (.ui-mc) muda de pílula 44px pra cartão; o gatilho (com o avatar)
+   desliza do canto pro centro do cabeçalho. Tudo na escala transitions.dev. */
+
+.ui-mc-raiz {
+  --mc-w: min(248px, calc(100vw - 32px));
+  position: relative;
+  width: var(--tap);
+  height: var(--tap);
+  flex: none;
+}
+
+.ui-mc {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 60;
+  width: var(--tap);
+  height: var(--tap);
+  border-radius: var(--r-pill);
+  overflow: hidden;
+  background: var(--pop-bg);
+  border: 1px solid var(--border);
+  box-shadow: 0 6px 10px -4px rgb(0 0 0 / .14), 0 1px 2px rgb(0 0 0 / .08);
+  /* fechar: rápido, sem atraso, curva que não passa do ponto */
+  transition-property: width, height, border-radius, box-shadow;
+  transition-duration: var(--duration-quick);
+  transition-timing-function: var(--ease-smooth-out);
+}
+.ui-mc-raiz[data-lado="direita"] .ui-mc { left: auto; right: 0; }
+
+.ui-mc[data-aberto] {
+  width: var(--mc-w);
+  height: var(--mc-h);
+  border-radius: var(--r-md);
+  box-shadow: 0 0 32px -8px rgb(0 0 0 / .14), 0 16px 24px -8px rgb(0 0 0 / .16), 0 6px 8px -6px rgb(0 0 0 / .22);
+  transition-duration: var(--duration-fast);
+}
+
+.ui-mc-gatilho {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  left: 0;
+  width: var(--tap);
+  height: var(--tap);
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: transparent;
+  cursor: pointer;
+  transition-property: left, top;
+  transition-duration: var(--duration-quick);
+  transition-timing-function: var(--ease-smooth-out);
+}
+.ui-mc[data-aberto] .ui-mc-gatilho {
+  left: calc(50% - var(--tap) / 2);
+  top: 12px;
+  transition-duration: var(--duration-fast);
+}
+.ui-mc-avatar { display: grid; pointer-events: none; }
+
+.ui-mc-corpo {
+  width: var(--mc-w);
+  padding: calc(12px + var(--tap) + 8px) 4px 4px;
+  opacity: 0;
+  filter: blur(var(--blur-large));
+  transition-property: opacity, filter;
+  transition-duration: var(--duration-quick);
+  transition-timing-function: var(--ease-smooth-out);
+}
+.ui-mc[data-aberto] .ui-mc-corpo {
+  opacity: 1;
+  filter: none;
+  transition-duration: var(--duration-fast);
+  transition-delay: var(--duration-quick); /* o corpo abre, o conteúdo chega */
+}
+
+.ui-mc-cab { text-align: center; padding: 0 12px 14px; min-width: 0; }
+.ui-mc-nome { margin: 0; font-size: 14px; font-weight: 600; line-height: 1.3; overflow-wrap: anywhere; }
+.ui-mc-email { margin: 2px 0 0; font-size: 12px; color: var(--text-dim); overflow-wrap: anywhere; }
+
+.ui-mc-acoes {
+  display: grid;
+  gap: 2px;
+  padding: 4px;
+  border-radius: calc(var(--r-md) - 4px);
+  background: var(--surface-2);
+}
+.ui-mc-item { justify-content: flex-start; }
+.ui-mc-rodape {
+  min-height: 32px;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-mc, .ui-mc-gatilho, .ui-mc-corpo { transition-duration: 0s !important; transition-delay: 0s !important; }
+  .ui-mc-corpo { filter: none; }
+}

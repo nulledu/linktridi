@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Camada de fundo do ícone adaptativo. Cor chapada: o launcher pode animar
+     esta camada em paralaxe, e qualquer desenho aqui vira ruído em movimento. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/galpao_fundo" />
+</shape>

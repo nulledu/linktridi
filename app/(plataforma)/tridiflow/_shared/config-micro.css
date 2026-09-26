@@ -1,0 +1,150 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   TridiFlow · Configurações e Dashboard — micro-interações do módulo.
+
+   Local de propósito: a fundação (globals.css) está sendo mexida em paralelo.
+   Tudo aqui é prefixo `tfm-`, lê tempo e curva da escala do `:root`
+   (--duration-*, --ease-*) e respeita as regras do CLAUDE.md:
+     · nenhum keyframe termina em translateY(0)/scale(1) — só `from { }`, o fim
+       é o estilo próprio do nó (transform: none);
+     · entrada só no eixo Y (nada lateral);
+     · fechar/sair nunca é mais lento que abrir;
+     · nada depende de :hover; tudo tem o bloco prefers-reduced-motion.
+   Efeitos: Kinetics 016/055 (copiar), 063 (pílula), 064/077 (pulso),
+   065/072 (envio), 049 (foco que se propaga), 054/096 (fila/diário), 006.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* ── Pílula de estado (063) + pulso ao vivo (064/077) ───────────────────── */
+.tfm-pilula {
+  --pc: var(--text-dim);
+  display: inline-flex; align-items: center; gap: 5px; flex: none;
+  font-size: 10.5px; font-weight: 800; line-height: 1.5;
+  padding: 2px 9px; border-radius: 999px;
+  color: var(--pc);
+  background: color-mix(in srgb, var(--pc) 15%, transparent);
+  transition:
+    color var(--duration-fast) var(--ease-in-out),
+    background-color var(--duration-fast) var(--ease-in-out);
+}
+.tfm-pilula[data-estado="ok"] { --pc: var(--ok); }
+.tfm-pilula[data-estado="pendente"] { --pc: var(--atencao); }
+.tfm-pilula[data-estado="erro"] { --pc: var(--perigo); }
+.tfm-pilula[data-estado="carregando"] { --pc: var(--azul, var(--primary-texto)); }
+.tfm-pilula[data-tam="md"] { font-size: 12px; padding: 3px 10px; }
+
+.tfm-pulso { position: relative; width: 7px; height: 7px; border-radius: 50%; background: currentColor; flex: none; }
+.tfm-pulso::before,
+.tfm-pulso::after {
+  content: ""; position: absolute; inset: 0; border-radius: 50%;
+  border: 1.5px solid currentColor; opacity: 0;
+  animation: tfm-pulso 1.8s var(--ease-out) infinite;
+}
+.tfm-pulso::after { animation-delay: 0.9s; }
+/* Fora da tela o anel para: pulso que ninguém vê é quadro jogado fora. */
+.tfm-pulso[data-parado="1"]::before,
+.tfm-pulso[data-parado="1"]::after { animation: none; }
+@keyframes tfm-pulso {
+  0% { transform: scale(1); opacity: 0.7; }
+  100% { transform: scale(2.6); opacity: 0; }
+}
+
+/* O visto que se desenha (065): o path é o `check` do Tabler, só com o traço
+   escondido por dasharray. Entra com a curva que passa do ponto — é entrada. */
+.tfm-visto path {
+  stroke-dasharray: 24; stroke-dashoffset: 24;
+  transition: stroke-dashoffset var(--duration-slow) var(--ease-bounce);
+}
+.tfm-visto[data-desenhado="1"] path { stroke-dashoffset: 0; }
+
+/* Tremor de recusa (103). Linear e sem fill: nada sobra aplicado no fim. */
+@keyframes tfm-tremor {
+  10%, 90% { transform: translateX(-1px); }
+  20%, 80% { transform: translateX(2px); }
+  30%, 50%, 70% { transform: translateX(-4px); }
+  40%, 60% { transform: translateX(4px); }
+}
+.tfm-treme { animation: tfm-tremor calc(var(--shake-dur-a, 80ms) * 2 + var(--shake-dur-b, 60ms) * 2) linear; }
+
+/* ── Campo: foco que se propaga (049) ─────────────────────────────────────── */
+.tfm-entrada {
+  flex: 1; min-width: 0; min-height: var(--ctl-md, 40px); box-sizing: border-box;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+  padding: 9px 12px; color: var(--text); font: inherit; font-size: 13.5px; outline: none;
+  transition:
+    border-color var(--duration-quick) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-smooth-out);
+}
+.tfm-entrada[data-mono="1"] { font-family: ui-monospace, Menlo, monospace; }
+.tfm-entrada:focus {
+  border-color: color-mix(in srgb, var(--primary) 60%, var(--border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 18%, transparent);
+}
+@media (pointer: coarse) { .tfm-entrada { min-height: var(--tap); font-size: 16px; } }
+.tfm-grupo { display: flex; gap: 8px; flex-wrap: wrap; align-items: stretch; }
+.tfm-grupo > .tfm-entrada { flex: 1 1 200px; }
+/* O cartão inteiro acende quando o campo de dentro ganha foco: a pessoa sabe
+   em que passo está sem procurar o cursor. */
+.tfm-passo {
+  transition: border-color var(--duration-fast) var(--ease-in-out), box-shadow var(--duration-fast) var(--ease-in-out);
+}
+.tfm-passo:focus-within {
+  border-color: color-mix(in srgb, var(--primary) 38%, var(--border)) !important;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 7%, transparent);
+}
+.tfm-passo-n { transition: box-shadow var(--duration-fast) var(--ease-smooth-out); }
+.tfm-passo:focus-within .tfm-passo-n { box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 20%, transparent); }
+
+/* ── Sanfona (006) — só o cabeçalho; o painel é o `.t-acc` da fundação ───── */
+.tfm-sanfona-cab {
+  display: flex; align-items: center; gap: 8px; width: 100%; min-height: var(--tap);
+  margin: -8px 0; padding: 0; border: none; background: none; cursor: pointer;
+  text-align: left; color: var(--text); font: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+.tfm-sanfona-cab { border-radius: 8px; }
+.tfm-sanfona-cab:focus-visible { outline: var(--foco-largura) solid var(--foco-cor); outline-offset: 4px; }
+.tfm-sanfona-cab .t-acc-chevron { margin-left: auto; color: var(--text-dim); }
+.tfm-sanfona-miolo { padding-top: 12px; }
+
+/* ── Fila escalonada (054) e diário de atividade (096) ──────────────────── */
+.tfm-fila > * {
+  animation: tfm-chega var(--duration-slow) var(--ease-smooth-out) backwards;
+  animation-delay: min(calc(var(--i, 0) * var(--duration-stagger, 40ms)), 480ms);
+}
+@keyframes tfm-chega {
+  from { opacity: 0; transform: translateY(var(--distance-base)); }
+}
+/* Linha que CHEGOU agora (atualizou e veio algo novo): desce do topo e o fundo
+   acende e apaga — o registro do diário que acabou de ser escrito. */
+.tfm-nova {
+  animation:
+    tfm-registro var(--duration-slow) var(--ease-smooth-out) backwards,
+    tfm-acende 1.6s var(--ease-out) backwards;
+  animation-delay: min(calc(var(--i, 0) * var(--duration-stagger, 40ms)), 480ms);
+}
+@keyframes tfm-registro {
+  from { opacity: 0; transform: translateY(calc(var(--distance-base) * -1)) scale(1.02); }
+}
+@keyframes tfm-acende {
+  from { background-color: color-mix(in srgb, var(--primary) 14%, var(--surface-2)); }
+}
+.tfm-surge { animation: tfm-chega var(--duration-fast) var(--ease-smooth-out) backwards; }
+
+/* ── Dashboard: barras crescem da base ───────────────────────────────────── */
+.tfm-barra {
+  transform-origin: bottom;
+  animation: tfm-cresce var(--duration-very-slow) var(--ease-smooth-out) backwards;
+  animation-delay: min(calc(var(--i, 0) * 25ms), 400ms);
+}
+@keyframes tfm-cresce { from { transform: scaleY(0); } }
+
+/* Seta do grupo Configurações na barra do TridiFlow: abrir passa do ponto,
+   fechar é mais curto e sem repique. */
+.tfm-seta { display: flex; transition: transform var(--duration-quick) var(--ease-smooth-out); }
+.tfm-seta[data-aberta="1"] { transform: rotate(90deg); transition: transform var(--duration-fast) var(--ease-bounce); }
+
+@media (prefers-reduced-motion: reduce) {
+  .tfm-pilula,
+  .tfm-visto path, .tfm-entrada, .tfm-passo, .tfm-passo-n, .tfm-seta { transition: none !important; }
+  .tfm-pulso::before, .tfm-pulso::after, .tfm-fila > *, .tfm-nova,
+  .tfm-surge, .tfm-barra, .tfm-treme { animation: none !important; }
+}

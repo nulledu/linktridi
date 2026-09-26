@@ -1,0 +1,25 @@
+/* PeriodPicker — sombra das pílulas (Hoje / Ontem / 7 dias / 30 dias / Este mês / Datas).
+   O `.glass` traz a sombra de CARTÃO (0 8px 32px): numa pílula de 30px ela
+   vira uma mancha 3× maior que o botão, as manchas vizinhas se somam no gap de
+   8px e, no celular, o `overflow-y: hidden` da `.filtro-faixa` a corta reta no
+   pé — a "sombra bugada atrás das pills". Pílula ganha sombra de pílula. */
+.pp-pilula.glass:not(:active) {
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+html.light .pp-pilula.glass:not(:active) {
+  box-shadow:
+    0 1px 2px rgba(16, 24, 40, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+/* O invólucro do "Datas" é um `.filtro-faixa > *` e ganhava o véu de toque
+   (`inset 0 0 0 999px`) no :active — um retângulo de cantos vivos atrás da
+   pílula redonda. Quem responde ao toque é o botão; o invólucro fica sem
+   sombra e sem transform (ele abriga o popover). */
+.filtro-faixa > .pp-datas,
+.filtro-faixa > .pp-datas:active {
+  box-shadow: none;
+  border-radius: 999px;
+}

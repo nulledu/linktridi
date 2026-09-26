@@ -1,0 +1,99 @@
+import { NextRequest, NextResponse } from "next/server";
+import { getProfileForModule } from "@/lib/require-auth";
+import { createSupabaseAdminClient } from "@/lib/supabase/server";
+import { ROTA_ARQUIVOS, areaDaChave, chaveValida } from "@/lib/armazenamento/referencia";
+import { lerDesignEmCache, type TipoArquivo } from "@/lib/design-projetos";
+import { CATEGORIAS_MATERIAL, type CategoriaMaterial } from "@/lib/design-biblioteca";
+
+export const dynamic = "force-dynamic";
+
+const COLS = "id,nome,categoria,url,mime,tamanho,tags,descricao,pedido_id,pedido_ref,criado_nome,created_at";
+const tabelaAusente = (e: { code?: string; message?: string } | null) => !!e && (e.code === "42P01" || e.code === "PGRST205" || /does not exist|schema cache/i.test(e.message ?? ""));
+const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+
+/**
+ * Biblioteca do Design = duas origens numa tela só:
+ *  · dos PROJETOS (ERP): arte do cliente, vetorizada, reprovada, logo — presas
+ *    ao pedido, lidas da mesma leitura em cache das outras telas;
+ *  · do SETOR (`design_materiais`, arquivo no B2): template, fonte, mockup,
+ *    editável, referência, elemento — o que não nasce do pedido.
+ */
+export async function GET(req: NextRequest) {
+  if (!(await getProfileForModule("design"))) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const sp = new URL(req.url).searchParams;
+  const q = sp.get("q")?.trim() ? norm(sp.get("q")!.trim()) : null;
+  const tipo = sp.get("tipo") as TipoArquivo | null;
+  const categoria = sp.get("categoria") as CategoriaMaterial | null;
+  const limite = Math.min(240, Math.max(12, Number(sp.get("limite")) || 60));
+  const projeto = Number(sp.get("projeto")) || null;
+
+  const db = createSupabaseAdminClient();
+  let consulta = db.from("design_materiais").select(COLS).order("created_at", { ascending: false }).limit(limite);
+  if (categoria && CATEGORIAS_MATERIAL.some((c) => c.chave === categoria)) consulta = consulta.eq("categoria", categoria);
+  if (projeto) consulta = consulta.eq("pedido_id", projeto);
+  const [leitura, mat] = await Promise.all([lerDesignEmCache().catch(() => null), consulta]);
+
+  const arquivosTodos = (leitura?.arquivos ?? []).filter((a) =>
+    (!tipo || a.tipo === tipo) && (!projeto || a.projetoId === projeto) &&
+    (!q || norm(`${a.ref} ${a.produto}`).includes(q)));
+  const contagem: Record<string, number> = {};
+  for (const a of leitura?.arquivos ?? []) contagem[a.tipo] = (contagem[a.tipo] ?? 0) + 1;
+
+  const materiais = ((mat.data ?? []) as Record<string, unknown>[]).filter((m) =>
+    !q || norm(`${m.nome} ${(m.tags as string[] | null)?.join(" ") ?? ""} ${m.pedido_ref ?? ""}`).includes(q));
+
+  return NextResponse.json({
+    erp: leitura ? "ok" : "erro",
+    materiaisDisponivel: !tabelaAusente(mat.error),
+    arquivos: arquivosTodos.slice(0, limite),
+    totalArquivos: arquivosTodos.length,
+    contagem,
+    materiais,
+  }, { headers: { "Cache-Control": "no-store" } });
+}
+
+/** Registra um material já enviado ao B2 (presign + PUT direto na área `design/`). */
+export async function POST(req: NextRequest) {
+  const eu = await getProfileForModule("design");
+  if (!eu) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  let b: Record<string, unknown>;
+  try { b = await req.json(); } catch { return NextResponse.json({ error: "dados_invalidos" }, { status: 400 }); }
+
+  const url = String(b.url ?? "");
+  const chave = url.startsWith(`${ROTA_ARQUIVOS}/`) ? url.slice(ROTA_ARQUIVOS.length + 1) : "";
+  if (!chaveValida(chave) || areaDaChave(chave) !== "design") return NextResponse.json({ error: "arquivo_invalido", detalhe: "Envie o arquivo antes de salvar." }, { status: 400 });
+  const categoria = String(b.categoria ?? "") as CategoriaMaterial;
+  if (!CATEGORIAS_MATERIAL.some((c) => c.chave === categoria)) return NextResponse.json({ error: "categoria_invalida" }, { status: 400 });
+  const nome = String(b.nome ?? "").trim().slice(0, 160);
+  if (!nome) return NextResponse.json({ error: "nome_obrigatorio", detalhe: "Dê um nome ao material." }, { status: 400 });
+
+  const tags = Array.isArray(b.tags) ? (b.tags as unknown[]).map((t) => String(t).trim().toLowerCase()).filter(Boolean).slice(0, 12) : [];
+  const db = createSupabaseAdminClient();
+  const { data, error } = await db.from("design_materiais").insert({
+    nome, categoria, url, tags,
+    mime: b.mime ? String(b.mime).slice(0, 120) : null,
+    tamanho: Number(b.tamanho) || null,
+    descricao: b.descricao ? String(b.descricao).slice(0, 600) : null,
+    pedido_id: Number(b.pedidoId) || null,
+    pedido_ref: b.pedidoRef ? String(b.pedidoRef).slice(0, 120) : null,
+    criado_por: eu.id, criado_nome: eu.name ?? null,
+  }).select(COLS).single();
+  if (tabelaAusente(error)) return NextResponse.json({ error: "schema_desatualizado", detalhe: "Rode supabase/design_materiais.sql no Supabase." }, { status: 409 });
+  if (error) return NextResponse.json({ error: "banco" }, { status: 500 });
+  return NextResponse.json({ material: data });
+}
+
+export async function DELETE(req: NextRequest) {
+  const eu = await getProfileForModule("design");
+  if (!eu) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const id = new URL(req.url).searchParams.get("id");
+  if (!id) return NextResponse.json({ error: "id" }, { status: 400 });
+  const db = createSupabaseAdminClient();
+  // Quem enviou apaga o seu; admin apaga qualquer um.
+  let del = db.from("design_materiais").delete().eq("id", id);
+  if (eu.role !== "admin") del = del.eq("criado_por", eu.id);
+  const { data, error } = await del.select("id");
+  if (error) return NextResponse.json({ error: "banco" }, { status: 500 });
+  if (!data?.length) return NextResponse.json({ error: "forbidden", detalhe: "Só quem enviou (ou um admin) pode remover." }, { status: 403 });
+  return NextResponse.json({ ok: true });
+}

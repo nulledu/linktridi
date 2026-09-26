@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Marca do Estoque Tridi: CAIXA com FAIXA DE CÓDIGO DE BARRAS atravessando.
+     Substitui a sacola de compras do TridiMarket (ic_tridimarket_logo), que era
+     a logo de um mercadinho num aparelho que nunca vendeu nada.
+
+     Gêmeo em XML de ui/MarcaEstoque.kt — mesmas proporções, mesmas 8 barras.
+     Desenhado no viewport 108×108 do ícone adaptativo, com todo o traço dentro
+     da ZONA SEGURA (o quadrado central de 72×72, ou seja 18..90): fora dela a
+     máscara do launcher — círculo, "squircle", gota — corta o desenho, e a
+     ponta da faixa é justamente o que sumiria primeiro. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Caixa (contorno grosso: sobrevive ao ícone de 48px na gaveta) -->
+    <path
+        android:fillColor="@color/galpao_texto"
+        android:fillType="evenOdd"
+        android:pathData="M35.5,32 H72.5 A6.5,6.5 0 0 1 79,38.5 V70.5 A6.5,6.5 0 0 1 72.5,77 H35.5 A6.5,6.5 0 0 1 29,70.5 V38.5 A6.5,6.5 0 0 1 35.5,32 Z M34.5,37.5 H73.5 V71.5 H34.5 Z" />
+
+    <!-- Faixa: passa das bordas da caixa de propósito — lê como cinta/etiqueta
+         aplicada por cima, não como um quadrado decorado. -->
+    <path
+        android:fillColor="@color/galpao_acento"
+        android:pathData="M22.3,48.2 H85.7 V62.6 H22.3 Z" />
+
+    <!-- Barras do código: pintadas com a cor do fundo, igual ao Canvas do
+         Compose (ver MarcaEstoque.kt). -->
+    <path
+        android:fillColor="@color/galpao_fundo"
+        android:pathData="M26.1,48.2 H30.6 V62.6 H26.1 Z M33.7,48.2 H36.9 V62.6 H33.7 Z M39.4,48.2 H45.8 V62.6 H39.4 Z M48.9,48.2 H52.1 V62.6 H48.9 Z M55.3,48.2 H60.3 V62.6 H55.3 Z M63.5,48.2 H66.7 V62.6 H63.5 Z M69.8,48.2 H75.5 V62.6 H69.8 Z M78.7,48.2 H81.9 V62.6 H78.7 Z" />
+</vector>
